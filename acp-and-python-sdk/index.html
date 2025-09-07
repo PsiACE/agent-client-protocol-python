@@ -12,13 +12,9 @@
         <meta name="author" content="Chojan Shang">
       
       
-        <link rel="canonical" href="https://psiace.github.io/agent-client-protocol-python/quickstart/">
+        <link rel="canonical" href="https://psiace.github.io/agent-client-protocol-python/acp-and-python-sdk/">
       
       
-        <link rel="prev" href="..">
-      
-      
-        <link rel="next" href="../mini-swe-agent/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>Quick Start - Agent Client Protocol - Python SDK</title>
+        <title>ACP 与 Python SDK：让编辑器与 Agent 说同一种语言 - Agent Client Protocol - Python SDK</title>
       
     
     
@@ -80,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart" class="md-skip">
+        <a href="#acp-python-sdk-agent" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quick Start
+              ACP 与 Python SDK：让编辑器与 Agent 说同一种语言
             
           </span>
         </div>
@@ -281,32 +277,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Quick Start
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -317,53 +291,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-the-sdk" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install the SDK
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#minimal-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      Minimal agent
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-the-mini-swe-agent-bridge-in-zed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Run the Mini SWE Agent bridge in Zed
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -417,27 +344,99 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install-the-sdk" class="md-nav__link">
+  <a href="#tldr" class="md-nav__link">
     <span class="md-ellipsis">
-      Install the SDK
+      TL;DR
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#minimal-agent" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Minimal agent
+      为什么写这篇
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-mini-swe-agent-bridge-in-zed" class="md-nav__link">
+  <a href="#acp-acp" class="md-nav__link">
     <span class="md-ellipsis">
-      Run the Mini SWE Agent bridge in Zed
+      ACP 是什么，为什么需要 ACP
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      设计要点（把“话”说清楚）
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      为什么做一个 Python SDK
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      最小可用示例
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zed" class="md-nav__link">
+    <span class="md-ellipsis">
+      在 Zed 中运行
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      和“传统集成”的不同
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      我的做事原则
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      上手与示例
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      尾声
     </span>
   </a>
   
@@ -462,86 +461,138 @@
   
 
 
-<h1 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h1>
-<p>Use the published package to build an ACP agent, or run the included example.</p>
-<h2 id="install-the-sdk">Install the SDK<a class="headerlink" href="#install-the-sdk" title="Permanent link">&para;</a></h2>
-<pre><code class="language-bash">pip install agent-client-protocol
-</code></pre>
-<h2 id="minimal-agent">Minimal agent<a class="headerlink" href="#minimal-agent" title="Permanent link">&para;</a></h2>
+<h1 id="acp-python-sdk-agent">ACP 与 Python SDK：让编辑器与 Agent 说同一种语言<a class="headerlink" href="#acp-python-sdk-agent" title="Permanent link">&para;</a></h1>
+<h2 id="tldr">TL;DR<a class="headerlink" href="#tldr" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Agent Client Protocol（ACP）把“编辑器 ↔ Agent”的交互标准化，像 LSP 之于语言服务一样，解耦能力提供方与承载方。</li>
+<li>我写了一个 Python SDK（agent-client-protocol），用最小心智负担把你的 Python Agent 接到 Zed 等 ACP 客户端上，走 stdio + JSON-RPC。</li>
+<li>一条命令安装；几十行代码跑通；支持在 Zed 中作为外部 Agent 运行；内置一个可跑的 Mini SWE Agent 桥接示例。</li>
+</ul>
+<p>参考：
+- 官方站点与协议文档：https://agentclientprotocol.com
+- Zed 外部 Agent 集成指南：https://zed.dev/docs/ai/external-agents
+- Python SDK 文档与示例：https://psiace.github.io/agent-client-protocol-python</p>
+<hr />
+<h2 id="_1">为什么写这篇<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>我不太想再讨论“画一个复杂的 Agent 架构图”了。我更关心两件事：</p>
+<ul>
+<li>让系统把话说清楚（协议与交互尽量标准、可观测）；</li>
+<li>让事情先跑起来（最小路径把反馈回路接通）。</li>
+</ul>
+<p>ACP 正好提供了“说清楚”的契约；而 Python SDK 则提供了“先跑起来”的路径。本文把两者合在一起说，顺便交付一个你可以立刻跑的最小例子与在 Zed 中接入的方法。</p>
+<hr />
+<h2 id="acp-acp">ACP 是什么，为什么需要 ACP<a class="headerlink" href="#acp-acp" title="Permanent link">&para;</a></h2>
+<p>官方介绍：
+- Introduction：https://agentclientprotocol.com/overview/introduction
+- Architecture：https://agentclientprotocol.com/overview/architecture</p>
+<p>一句话版：ACP 是编辑器与 Agent 之间的标准对话方式。没有它，每个编辑器都要为每个 Agent 单独写适配；每个 Agent 也要学会不同编辑器的私有 API。后果是：</p>
+<ul>
+<li>集成成本高：组合数爆炸；</li>
+<li>兼容性差：Agent 只能在少数编辑器里跑；</li>
+<li>锁定效应强：选了哪个 Agent，往往就被它支持的界面形态绑死了。</li>
+</ul>
+<p>ACP 把这层对话协议抽象出来，类似当年的 LSP：实现了 ACP 的 Agent，在任何支持 ACP 的编辑器里都能工作；支持 ACP 的编辑器也能一次性获得整个生态的 Agent。</p>
+<hr />
+<h2 id="_2">设计要点（把“话”说清楚）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>传输：JSON-RPC over stdio。简单、可移植、可观测。</li>
+<li>内容：沿用 MCP 的 JSON 表达（能复用就复用），也定义了 Agent 场景特有的类型（比如 diff 展示）。</li>
+<li>文本：默认是 Markdown，足够表达富文本，但对编辑器渲染能力的要求不过分。</li>
+<li>能力：Prompt、工具调用、文件系统访问、Agent 计划等都在协议里有第一类抽象。</li>
+<li>支持矩阵（文档中会不断更新）：</li>
+<li>编辑器侧：Zed、Neovim（CodeCompanion / avante.nvim）等</li>
+<li>Agent 侧：Gemini CLI、Claude Code（适配器）等</li>
+</ul>
+<p>参考：
+- Protocol 总览：https://agentclientprotocol.com/protocol/overview
+- Zed 外部 Agent 集成文档：https://zed.dev/docs/ai/external-agents</p>
+<hr />
+<h2 id="python-sdk">为什么做一个 Python SDK<a class="headerlink" href="#python-sdk" title="Permanent link">&para;</a></h2>
+<p>Python 在 Agent 生态里是事实标准：工具链丰富、模型 SDK 广、跑脚本部署容易。协议有了，但如果没有“开箱即用的 Python 端实现”，工程起步成本依然高。这个 SDK 试图做到：</p>
+<ul>
+<li>安装简单：pip 装完就能用；</li>
+<li>API 收敛：暴露 AgentSideConnection / ClientSideConnection 两个常见入口；</li>
+<li>最小心智负担：几十行代码接入、先把反馈回路跑起来；</li>
+<li>演示即文档：Mini SWE Agent 桥接例子，把流式输出、工具调用、最终提交这些典型交互串起来。</li>
+</ul>
+<hr />
+<h2 id="_3">最小可用示例<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>下面是一个最小 Echo Agent：初始化握手后，在每次 prompt 中发送一段流式文本，并结束回合。</p>
 <pre><code class="language-python">import asyncio
-
 from acp import (
-    Agent,
-    AgentSideConnection,
-    AuthenticateRequest,
-    CancelNotification,
-    InitializeRequest,
-    InitializeResponse,
-    LoadSessionRequest,
-    NewSessionRequest,
-    NewSessionResponse,
-    PromptRequest,
-    PromptResponse,
-    stdio_streams,
+    Agent, AgentSideConnection, Client,
+    InitializeRequest, InitializeResponse,
+    PromptRequest, PromptResponse,
+    SessionNotification, stdio_streams, PROTOCOL_VERSION
 )
-
+from acp.schema import ContentBlock1, SessionUpdate2
 
 class EchoAgent(Agent):
-    async def initialize(self, params: InitializeRequest) -&gt; InitializeResponse:
-        return InitializeResponse(protocolVersion=params.protocolVersion)
-
-    async def newSession(self, params: NewSessionRequest) -&gt; NewSessionResponse:
-        return NewSessionResponse(sessionId=&quot;sess-1&quot;)
-
-    async def loadSession(self, params: LoadSessionRequest) -&gt; None:
-        return None
-
-    async def authenticate(self, params: AuthenticateRequest) -&gt; None:
-        return None
-
-    async def prompt(self, params: PromptRequest) -&gt; PromptResponse:
-        # Normally you'd stream updates via sessionUpdate
+    def __init__(self, client: Client):
+        self.client = client
+    async def initialize(self, _p: InitializeRequest) -&gt; InitializeResponse:
+        return InitializeResponse(protocolVersion=PROTOCOL_VERSION)
+    async def prompt(self, p: PromptRequest) -&gt; PromptResponse:
+        await self.client.sessionUpdate(SessionNotification(
+            sessionId=p.sessionId,
+            update=SessionUpdate2(
+                sessionUpdate=&quot;agent_message_chunk&quot;,
+                content=ContentBlock1(type=&quot;text&quot;, text=&quot;Hello from ACP (Python)&quot;)
+            )
+        ))
         return PromptResponse(stopReason=&quot;end_turn&quot;)
-
-    async def cancel(self, params: CancelNotification) -&gt; None:
-        return None
-
 
 async def main() -&gt; None:
     reader, writer = await stdio_streams()
-    # For an agent process, local writes go to client stdin (writer=stdout)
-    AgentSideConnection(lambda _conn: EchoAgent(), writer, reader)
-    # Keep running; in a real agent you would await tasks or add your own loop
+    AgentSideConnection(lambda c: EchoAgent(c), writer, reader)
     await asyncio.Event().wait()
-
 
 if __name__ == &quot;__main__&quot;:
     asyncio.run(main())
 </code></pre>
-<p>Run this program from your ACP-capable client.</p>
-<h2 id="run-the-mini-swe-agent-bridge-in-zed">Run the Mini SWE Agent bridge in Zed<a class="headerlink" href="#run-the-mini-swe-agent-bridge-in-zed" title="Permanent link">&para;</a></h2>
-<p>Install <code>mini-swe-agent</code> (or at least its core dependencies) into the same environment that will run the example:</p>
-<pre><code class="language-bash">pip install mini-swe-agent
+<p>安装：</p>
+<pre><code class="language-bash">pip install agent-client-protocol
 </code></pre>
-<p>Add an agent server to Zed’s <code>settings.json</code>:</p>
+<hr />
+<h2 id="zed">在 Zed 中运行<a class="headerlink" href="#zed" title="Permanent link">&para;</a></h2>
+<p>在 Zed 的 settings.json 里增加一个自定义 Agent 服务（完整说明见官方文档：https://zed.dev/docs/ai/external-agents）：</p>
 <pre><code class="language-json">{
   &quot;agent_servers&quot;: {
-    &quot;Mini SWE Agent (Python)&quot;: {
+    &quot;Echo Agent (Python)&quot;: {
       &quot;command&quot;: &quot;/abs/path/to/python&quot;,
-      &quot;args&quot;: [
-        &quot;/abs/path/to/agent-client-protocol-python/examples/mini_swe_agent/agent.py&quot;
-      ],
-      &quot;env&quot;: {
-        &quot;MINI_SWE_MODEL&quot;: &quot;openrouter/openai/gpt-4o-mini&quot;,
-        &quot;MINI_SWE_MODEL_KWARGS&quot;: &quot;{\&quot;api_base\&quot;:\&quot;https://openrouter.ai/api/v1\&quot;}&quot;,
-        &quot;OPENROUTER_API_KEY&quot;: &quot;sk-or-...&quot;
-      }
+      &quot;args&quot;: [&quot;/abs/path/to/your_echo_agent.py&quot;],
+      &quot;env&quot;: {}
     }
   }
 }
 </code></pre>
-<p>In Zed, open the Agents panel and select "Mini SWE Agent (Python)".</p>
-<p>See <a href="../mini-swe-agent/">mini-swe-agent.md</a> for behavior and message mapping details.</p>
+<p>打开 Zed 的 Agents 面板，选择 “Echo Agent (Python)” 即可启动一条会话。Mini SWE Agent 的桥接示例也可以用同样方式运行（见下方链接）。</p>
+<hr />
+<h2 id="_4">和“传统集成”的不同<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一致性：编辑器与 Agent 的交互语义在协议中被精确定义，减少了“靠猜”的部分。</li>
+<li>可替换性：Agent 与编辑器可以独立演进、自由组合。</li>
+<li>可观测性：基于 JSON-RPC over stdio，抓包 / 日志 / 重放都很容易；Zed 也内置了 ACP 调试视图。</li>
+</ul>
+<hr />
+<h2 id="_5">我的做事原则<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<ul>
+<li>先跑起来，再优化：先把“请求 → 响应 → 流式更新 → 结束”这条回路打通；</li>
+<li>简单优先：优先选择本地守护（stdio）与最小依赖；</li>
+<li>可观测优先：日志与事件尽可能透明，方便复盘和定位；</li>
+<li>可替换：模型、后端、工具执行器都不固化；协议稳定、实现可换。</li>
+</ul>
+<hr />
+<h2 id="_6">上手与示例<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<ul>
+<li>SDK 文档与快速开始：https://psiace.github.io/agent-client-protocol-python</li>
+<li>Mini SWE Agent 桥接（含工具调用、流式输出、最终提交等典型交互）：见“Mini SWE Agent”一节</li>
+<li>ACP 官方协议文档：https://agentclientprotocol.com</li>
+</ul>
+<hr />
+<h2 id="_7">尾声<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>我欣赏“能把事情说清楚、也能把事情做成”的工程实践。ACP 让我们在“说清楚”这件事上迈了一步；Python SDK 则让“做成”更轻一点。欢迎你把自己的 Agent 先接起来，跑一遍，看看它在编辑器里的真实表现，再谈优化与花活。</p>
+<p>如果你已经有一个 Python 项目的 Agent 内核，通常只需要把入口包上 <code>AgentSideConnection</code>，几分钟就能跑进 Zed。剩下的，就交给反馈回路与观察。</p>
 
 
 
