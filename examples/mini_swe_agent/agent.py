@@ -1,9 +1,11 @@
 import asyncio
 import os
+import re
 import sys
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
 from acp import (
     Agent,
@@ -23,13 +25,29 @@ from acp import (
 )
 from acp.schema import (
     ContentBlock1,
+    PermissionOption,
+    RequestPermissionRequest,
+    RequestPermissionResponse,
+    RequestPermissionOutcome1,
+    RequestPermissionOutcome2,
+    SessionUpdate1,
     SessionUpdate2,
+    SessionUpdate3,
     SessionUpdate4,
     SessionUpdate5,
     ToolCallContent1,
+    ToolCallUpdate,
 )
 
+
 # Lazily import mini-swe-agent to avoid hard dependency for users who don't need this example
+
+
+@dataclass
+class ACPAgentConfig:  # Extra controls layered on top of mini-swe-agent defaults
+    mode: Literal["confirm", "yolo", "human"] = "confirm"
+    whitelist_actions: list[str] = field(default_factory=list)
+    confirm_exit: bool = True
 
 
 def _create_streaming_mini_agent(
@@ -40,6 +58,7 @@ def _create_streaming_mini_agent(
     model_name: str,
     model_kwargs: dict[str, Any],
     loop: asyncio.AbstractEventLoop,
+    ext_config: ACPAgentConfig,
 ):
     """Create a DefaultAgent that emits ACP session/update events during execution.
 
@@ -52,6 +71,7 @@ def _create_streaming_mini_agent(
                 NonTerminatingException,
                 Submitted,
                 LimitsExceeded,
+                AgentConfig as _BaseCfg,
             )  # type: ignore
             from minisweagent.environments.local import LocalEnvironment  # type: ignore
             from minisweagent.models.litellm_model import LitellmModel  # type: ignore
@@ -66,6 +86,7 @@ def _create_streaming_mini_agent(
                     NonTerminatingException,
                     Submitted,
                     LimitsExceeded,
+                    AgentConfig as _BaseCfg,
                 )  # type: ignore
                 from minisweagent.environments.local import LocalEnvironment  # type: ignore
                 from minisweagent.models.litellm_model import LitellmModel  # type: ignore
@@ -84,76 +105,133 @@ def _create_streaming_mini_agent(
                 self._LimitsExceeded = LimitsExceeded
                 model = LitellmModel(model_name=model_name, model_kwargs=model_kwargs)
                 env = LocalEnvironment(cwd=cwd)
-                super().__init__(model=model, env=env)
+                super().__init__(model=model, env=env, config_class=_BaseCfg)
+                # extra config
+                self.acp_config = ext_config
+                # During initial seeding (system/user templates), suppress updates
+                self._emit_updates = False
+
+            # --- ACP streaming helpers ---
 
             def _schedule(self, coro):
                 import asyncio as _asyncio
 
-                _asyncio.run_coroutine_threadsafe(coro, self._loop)
+                return _asyncio.run_coroutine_threadsafe(coro, self._loop)
 
             async def _send(self, update_model) -> None:
                 await self._acp_client.sessionUpdate(
                     SessionNotification(sessionId=self._session_id, update=update_model)
                 )
 
-            async def on_tool_start(self, title: str, command: str, tool_call_id: str) -> None:
-                update = SessionUpdate4(
-                    sessionUpdate="tool_call",
-                    toolCallId=tool_call_id,
-                    title=title,
-                    kind="execute",
-                    status="pending",
-                    content=[
-                        ToolCallContent1(
-                            type="content",
-                            content=ContentBlock1(type="text", text=f"```bash\n{command}\n```"),
-                        )
-                    ],
-                    rawInput={"command": command},
+            def _send_cost_hint(self) -> None:
+                try:
+                    cost = float(getattr(self.model, "cost", 0.0))
+                except Exception:
+                    cost = 0.0
+                hint = SessionUpdate3(
+                    sessionUpdate="agent_thought_chunk",
+                    content=ContentBlock1(type="text", text=f"__COST__:{cost:.2f}"),
                 )
-                await self._send(update)
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(self._send(hint))
+                except RuntimeError:
+                    self._schedule(self._send(hint))
 
-            async def on_tool_complete(
-                self,
-                tool_call_id: str,
-                output: str,
-                returncode: int,
-                *,
-                status: str = "completed",
-            ) -> None:
-                update = SessionUpdate5(
-                    sessionUpdate="tool_call_update",
-                    toolCallId=tool_call_id,
-                    status=status,
-                    content=[
-                        ToolCallContent1(
-                            type="content",
-                            content=ContentBlock1(type="text", text=output),
-                        )
+            def add_message(self, role: str, content: str, **kwargs):
+                super().add_message(role, content, **kwargs)
+                # Only the client should send user_message_chunk. The agent reports its own text via agent_message_chunk.
+                if not getattr(self, "_emit_updates", True):
+                    return
+                # Avoid duplicating tool outputs as a separate "Observation" agent message; rely on tool_call_update
+                text = str(content)
+                if role == "user" and text.strip().startswith("Observation:"):
+                    return
+                block = ContentBlock1(type="text", text=text)
+                update = SessionUpdate2(sessionUpdate="agent_message_chunk", content=block)
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(self._send(update))
+                except RuntimeError:
+                    self._schedule(self._send(update))
+                # Fire-and-forget
+
+            def _confirm_action_sync(self, tool_call_id: str, command: str) -> bool:
+                # Build request and block until client responds
+                req = RequestPermissionRequest(
+                    sessionId=self._session_id,
+                    options=[
+                        PermissionOption(optionId="allow-once", name="Allow once", kind="allow_once"),
+                        PermissionOption(optionId="reject-once", name="Reject", kind="reject_once"),
                     ],
-                    rawOutput={"output": output, "returncode": returncode},
+                    toolCall=ToolCallUpdate(
+                        toolCallId=tool_call_id,
+                        title="bash",
+                        kind="execute",
+                        status="pending",
+                        content=[
+                            ToolCallContent1(
+                                type="content",
+                                content=ContentBlock1(type="text", text=f"```bash\n{command}\n```"),
+                            )
+                        ],
+                        rawInput={"command": command},
+                    ),
                 )
-                await self._send(update)
+                fut = self._schedule(self._acp_client.requestPermission(req))
+                try:
+                    resp: RequestPermissionResponse = fut.result()  # type: ignore[assignment]
+                except Exception:
+                    return False
+                out = resp.outcome
+                if isinstance(out, RequestPermissionOutcome2) and out.optionId in ("allow-once", "allow-always"):
+                    return True
+                return False
 
             def execute_action(self, action: dict) -> dict:  # type: ignore[override]
                 self._tool_seq += 1
                 tool_id = f"mini-bash-{self._tool_seq}-{uuid.uuid4().hex[:8]}"
                 command = action.get("action", "")
+
+                # Always create tool_call first (pending)
                 self._schedule(self.on_tool_start("bash", command, tool_id))
+
+                # Request permission unless whitelisted
+                if command.strip() and not any(re.match(r, command) for r in self.acp_config.whitelist_actions):
+                    allowed = self._confirm_action_sync(tool_id, command)
+                    if not allowed:
+                        # Mark as cancelled/failed accordingly and abort this step
+                        self._schedule(
+                            self.on_tool_complete(
+                                tool_id,
+                                "Permission denied by user",
+                                0,
+                                status="cancelled",
+                            )
+                        )
+                        raise self._NonTerminatingException("Command not executed: denied by user")
+
                 try:
+                    # Mark in progress
+                    self._schedule(
+                        self._send(
+                            SessionUpdate5(
+                                sessionUpdate="tool_call_update",
+                                toolCallId=tool_id,
+                                status="in_progress",
+                            )
+                        )
+                    )
                     result = super().execute_action(action)
                     output = result.get("output", "")
                     returncode = int(result.get("returncode", 0) or 0)
                     self._schedule(self.on_tool_complete(tool_id, output, returncode, status="completed"))
                     return result
-                except Submitted as e:
-                    # Finished successfully; e contains the final output without the marker line
+                except self._Submitted as e:  # type: ignore[misc]
                     final_text = str(e)
                     self._schedule(self.on_tool_complete(tool_id, final_text, 0, status="completed"))
                     raise
-                except NonTerminatingException as e:
-                    # Non-terminating cases: timeouts or user-driven re-plans in interactive flows.
-                    # Map likely user cancellations to a softer status for better UX.
+                except self._NonTerminatingException as e:  # type: ignore[misc]
                     msg = str(e)
                     status = (
                         "cancelled"
@@ -201,68 +279,94 @@ class MiniSweACPAgent(Agent):
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
         session_id = f"sess-{uuid.uuid4().hex[:12]}"
+        # load config from env for whitelist & confirm_exit
+        cfg = ACPAgentConfig()
+        try:
+            import json as _json
+
+            wl = os.getenv("MINI_SWE_WHITELIST", "[]")
+            cfg.whitelist_actions = list(_json.loads(wl)) if wl else []  # type: ignore[assignment]
+        except Exception:
+            pass
+        ce = os.getenv("MINI_SWE_CONFIRM_EXIT")
+        if ce is not None:
+            cfg.confirm_exit = ce.lower() not in ("0", "false", "no")
         self._sessions[session_id] = {
             "cwd": params.cwd,
             "agent": None,
+            "task": None,
+            "config": cfg,
         }
         return NewSessionResponse(sessionId=session_id)
 
     async def loadSession(self, params) -> None:  # type: ignore[override]
-        # Update/initialize session storage for externally provided sessionId
         try:
             session_id = params.sessionId  # type: ignore[attr-defined]
             cwd = params.cwd  # type: ignore[attr-defined]
         except Exception:
             session_id = getattr(params, "sessionId", "sess-unknown")
             cwd = getattr(params, "cwd", os.getcwd())
-        self._sessions.setdefault(session_id, {"cwd": cwd, "agent": None})
+        if session_id not in self._sessions:
+            cfg = ACPAgentConfig()
+            try:
+                import json as _json
+
+                wl = os.getenv("MINI_SWE_WHITELIST", "[]")
+                cfg.whitelist_actions = list(_json.loads(wl)) if wl else []  # type: ignore[assignment]
+            except Exception:
+                pass
+            ce = os.getenv("MINI_SWE_CONFIRM_EXIT")
+            if ce is not None:
+                cfg.confirm_exit = ce.lower() not in ("0", "false", "no")
+            self._sessions[session_id] = {"cwd": cwd, "agent": None, "task": None, "config": cfg}
         return None
 
     async def authenticate(self, _params: AuthenticateRequest) -> None:
-        # mini-swe-agent reads credentials from environment (e.g., OpenAI/OpenRouter)
+        return None
+
+    def _extract_mode_from_blocks(self, blocks) -> Literal["confirm", "yolo", "human"] | None:
+        for b in blocks:
+            if getattr(b, "type", None) == "text":
+                t = getattr(b, "text", "") or ""
+                m = re.search(r"\[\[MODE:([a-zA-Z]+)\]\]", t)
+                if m:
+                    mode = m.group(1).lower()
+                    if mode in ("confirm", "yolo", "human"):
+                        return mode  # type: ignore[return-value]
+        return None
+
+    def _extract_code_from_blocks(self, blocks) -> str | None:
+        for b in blocks:
+            if getattr(b, "type", None) == "text":
+                t = getattr(b, "text", "") or ""
+                actions = re.findall(r"```bash\n(.*?)\n```", t, re.DOTALL)
+                if actions:
+                    return actions[0].strip()
         return None
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         sess = self._sessions.get(params.sessionId)
         if not sess:
-            # Create a volatile session if missing
-            self._sessions[params.sessionId] = {"cwd": os.getcwd(), "agent": None}
+            self._sessions[params.sessionId] = {
+                "cwd": os.getcwd(),
+                "agent": None,
+                "task": None,
+                "config": ACPAgentConfig(),
+            }
             sess = self._sessions[params.sessionId]
 
-        # Build the task string from content blocks
-        task_parts: list[str] = []
-        for block in params.prompt:
-            btype = getattr(block, "type", None)
-            if btype == "text":
-                text = getattr(block, "text", "")
-                if text:
-                    task_parts.append(str(text))
-            elif btype in ("resource", "resource_link"):
-                # Represent referenced resources as hints
-                uri = None
-                if btype == "resource_link":
-                    uri = getattr(block, "uri", None)
-                else:  # resource with embedded contents
-                    res = getattr(block, "resource", None)
-                    uri = getattr(res, "uri", None)
-                if uri:
-                    task_parts.append(f"\nReference: {uri}\n")
-        task = "".join(task_parts).strip() or "Help me with the current repository."
-
-        # Create the backing mini-swe-agent on first use per session
+        # Init or reuse agent
         agent = sess.get("agent")
         if agent is None:
             model_name = os.getenv("MINI_SWE_MODEL", os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
-            model_kwargs_env = os.getenv("MINI_SWE_MODEL_KWARGS", "{}")
             try:
                 import json
 
-                model_kwargs = json.loads(model_kwargs_env)
+                model_kwargs = json.loads(os.getenv("MINI_SWE_MODEL_KWARGS", "{}"))
                 if not isinstance(model_kwargs, dict):
                     model_kwargs = {}
             except Exception:
                 model_kwargs = {}
-
             loop = asyncio.get_running_loop()
             agent, err = _create_streaming_mini_agent(
                 client=self._client,
@@ -271,6 +375,7 @@ class MiniSweACPAgent(Agent):
                 model_name=model_name,
                 model_kwargs=model_kwargs,
                 loop=loop,
+                ext_config=sess["config"],
             )
             if err:
                 await self._client.sessionUpdate(
@@ -292,74 +397,100 @@ class MiniSweACPAgent(Agent):
                 return PromptResponse(stopReason="end_turn")
             sess["agent"] = agent
 
-        # Initialize the mini-swe-agent conversation like DefaultAgent.run does
-        agent.extra_template_vars |= {"task": task}
-        agent.messages = []
-        agent.add_message("system", agent.render_template(agent.config.system_template))
-        agent.add_message("user", agent.render_template(agent.config.instance_template))
+        # Mode is controlled entirely client-side via requestPermission behavior; no control blocks are parsed.
 
-        # Immediate UX feedback
-        await self._client.sessionUpdate(
-            SessionNotification(
-                sessionId=params.sessionId,
-                update=SessionUpdate2(
-                    sessionUpdate="agent_message_chunk",
-                    content=ContentBlock1(
-                        type="text",
-                        text=f"Starting mini-swe-agent…\nTask: {task[:200]}",
-                    ),
-                ),
-            )
-        )
+        # Initialize conversation on first task
+        if not sess.get("task"):
+            # Build task
+            task_parts: list[str] = []
+            for block in params.prompt:
+                btype = getattr(block, "type", None)
+                if btype == "text":
+                    text = getattr(block, "text", "")
+                    if text and not text.strip().startswith("[[MODE:"):
+                        task_parts.append(str(text))
+            task = "\n".join(task_parts).strip() or "Help me with the current repository."
+            sess["task"] = task
+            agent.extra_template_vars |= {"task": task}
+            agent.messages = []
+            # Seed templates without emitting updates
+            agent._emit_updates = False  # type: ignore[attr-defined]
+            agent.add_message("system", agent.render_template(agent.config.system_template))
+            agent.add_message("user", agent.render_template(agent.config.instance_template))
+            agent._emit_updates = True  # type: ignore[attr-defined]
 
-        # Step until completion, surfacing updates
-        final_message = ""
-        SubmittedT = getattr(agent, "_Submitted", Exception)
-        NonTerminatingT = getattr(agent, "_NonTerminatingException", Exception)
-        LimitsExceededT = getattr(agent, "_LimitsExceeded", Exception)
+        # Decide the source of the next action
+        try:
+            if sess["config"].mode == "human":
+                # Expect a bash command from the client
+                cmd = self._extract_code_from_blocks(params.prompt)
+                if not cmd:
+                    # Ask user to provide a command and return
+                    await self._client.sessionUpdate(
+                        SessionNotification(
+                            sessionId=params.sessionId,
+                            update=SessionUpdate2(
+                                sessionUpdate="agent_message_chunk",
+                                content=ContentBlock1(type="text", text="Human mode: please submit a bash command."),
+                            ),
+                        )
+                    )
+                    return PromptResponse(stopReason="end_turn")
+                # Fabricate assistant message with the command
+                msg_content = f"\n```bash\n{cmd}\n```"
+                agent.add_message("assistant", msg_content)
+                response = {"content": msg_content}
+            else:
+                # Query the model in a worker thread to keep the event loop free
+                response = await asyncio.to_thread(agent.query)
+                # Send cost hint after each model call
+                try:
+                    agent._send_cost_hint()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
 
-        while True:
-            try:
-                await asyncio.to_thread(agent.step)
-            except NonTerminatingT as e:  # type: ignore[misc]
-                # Feed observation back into the agent state and show to user
-                note = str(e)
-                agent.add_message("user", note)
+            # Execute and record observation in worker thread
+            await asyncio.to_thread(agent.get_observation, response)
+        except getattr(agent, "_NonTerminatingException") as e:  # type: ignore[misc]
+            agent.add_message("user", str(e))
+        except getattr(agent, "_Submitted") as e:  # type: ignore[misc]
+            final_message = str(e)
+            agent.add_message("user", final_message)
+            # Ask for confirmation / new task if configured
+            if sess["config"].confirm_exit:
                 await self._client.sessionUpdate(
                     SessionNotification(
                         sessionId=params.sessionId,
                         update=SessionUpdate2(
                             sessionUpdate="agent_message_chunk",
-                            content=ContentBlock1(type="text", text=note),
+                            content=ContentBlock1(
+                                type="text",
+                                text=(
+                                    "Agent finished. Type a new task in the next message to continue, or do nothing to end."
+                                ),
+                            ),
                         ),
                     )
                 )
-                continue
-            except SubmittedT as e:  # type: ignore[misc]
-                final_message = str(e)
-                # Mirror what DefaultAgent.run does for completion bookkeeping
-                agent.add_message("user", final_message)
-                break
-            except LimitsExceededT as e:  # type: ignore[misc]
-                final_message = f"Limits exceeded: {e}"
-                agent.add_message("user", final_message)
-                break
-
-        # Send the final result text to the client
-        await self._client.sessionUpdate(
-            SessionNotification(
-                sessionId=params.sessionId,
-                update=SessionUpdate2(
-                    sessionUpdate="agent_message_chunk",
-                    content=ContentBlock1(type="text", text=final_message or "(no final output)"),
-                ),
+                # Reset task so that next prompt can set a new one
+                sess["task"] = None
+        except getattr(agent, "_LimitsExceeded") as e:  # type: ignore[misc]
+            agent.add_message("user", f"Limits exceeded: {e}")
+        except Exception as e:
+            # Surface unexpected errors to the client to avoid silent waits
+            await self._client.sessionUpdate(
+                SessionNotification(
+                    sessionId=params.sessionId,
+                    update=SessionUpdate2(
+                        sessionUpdate="agent_message_chunk",
+                        content=ContentBlock1(type="text", text=f"Error while processing: {e}"),
+                    ),
+                )
             )
-        )
 
         return PromptResponse(stopReason="end_turn")
 
     async def cancel(self, _params: CancelNotification) -> None:
-        # DefaultAgent is synchronous per step; nothing to cancel mid-step here
         return None
 
 
