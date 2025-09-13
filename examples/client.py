@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+from typing import Optional
 
 from acp import (
     Client,
@@ -9,64 +10,66 @@ from acp import (
     InitializeRequest,
     NewSessionRequest,
     PromptRequest,
-    ReadTextFileRequest,
-    ReadTextFileResponse,
-    RequestPermissionRequest,
-    RequestPermissionResponse,
     SessionNotification,
-    WriteTextFileRequest,
-    stdio_streams,
 )
 
 
-class MinimalClient(Client):
-    async def writeTextFile(self, params: WriteTextFileRequest) -> None:
-        print(f"write {params.path}", file=sys.stderr)
-
-    async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse:
-        return ReadTextFileResponse(content="example")
-
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
-        return RequestPermissionResponse.model_validate({"outcome": {"outcome": "selected", "optionId": "allow"}})
-
+class ExampleClient(Client):
     async def sessionUpdate(self, params: SessionNotification) -> None:
-        print(f"session update: {params}", file=sys.stderr)
-
-    # Optional terminal methods (not implemented in this minimal client)
-    async def createTerminal(self, params) -> None:
-        pass
-
-    async def terminalOutput(self, params) -> None:
-        pass
-
-    async def releaseTerminal(self, params) -> None:
-        pass
-
-    async def waitForTerminalExit(self, params) -> None:
-        pass
-
-    async def killTerminal(self, params) -> None:
-        pass
+        update = params.update
+        kind = getattr(update, "sessionUpdate", None) if not isinstance(update, dict) else update.get("sessionUpdate")
+        if kind == "agent_message_chunk":
+            # Handle both dict and model shapes
+            content = update["content"] if isinstance(update, dict) else getattr(update, "content", None)
+            text = content.get("text") if isinstance(content, dict) else getattr(content, "text", "<content>")
+            print(f"| Agent: {text}")
 
 
-async def main() -> None:
-    reader, writer = await stdio_streams()
-    client_conn = ClientSideConnection(lambda _agent: MinimalClient(), writer, reader)
-    # 1) initialize
-    resp = await client_conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION))
-    print(f"Initialized with protocol version: {resp.protocolVersion}", file=sys.stderr)
-    # 2) new session
-    new_sess = await client_conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
-    # 3) prompt
-    await client_conn.prompt(
-        PromptRequest(
-            sessionId=new_sess.sessionId,
-            prompt=[{"type": "text", "text": "Hello from client"}],
-        )
+async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
+    loop = asyncio.get_running_loop()
+    while True:
+        try:
+            line = await loop.run_in_executor(None, lambda: input("> "))
+        except EOFError:
+            break
+        if not line:
+            continue
+        try:
+            await conn.prompt(PromptRequest(sessionId=session_id, prompt=[{"type": "text", "text": line}]))
+        except Exception as e:  # noqa: BLE001
+            print(f"error: {e}", file=sys.stderr)
+
+
+async def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print("Usage: python examples/client.py AGENT_PROGRAM [ARGS...]", file=sys.stderr)
+        return 2
+
+    # Spawn agent subprocess
+    proc = await asyncio.create_subprocess_exec(
+        sys.executable,
+        *argv[1:],
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
     )
-    # Small grace period to allow duplex messages to flush
-    await asyncio.sleep(0.2)
+    assert proc.stdin and proc.stdout
+
+    # Connect to agent stdio
+    conn = ClientSideConnection(lambda _agent: ExampleClient(), proc.stdin, proc.stdout)
+
+    # Initialize and create session
+    await conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION, clientCapabilities=None))
+    new_sess = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
+
+    # Run REPL until EOF
+    await interactive_loop(conn, new_sess.sessionId)
+
+    try:
+        proc.terminate()
+    except ProcessLookupError:
+        pass
+    return 0
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    raise SystemExit(asyncio.run(main(sys.argv)))
