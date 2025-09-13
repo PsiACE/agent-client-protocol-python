@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import json
 
 import pytest
 
@@ -21,6 +22,7 @@ from acp import (
     RequestPermissionRequest,
     RequestPermissionResponse,
     SessionNotification,
+    SetSessionModeRequest,
     WriteTextFileRequest,
 )
 from acp.schema import ContentBlock1, SessionUpdate1, SessionUpdate2
@@ -78,6 +80,8 @@ class TestClient(Client):
         self.permission_outcomes: list[dict] = []
         self.files: dict[str, str] = {}
         self.notifications: list[SessionNotification] = []
+        self.ext_calls: list[tuple[str, dict]] = []
+        self.ext_notes: list[tuple[str, dict]] = []
 
     async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
         outcome = self.permission_outcomes.pop() if self.permission_outcomes else {"outcome": "cancelled"}
@@ -94,20 +98,27 @@ class TestClient(Client):
         self.notifications.append(params)
 
     # Optional terminal methods (not implemented in this test client)
-    async def createTerminal(self, params) -> None:
+    async def createTerminal(self, params) -> None:  # pragma: no cover - placeholder
         pass
 
-    async def terminalOutput(self, params) -> None:
+    async def terminalOutput(self, params) -> None:  # pragma: no cover - placeholder
         pass
 
-    async def releaseTerminal(self, params) -> None:
+    async def releaseTerminal(self, params) -> None:  # pragma: no cover - placeholder
         pass
 
-    async def waitForTerminalExit(self, params) -> None:
+    async def waitForTerminalExit(self, params) -> None:  # pragma: no cover - placeholder
         pass
 
-    async def killTerminal(self, params) -> None:
+    async def killTerminal(self, params) -> None:  # pragma: no cover - placeholder
         pass
+
+    async def extMethod(self, method: str, params: dict) -> dict:
+        self.ext_calls.append((method, params))
+        return {"ok": True, "method": method}
+
+    async def extNotification(self, method: str, params: dict) -> None:
+        self.ext_notes.append((method, params))
 
 
 class TestAgent(Agent):
@@ -116,6 +127,8 @@ class TestAgent(Agent):
     def __init__(self) -> None:
         self.prompts: list[PromptRequest] = []
         self.cancellations: list[str] = []
+        self.ext_calls: list[tuple[str, dict]] = []
+        self.ext_notes: list[tuple[str, dict]] = []
 
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:
         # Avoid serializer warnings by omitting defaults
@@ -136,6 +149,16 @@ class TestAgent(Agent):
 
     async def cancel(self, params: CancelNotification) -> None:
         self.cancellations.append(params.sessionId)
+
+    async def setSessionMode(self, params):
+        return {}
+
+    async def extMethod(self, method: str, params: dict) -> dict:
+        self.ext_calls.append((method, params))
+        return {"ok": True, "method": method}
+
+    async def extNotification(self, method: str, params: dict) -> None:
+        self.ext_notes.append((method, params))
 
 
 # ------------------------ Tests --------------------------
@@ -252,3 +275,84 @@ async def test_concurrent_reads():
         results = await asyncio.gather(*(read_one(i) for i in range(5)))
         for i, res in enumerate(results):
             assert res.content == f"Content {i}"
+
+
+@pytest.mark.asyncio
+async def test_invalid_params_results_in_error_response():
+    async with _Server() as s:
+        # Only start agent-side (server) so we can inject raw request from client socket
+        agent = TestAgent()
+        _server_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
+
+        # Send initialize with wrong param type (protocolVersion should be int)
+        req = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "oops"}}
+        s.client_writer.write((json.dumps(req) + "\n").encode())
+        await s.client_writer.drain()
+
+        # Read response
+        line = await asyncio.wait_for(s.client_reader.readline(), timeout=1)
+        resp = json.loads(line)
+        assert resp["id"] == 1
+        assert "error" in resp
+        assert resp["error"]["code"] == -32602  # invalid params
+
+
+@pytest.mark.asyncio
+async def test_method_not_found_results_in_error_response():
+    async with _Server() as s:
+        agent = TestAgent()
+        _server_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
+
+        req = {"jsonrpc": "2.0", "id": 2, "method": "unknown/method", "params": {}}
+        s.client_writer.write((json.dumps(req) + "\n").encode())
+        await s.client_writer.drain()
+
+        line = await asyncio.wait_for(s.client_reader.readline(), timeout=1)
+        resp = json.loads(line)
+        assert resp["id"] == 2
+        assert resp["error"]["code"] == -32601  # method not found
+
+
+@pytest.mark.asyncio
+async def test_set_session_mode_and_extensions():
+    async with _Server() as s:
+        agent = TestAgent()
+        client = TestClient()
+        agent_conn = ClientSideConnection(lambda _conn: client, s.client_writer, s.client_reader)
+        _client_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
+
+        # setSessionMode
+        resp = await agent_conn.setSessionMode(SetSessionModeRequest(sessionId="sess", modeId="yolo"))
+        # Either empty object or typed response depending on implementation
+        assert resp is None or resp.__class__.__name__ == "SetSessionModeResponse"
+
+        # extMethod
+        res = await agent_conn.extMethod("ping", {"x": 1})
+        assert res.get("ok") is True
+
+        # extNotification
+        await agent_conn.extNotification("note", {"y": 2})
+        # allow dispatch
+        await asyncio.sleep(0.05)
+        assert agent.ext_notes and agent.ext_notes[-1][0] == "note"
+
+
+@pytest.mark.asyncio
+async def test_ignore_invalid_messages():
+    async with _Server() as s:
+        agent = TestAgent()
+        _server_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
+
+        # Message without id and method
+        msg1 = {"jsonrpc": "2.0"}
+        s.client_writer.write((json.dumps(msg1) + "\n").encode())
+        await s.client_writer.drain()
+
+        # Message without jsonrpc and without id/method
+        msg2 = {"foo": "bar"}
+        s.client_writer.write((json.dumps(msg2) + "\n").encode())
+        await s.client_writer.drain()
+
+        # Should not receive any response lines
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(s.client_reader.readline(), timeout=0.1)

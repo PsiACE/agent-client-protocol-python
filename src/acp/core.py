@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -12,9 +13,14 @@ from pydantic import BaseModel, ValidationError
 from .meta import AGENT_METHODS, CLIENT_METHODS, PROTOCOL_VERSION  # noqa: F401
 from .schema import (
     AuthenticateRequest,
+    AuthenticateResponse,
     CancelNotification,
+    CreateTerminalRequest,
+    CreateTerminalResponse,
     InitializeRequest,
     InitializeResponse,
+    KillTerminalCommandRequest,
+    KillTerminalCommandResponse,
     LoadSessionRequest,
     NewSessionRequest,
     NewSessionResponse,
@@ -22,10 +28,19 @@ from .schema import (
     PromptResponse,
     ReadTextFileRequest,
     ReadTextFileResponse,
+    ReleaseTerminalRequest,
+    ReleaseTerminalResponse,
     RequestPermissionRequest,
     RequestPermissionResponse,
     SessionNotification,
+    SetSessionModeRequest,
+    SetSessionModeResponse,
+    TerminalOutputRequest,
+    TerminalOutputResponse,
+    WaitForTerminalExitRequest,
+    WaitForTerminalExitResponse,
     WriteTextFileRequest,
+    WriteTextFileResponse,
 )
 
 # --- JSON-RPC 2.0 error helpers -------------------------------------------------
@@ -71,7 +86,8 @@ class RequestError(Exception):
 # --- Transport & Connection ------------------------------------------------------
 
 JsonValue = Any
-MethodHandler = Callable[[str, JsonValue | None], Awaitable[JsonValue | None]]
+MethodHandler = Callable[[str, JsonValue | None, bool], Awaitable[JsonValue | None]]
+_NO_MATCH = object()
 
 
 @dataclass(slots=True)
@@ -121,19 +137,8 @@ class Connection:
                 try:
                     message = json.loads(line)
                 except Exception:
-                    # No id to reply to -> ignore; with id -> send parse error
-                    # Try to peek id; if not possible, skip
-                    try:
-                        maybe = json.loads(line.decode("utf-8", errors="ignore"))
-                        msg_id = maybe.get("id") if isinstance(maybe, dict) else None
-                    except Exception:
-                        msg_id = None
-                    if msg_id is not None:
-                        await self._send_obj({
-                            "jsonrpc": "2.0",
-                            "id": msg_id,
-                            "error": RequestError.parse_error().to_error_obj(),
-                        })
+                    # Align with Rust/TS: on parse error, do not send a response; just skip
+                    logging.exception("Error parsing JSON-RPC message")
                     continue
 
                 await self._process_message(message)
@@ -155,7 +160,7 @@ class Connection:
         """Handle JSON-RPC request."""
         payload = {"jsonrpc": "2.0", "id": message["id"]}
         try:
-            result = await self._handler(message["method"], message.get("params"))
+            result = await self._handler(message["method"], message.get("params"), False)
             if isinstance(result, BaseModel):
                 result = result.model_dump()
             payload["result"] = result if result is not None else None
@@ -175,7 +180,7 @@ class Connection:
         """Handle JSON-RPC notification."""
         with contextlib.suppress(Exception):
             # Best-effort; notifications do not produce responses
-            await self._handler(message["method"], message.get("params"))
+            await self._handler(message["method"], message.get("params"), True)
 
     async def _handle_response(self, message: dict) -> None:
         """Handle JSON-RPC response."""
@@ -222,20 +227,25 @@ class Client(Protocol):
 
     async def sessionUpdate(self, params: SessionNotification) -> None: ...
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> None: ...
+    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse | None: ...
 
     async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse: ...
 
     # Optional/unstable terminal methods
-    async def createTerminal(self, params: Any) -> Any: ...
+    async def createTerminal(self, params: CreateTerminalRequest) -> CreateTerminalResponse: ...
 
-    async def terminalOutput(self, params: Any) -> Any: ...
+    async def terminalOutput(self, params: TerminalOutputRequest) -> TerminalOutputResponse: ...
 
-    async def releaseTerminal(self, params: Any) -> None: ...
+    async def releaseTerminal(self, params: ReleaseTerminalRequest) -> ReleaseTerminalResponse | None: ...
 
-    async def waitForTerminalExit(self, params: Any) -> Any: ...
+    async def waitForTerminalExit(self, params: WaitForTerminalExitRequest) -> WaitForTerminalExitResponse: ...
 
-    async def killTerminal(self, params: Any) -> None: ...
+    async def killTerminal(self, params: KillTerminalCommandRequest) -> KillTerminalCommandResponse | None: ...
+
+    # Extension hooks (optional)
+    async def extMethod(self, method: str, params: dict) -> dict: ...
+
+    async def extNotification(self, method: str, params: dict) -> None: ...
 
 
 class Agent(Protocol):
@@ -245,11 +255,18 @@ class Agent(Protocol):
 
     async def loadSession(self, params: LoadSessionRequest) -> None: ...
 
-    async def authenticate(self, params: AuthenticateRequest) -> None: ...
+    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None: ...
 
     async def prompt(self, params: PromptRequest) -> PromptResponse: ...
 
     async def cancel(self, params: CancelNotification) -> None: ...
+
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None: ...
+
+    # Extension hooks (optional)
+    async def extMethod(self, method: str, params: dict) -> dict: ...
+
+    async def extNotification(self, method: str, params: dict) -> None: ...
 
 
 class AgentSideConnection:
@@ -270,32 +287,86 @@ class AgentSideConnection:
     ) -> None:
         agent = to_agent(self)
 
-        async def handler(method: str, params: Any) -> Any:
-            if method == AGENT_METHODS["initialize"]:
-                p = InitializeRequest.model_validate(params)
-                return await agent.initialize(p)
-            if method == AGENT_METHODS["session_new"]:
-                p = NewSessionRequest.model_validate(params)
-                return await agent.newSession(p)
-            if method == AGENT_METHODS["session_load"]:
-                if not hasattr(agent, "loadSession"):
-                    raise RequestError.method_not_found(method)
-                p = LoadSessionRequest.model_validate(params)
-                return await agent.loadSession(p)
-            if method == AGENT_METHODS["authenticate"]:
-                p = AuthenticateRequest.model_validate(params)
-                return await agent.authenticate(p)
-            if method == AGENT_METHODS["session_prompt"]:
-                p = PromptRequest.model_validate(params)
-                return await agent.prompt(p)
-            if method == AGENT_METHODS["session_cancel"]:
-                p = CancelNotification.model_validate(params)
-                return await agent.cancel(p)
-            raise RequestError.method_not_found(method)
+        handler = self._create_agent_handler(agent)
 
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_AGENT_CONNECTION_ERROR)
         self._conn = Connection(handler, input_stream, output_stream)
+
+    def _create_agent_handler(self, agent: Agent) -> MethodHandler:
+        async def handler(method: str, params: Any, is_notification: bool) -> Any:
+            return await self._handle_agent_method(agent, method, params, is_notification)
+
+        return handler
+
+    async def _handle_agent_method(self, agent: Agent, method: str, params: Any, is_notification: bool) -> Any:
+        # Init/new
+        result = await self._handle_agent_init_methods(agent, method, params)
+        if result is not _NO_MATCH:
+            return result
+        # Session-related
+        result = await self._handle_agent_session_methods(agent, method, params)
+        if result is not _NO_MATCH:
+            return result
+        # Auth
+        result = await self._handle_agent_auth_methods(agent, method, params)
+        if result is not _NO_MATCH:
+            return result
+        # Extensions
+        result = await self._handle_agent_ext_methods(agent, method, params, is_notification)
+        if result is not _NO_MATCH:
+            return result
+        raise RequestError.method_not_found(method)
+
+    async def _handle_agent_init_methods(self, agent: Agent, method: str, params: Any) -> Any:
+        if method == AGENT_METHODS["initialize"]:
+            p = InitializeRequest.model_validate(params)
+            return await agent.initialize(p)
+        if method == AGENT_METHODS["session_new"]:
+            p = NewSessionRequest.model_validate(params)
+            return await agent.newSession(p)
+        return _NO_MATCH
+
+    async def _handle_agent_session_methods(self, agent: Agent, method: str, params: Any) -> Any:
+        if method == AGENT_METHODS["session_load"]:
+            if not hasattr(agent, "loadSession"):
+                raise RequestError.method_not_found(method)
+            p = LoadSessionRequest.model_validate(params)
+            return await agent.loadSession(p)
+        if method == AGENT_METHODS["session_set_mode"]:
+            if not hasattr(agent, "setSessionMode"):
+                raise RequestError.method_not_found(method)
+            p = SetSessionModeRequest.model_validate(params)
+            result = await agent.setSessionMode(p)
+            return result.model_dump() if isinstance(result, BaseModel) else (result or {})
+        if method == AGENT_METHODS["session_prompt"]:
+            p = PromptRequest.model_validate(params)
+            return await agent.prompt(p)
+        if method == AGENT_METHODS["session_cancel"]:
+            p = CancelNotification.model_validate(params)
+            return await agent.cancel(p)
+        return _NO_MATCH
+
+    async def _handle_agent_auth_methods(self, agent: Agent, method: str, params: Any) -> Any:
+        if method == AGENT_METHODS["authenticate"]:
+            p = AuthenticateRequest.model_validate(params)
+            result = await agent.authenticate(p)
+            return result.model_dump() if isinstance(result, BaseModel) else (result or {})
+        return _NO_MATCH
+
+    async def _handle_agent_ext_methods(self, agent: Agent, method: str, params: Any, is_notification: bool) -> Any:
+        if isinstance(method, str) and method.startswith("_"):
+            ext_name = method[1:]
+            if is_notification:
+                if hasattr(agent, "extNotification"):
+                    await agent.extNotification(ext_name, params or {})  # type: ignore[arg-type]
+                    return None
+                return None
+            else:
+                if hasattr(agent, "extMethod"):
+                    return await agent.extMethod(ext_name, params or {})  # type: ignore[arg-type]
+                return _NO_MATCH
+        return _NO_MATCH
 
     # client-bound methods (agent -> client)
     async def sessionUpdate(self, params: SessionNotification) -> None:
@@ -318,15 +389,27 @@ class AgentSideConnection:
         )
         return ReadTextFileResponse.model_validate(resp)
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> None:
-        await self._conn.send_request(
+    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse | None:
+        resp = await self._conn.send_request(
             CLIENT_METHODS["fs_write_text_file"],
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
+        # Response may be empty object
+        return WriteTextFileResponse.model_validate(resp) if isinstance(resp, dict) else None
 
-    async def createTerminal(self, params: Any) -> TerminalHandle:
-        resp = await self._conn.send_request(CLIENT_METHODS["terminal_create"], params)
-        return TerminalHandle(resp["terminalId"], params["sessionId"], self._conn)
+    async def createTerminal(self, params: CreateTerminalRequest) -> TerminalHandle:
+        resp = await self._conn.send_request(
+            CLIENT_METHODS["terminal_create"],
+            params.model_dump(exclude_none=True, exclude_defaults=True),
+        )
+        create_resp = CreateTerminalResponse.model_validate(resp)
+        return TerminalHandle(create_resp.terminalId, params.sessionId, self._conn)
+
+    async def extMethod(self, method: str, params: dict) -> dict:
+        return await self._conn.send_request(f"_{method}", params)
+
+    async def extNotification(self, method: str, params: dict) -> None:
+        await self._conn.send_notification(f"_{method}", params)
 
 
 class ClientSideConnection:
@@ -356,13 +439,28 @@ class ClientSideConnection:
     def _create_handler(self, client: Client) -> MethodHandler:
         """Create the method handler for client-side connection."""
 
-        async def handler(method: str, params: Any) -> Any:
-            return await self._handle_client_method(client, method, params)
+        async def handler(method: str, params: Any, is_notification: bool) -> Any:
+            return await self._handle_client_method(client, method, params, is_notification)
 
         return handler
 
-    async def _handle_client_method(self, client: Client, method: str, params: Any) -> Any:
+    async def _handle_client_method(self, client: Client, method: str, params: Any, is_notification: bool) -> Any:
         """Handle client method calls."""
+        # Core session/file methods
+        result = await self._handle_client_core_methods(client, method, params)
+        if result is not _NO_MATCH:
+            return result
+        # Terminal methods
+        result = await self._handle_client_terminal_methods(client, method, params)
+        if result is not _NO_MATCH:
+            return result
+        # Extension methods/notifications
+        result = await self._handle_client_extension_methods(client, method, params, is_notification)
+        if result is not _NO_MATCH:
+            return result
+        raise RequestError.method_not_found(method)
+
+    async def _handle_client_core_methods(self, client: Client, method: str, params: Any) -> Any:
         if method == CLIENT_METHODS["fs_write_text_file"]:
             p = WriteTextFileRequest.model_validate(params)
             return await client.writeTextFile(p)
@@ -375,17 +473,65 @@ class ClientSideConnection:
         if method == CLIENT_METHODS["session_update"]:
             p = SessionNotification.model_validate(params)
             return await client.sessionUpdate(p)
+        return _NO_MATCH
+
+    async def _handle_client_terminal_methods(self, client: Client, method: str, params: Any) -> Any:
+        result = await self._handle_client_terminal_basic(client, method, params)
+        if result is not _NO_MATCH:
+            return result
+        result = await self._handle_client_terminal_lifecycle(client, method, params)
+        if result is not _NO_MATCH:
+            return result
+        return _NO_MATCH
+
+    async def _handle_client_terminal_basic(self, client: Client, method: str, params: Any) -> Any:
         if method == CLIENT_METHODS["terminal_create"]:
-            return await client.createTerminal(params)
+            if hasattr(client, "createTerminal"):
+                p = CreateTerminalRequest.model_validate(params)
+                return await client.createTerminal(p)
+            return None  # TS returns null when optional method missing
         if method == CLIENT_METHODS["terminal_output"]:
-            return await client.terminalOutput(params)
+            if hasattr(client, "terminalOutput"):
+                p = TerminalOutputRequest.model_validate(params)
+                return await client.terminalOutput(p)
+            return None
+        return _NO_MATCH
+
+    async def _handle_client_terminal_lifecycle(self, client: Client, method: str, params: Any) -> Any:
         if method == CLIENT_METHODS["terminal_release"]:
-            return await client.releaseTerminal(params)
+            if hasattr(client, "releaseTerminal"):
+                p = ReleaseTerminalRequest.model_validate(params)
+                result = await client.releaseTerminal(p)
+                return result.model_dump() if isinstance(result, BaseModel) else (result or {})
+            return {}  # TS returns {} for void optional methods
         if method == CLIENT_METHODS["terminal_wait_for_exit"]:
-            return await client.waitForTerminalExit(params)
+            if hasattr(client, "waitForTerminalExit"):
+                p = WaitForTerminalExitRequest.model_validate(params)
+                return await client.waitForTerminalExit(p)
+            return None
         if method == CLIENT_METHODS["terminal_kill"]:
-            return await client.killTerminal(params)
-        raise RequestError.method_not_found(method)
+            if hasattr(client, "killTerminal"):
+                p = KillTerminalCommandRequest.model_validate(params)
+                result = await client.killTerminal(p)
+                return result.model_dump() if isinstance(result, BaseModel) else (result or {})
+            return {}  # TS returns {} for void optional methods
+        return _NO_MATCH
+
+    async def _handle_client_extension_methods(
+        self, client: Client, method: str, params: Any, is_notification: bool
+    ) -> Any:
+        if isinstance(method, str) and method.startswith("_"):
+            ext_name = method[1:]
+            if is_notification:
+                if hasattr(client, "extNotification"):
+                    await client.extNotification(ext_name, params or {})  # type: ignore[arg-type]
+                    return None
+                return None
+            else:
+                if hasattr(client, "extMethod"):
+                    return await client.extMethod(ext_name, params or {})  # type: ignore[arg-type]
+                return _NO_MATCH
+        return _NO_MATCH
 
     # agent-bound methods (client -> agent)
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:
@@ -408,11 +554,20 @@ class ClientSideConnection:
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
 
-    async def authenticate(self, params: AuthenticateRequest) -> None:
-        await self._conn.send_request(
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None:
+        resp = await self._conn.send_request(
+            AGENT_METHODS["session_set_mode"],
+            params.model_dump(exclude_none=True, exclude_defaults=True),
+        )
+        # May be empty object
+        return SetSessionModeResponse.model_validate(resp) if isinstance(resp, dict) else None
+
+    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:
+        resp = await self._conn.send_request(
             AGENT_METHODS["authenticate"],
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
+        return AuthenticateResponse.model_validate(resp) if isinstance(resp, dict) else None
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         resp = await self._conn.send_request(
@@ -427,6 +582,12 @@ class ClientSideConnection:
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
 
+    async def extMethod(self, method: str, params: dict) -> dict:
+        return await self._conn.send_request(f"_{method}", params)
+
+    async def extNotification(self, method: str, params: dict) -> None:
+        await self._conn.send_notification(f"_{method}", params)
+
 
 class TerminalHandle:
     def __init__(self, terminal_id: str, session_id: str, conn: Connection) -> None:
@@ -434,26 +595,30 @@ class TerminalHandle:
         self._session_id = session_id
         self._conn = conn
 
-    async def current_output(self) -> dict:
-        return await self._conn.send_request(
+    async def current_output(self) -> TerminalOutputResponse:
+        resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_output"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
+        return TerminalOutputResponse.model_validate(resp)
 
-    async def wait_for_exit(self) -> dict:
-        return await self._conn.send_request(
+    async def wait_for_exit(self) -> WaitForTerminalExitResponse:
+        resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_wait_for_exit"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
+        return WaitForTerminalExitResponse.model_validate(resp)
 
-    async def kill(self) -> None:
-        await self._conn.send_request(
+    async def kill(self) -> KillTerminalCommandResponse | None:
+        resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_kill"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
+        return KillTerminalCommandResponse.model_validate(resp) if isinstance(resp, dict) else None
 
-    async def release(self) -> None:
-        await self._conn.send_request(
+    async def release(self) -> ReleaseTerminalResponse | None:
+        resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_release"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
+        return ReleaseTerminalResponse.model_validate(resp) if isinstance(resp, dict) else None
