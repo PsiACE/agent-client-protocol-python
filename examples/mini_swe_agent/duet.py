@@ -1,50 +1,67 @@
 import asyncio
 import contextlib
 import os
-import signal
 import sys
 from pathlib import Path
 
 
-async def _relay(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, tag: str):
-    try:
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
-            writer.write(line)
-            try:
-                await writer.drain()
-            except ConnectionError:
-                break
-            # Mirror minimal logs for visibility
-            sys.stderr.write(f"[{tag}] {line.decode('utf-8', errors='replace')}")
-            sys.stderr.flush()
-    finally:
-        try:
-            writer.close()
-            await writer.wait_closed()
-        except Exception:
-            pass
-
-
 async def main() -> None:
-    # Launch the Textual client only; it will spawn the agent as a child and connect to it via pipes.
+    # Launch agent and client, wiring a dedicated pipe pair for ACP protocol.
+    # Client keeps its own stdin/stdout for the Textual UI.
     root = Path(__file__).resolve().parent
+    agent_path = str(root / "agent.py")
     client_path = str(root / "client.py")
 
-    env = os.environ.copy()
+    # Load .env into process env so children inherit it (prefer python-dotenv if available)
+    try:
+        from dotenv import load_dotenv  # type: ignore
+
+        load_dotenv(dotenv_path=str(root.parents[2] / ".env"), override=True)
+    except Exception:
+        pass
+
+    base_env = os.environ.copy()
     src_dir = str((root.parents[1] / "src").resolve())
-    env["PYTHONPATH"] = src_dir + os.pathsep + env.get("PYTHONPATH", "")
+    base_env["PYTHONPATH"] = src_dir + os.pathsep + base_env.get("PYTHONPATH", "")
+
+    # Create two pipes: agent->client and client->agent
+    a2c_r, a2c_w = os.pipe()
+    c2a_r, c2a_w = os.pipe()
+    # Ensure the FDs we pass to children are inheritable
+    for fd in (a2c_r, a2c_w, c2a_r, c2a_w):
+        os.set_inheritable(fd, True)
+
+    # Start agent: stdin <- client (c2a_r), stdout -> client (a2c_w)
+    agent = await asyncio.create_subprocess_exec(
+        sys.executable,
+        agent_path,
+        stdin=c2a_r,
+        stdout=a2c_w,
+        stderr=sys.stderr,
+        env=base_env,
+        close_fds=True,
+    )
+
+    # Start client with ACP FDs exported via environment; keep terminal IO for UI
+    client_env = base_env.copy()
+    client_env["MSWEA_READ_FD"] = str(a2c_r)  # where client reads ACP messages
+    client_env["MSWEA_WRITE_FD"] = str(c2a_w)  # where client writes ACP messages
 
     client = await asyncio.create_subprocess_exec(
         sys.executable,
         client_path,
-        stderr=sys.stderr,
-        env=env,
+        env=client_env,
+        pass_fds=(a2c_r, c2a_w),  # ensure client inherits these FDs
+        close_fds=True,
     )
 
-    await client.wait()
+    # Close parent's copies of the pipe ends to avoid leaks
+    for fd in (a2c_r, a2c_w, c2a_r, c2a_w):
+        with contextlib.suppress(OSError):
+            os.close(fd)
+
+    # Wait for processes to finish; no relay needed
+    await asyncio.gather(agent.wait(), client.wait())
 
 
 if __name__ == "__main__":

@@ -30,7 +30,6 @@ from acp import (
     RequestPermissionResponse,
     SessionNotification,
     SetSessionModeRequest,
-    stdio_streams,
 )
 from acp.schema import (
     ContentBlock1,
@@ -45,6 +44,7 @@ from acp.schema import (
     ToolCallContent1,
     ToolCallUpdate,
 )
+from acp.stdio import _WritePipeProtocol
 
 
 MODE = Literal["confirm", "yolo", "human"]
@@ -324,7 +324,7 @@ class TextualMiniSweClient(App):
         task = self.input_container.request_input("Enter your task for mini-swe-agent:")
         blocks = [ContentBlock1(type="text", text=task)]
         self._outbox.put(blocks)
-        self._start_backend()
+        self._start_connection_thread()
 
     def on_unmount(self) -> None:
         if self._bg_loop:
@@ -335,57 +335,58 @@ class TextualMiniSweClient(App):
 
     # --- Backend comms ---
 
-    def _start_backend(self) -> None:
-        def _runner():
+    def _start_connection_thread(self) -> None:
+        """Start a background thread running the ACP connection event loop."""
+
+        def _runner() -> None:
             loop = asyncio.new_event_loop()
             self._bg_loop = loop
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(self._backend_main())
+            loop.run_until_complete(self._run_connection())
 
         t = threading.Thread(target=_runner, daemon=True)
         t.start()
         self._bg_thread = t
 
-    async def _backend_main(self) -> None:
-        # Spawn the agent as a child process and talk over its stdio pipes
-        import sys as _sys
+    async def _open_acp_streams_from_env(self) -> tuple[Optional[asyncio.StreamReader], Optional[asyncio.StreamWriter]]:
+        """If launched via duet, open ACP streams from inherited FDs; else return (None, None)."""
+        read_fd_s = os.environ.get("MSWEA_READ_FD")
+        write_fd_s = os.environ.get("MSWEA_WRITE_FD")
+        if not read_fd_s or not write_fd_s:
+            return None, None
+        read_fd = int(read_fd_s)
+        write_fd = int(write_fd_s)
+        loop = asyncio.get_running_loop()
+        # Reader
+        reader = asyncio.StreamReader()
+        reader_proto = asyncio.StreamReaderProtocol(reader)
+        r_file = os.fdopen(read_fd, "rb", buffering=0)
+        await loop.connect_read_pipe(lambda: reader_proto, r_file)
+        # Writer
+        write_proto = _WritePipeProtocol()
+        w_file = os.fdopen(write_fd, "wb", buffering=0)
+        transport, _ = await loop.connect_write_pipe(lambda: write_proto, w_file)
+        writer = asyncio.StreamWriter(transport, write_proto, None, loop)
+        return reader, writer
 
-        agent_path = str(Path(__file__).parent / "agent.py")
-        env = os.environ.copy()
-        src_dir = str((Path(__file__).resolve().parents[2] / "src").resolve())
-        env["PYTHONPATH"] = src_dir + os.pathsep + env.get("PYTHONPATH", "")
-        # Load .env into environment for child agent
-        try:
-            from pathlib import Path as _P
-
-            dotenv_path = _P(__file__).resolve().parents[2] / ".env"
-            if dotenv_path.is_file():
-                for line in dotenv_path.read_text().splitlines():
-                    s = line.strip()
-                    if not s or s.startswith("#"):
-                        continue
-                    if s.startswith("export "):
-                        s = s[len("export ") :]
-                    if "=" not in s:
-                        continue
-                    k, v = s.split("=", 1)
-                    k = k.strip()
-                    v = v.strip().strip('"').strip("'")
-                    env.setdefault(k, v)
-        except Exception:
-            pass
-        proc = await asyncio.create_subprocess_exec(
-            _sys.executable,
-            agent_path,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=_sys.stderr,
-            env=env,
-        )
-        assert proc.stdout and proc.stdin
-        # Use subprocess-provided streams directly
-        reader = proc.stdout
-        writer = proc.stdin
+    async def _run_connection(self) -> None:
+        """Run the ACP client connection using FDs provided by duet; do not fallback."""
+        reader, writer = await self._open_acp_streams_from_env()
+        if reader is None or writer is None:  # type: ignore[truthy-bool]
+            # Do not fallback; inform user and stop
+            self.call_from_thread(
+                lambda: (
+                    self.enqueue_message(
+                        UIMessage(
+                            "assistant",
+                            "Communication endpoints not provided. Please launch via examples/mini_swe_agent/duet.py",
+                        )
+                    ),
+                    self.on_message_added(),
+                )
+            )
+            self.agent_state = "STOPPED"
+            return
 
         self._conn = ClientSideConnection(lambda _agent: MiniSweClientImpl(self), writer, reader)
         try:
@@ -411,7 +412,9 @@ class TextualMiniSweClient(App):
                     self.on_message_added(),
                 )
             )
+            self.agent_state = "STOPPED"
             return
+
         # Autostep loop: take queued prompts and send; if none and mode != human, keep stepping
         while True:
             blocks: list[ContentBlock1]
