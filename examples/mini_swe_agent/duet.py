@@ -16,7 +16,8 @@ async def main() -> None:
     try:
         from dotenv import load_dotenv  # type: ignore
 
-        load_dotenv(dotenv_path=str(root.parents[2] / ".env"), override=True)
+        # Load .env from repo root: examples/mini_swe_agent -> examples -> REPO
+        load_dotenv(dotenv_path=str(root.parents[1] / ".env"), override=True)
     except Exception:
         pass
 
@@ -60,8 +61,30 @@ async def main() -> None:
         with contextlib.suppress(OSError):
             os.close(fd)
 
-    # Wait for processes to finish; no relay needed
-    await asyncio.gather(agent.wait(), client.wait())
+    # If either process exits, terminate the other gracefully
+    agent_task = asyncio.create_task(agent.wait())
+    client_task = asyncio.create_task(client.wait())
+    done, pending = await asyncio.wait({agent_task, client_task}, return_when=asyncio.FIRST_COMPLETED)
+
+    # Terminate the peer process
+    if agent_task in done and client.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            client.terminate()
+    if client_task in done and agent.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            agent.terminate()
+
+    # Wait a bit, then kill if still running
+    try:
+        await asyncio.wait_for(asyncio.gather(agent.wait(), client.wait()), timeout=3)
+    except asyncio.TimeoutError:
+        with contextlib.suppress(ProcessLookupError):
+            if agent.returncode is None:
+                agent.kill()
+        with contextlib.suppress(ProcessLookupError):
+            if client.returncode is None:
+                client.kill()
+        await asyncio.gather(agent.wait(), client.wait())
 
 
 if __name__ == "__main__":

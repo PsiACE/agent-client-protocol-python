@@ -416,7 +416,7 @@ class TextualMiniSweClient(App):
             return
 
         # Autostep loop: take queued prompts and send; if none and mode != human, keep stepping
-        while True:
+        while self.agent_state != "STOPPED":
             blocks: list[ContentBlock1]
             try:
                 blocks = self._outbox.get_nowait()
@@ -450,6 +450,11 @@ class TextualMiniSweClient(App):
 
                     threading.Thread(target=_ask_new, daemon=True).start()
             except Exception as e:
+                # Break on connection shutdowns to stop background thread cleanly
+                msg = str(e)
+                if isinstance(e, (BrokenPipeError, ConnectionResetError)) or "Broken pipe" in msg or "closed" in msg:
+                    self.agent_state = "STOPPED"
+                    break
                 self.call_from_thread(lambda: self.enqueue_message(UIMessage("assistant", f"prompt error: {e}")))
             # Tiny delay to avoid busy-looping
             await asyncio.sleep(0.05)
