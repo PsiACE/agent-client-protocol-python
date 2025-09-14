@@ -20,6 +20,8 @@ from acp import (
     PromptRequest,
     PromptResponse,
     SessionNotification,
+    SetSessionModeRequest,
+    SetSessionModeResponse,
     stdio_streams,
     PROTOCOL_VERSION,
 )
@@ -138,15 +140,51 @@ def _create_streaming_mini_agent(
                 except RuntimeError:
                     self._schedule(self._send(hint))
 
+            async def on_tool_start(self, title: str, command: str, tool_call_id: str) -> None:
+                """Send a tool_call start notification for a bash command."""
+                update = SessionUpdate4(
+                    sessionUpdate="tool_call",
+                    toolCallId=tool_call_id,
+                    title=title,
+                    kind="execute",
+                    status="pending",
+                    content=[
+                        ToolCallContent1(
+                            type="content", content=ContentBlock1(type="text", text=f"```bash\n{command}\n```")
+                        )
+                    ],
+                    rawInput={"command": command},
+                )
+                await self._send(update)
+
+            async def on_tool_complete(
+                self,
+                tool_call_id: str,
+                output: str,
+                returncode: int,
+                *,
+                status: str = "completed",
+            ) -> None:
+                """Send a tool_call_update with the final output and return code."""
+                update = SessionUpdate5(
+                    sessionUpdate="tool_call_update",
+                    toolCallId=tool_call_id,
+                    status=status,
+                    content=[
+                        ToolCallContent1(
+                            type="content", content=ContentBlock1(type="text", text=f"```ansi\n{output}\n```")
+                        )
+                    ],
+                    rawOutput={"output": output, "returncode": returncode},
+                )
+                await self._send(update)
+
             def add_message(self, role: str, content: str, **kwargs):
                 super().add_message(role, content, **kwargs)
-                # Only the client should send user_message_chunk. The agent reports its own text via agent_message_chunk.
-                if not getattr(self, "_emit_updates", True):
+                # Only stream LM output as agent_message_chunk; tool output is handled via tool_call_update.
+                if not getattr(self, "_emit_updates", True) or role != "assistant":
                     return
-                # Avoid duplicating tool outputs as a separate "Observation" agent message; rely on tool_call_update
                 text = str(content)
-                if role == "user" and text.strip().startswith("Observation:"):
-                    return
                 block = ContentBlock1(type="text", text=text)
                 update = SessionUpdate2(sessionUpdate="agent_message_chunk", content=block)
                 try:
@@ -323,6 +361,15 @@ class MiniSweACPAgent(Agent):
 
     async def authenticate(self, _params: AuthenticateRequest) -> None:
         return None
+
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None:  # type: ignore[override]
+        sess = self._sessions.get(params.sessionId)
+        if not sess:
+            return SetSessionModeResponse()
+        mode = params.modeId.lower()
+        if mode in ("confirm", "yolo", "human"):
+            sess["config"].mode = mode  # type: ignore[attr-defined]
+        return SetSessionModeResponse()
 
     def _extract_mode_from_blocks(self, blocks) -> Literal["confirm", "yolo", "human"] | None:
         for b in blocks:

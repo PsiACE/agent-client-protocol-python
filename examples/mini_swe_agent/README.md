@@ -1,5 +1,7 @@
 # Mini SWE Agent (Python) — ACP Bridge
 
+> Just a show of the bridge in action. Not a best-effort or absolutely-correct implementation of the agent.
+
 A minimal Agent Client Protocol (ACP) bridge that wraps mini-swe-agent so it can be run by Zed as an external agent over stdio, and also provides a local Textual UI client.
 
 ## Configure in Zed (recommended for editor integration)

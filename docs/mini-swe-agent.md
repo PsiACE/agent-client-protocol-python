@@ -1,17 +1,17 @@
 # Mini SWE Agent bridge
 
-This example wraps mini-swe-agent behind ACP so Zed can run it as an external agent over stdio. It also includes a local Textual UI client connected via a duet launcher.
+> Just a show of the bridge in action. Not a best-effort or absolutely-correct implementation of the agent.
+
+This example wraps mini-swe-agent behind ACP so Zed can run it as an external agent over stdio. It also includes a local Textual UI client connected via a duet launcher
 
 ## Behavior
 
-- Prompts: text blocks are concatenated into a single task string; referenced resources (`resource_link` / `resource`) are surfaced as hints in the task.
-- Streaming: incremental text is sent via `session/update` with `agent_message_chunk`.
+- Prompts: text blocks are concatenated into a single task string. (Resource embedding is not used in this example.)
+- Streaming: only LM output is streamed via `session/update` → `agent_message_chunk`.
 - Tool calls: when the agent executes a shell command, the bridge sends:
   - `tool_call` with `kind=execute`, pending status, and a bash code block containing the command
   - `tool_call_update` upon completion, including output and a `rawOutput` object with `output` and `returncode`
 - Final result: on task submission (mini-swe-agent prints `COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT` as the first line), a final `agent_message_chunk` with the submission content is sent.
-
-Non-terminating events (e.g. user rejection or timeouts) are surfaced both as a `tool_call_update` with `status=cancelled|failed` and as a text chunk so the session can continue.
 
 ## Configuration
 
@@ -27,7 +27,7 @@ If `mini-swe-agent` is not installed in the venv, the bridge attempts to import 
 
 ## How to run
 
-- In Zed (editor integration): configure an agent server to launch `examples/mini_swe_agent/agent.py` and set the environment variables there.
+- In Zed (editor integration): configure an agent server to launch `examples/mini_swe_agent/agent.py` and set the environment variables there. Use Zed’s “Open ACP Logs” to inspect `tool_call`/`tool_call_update` and message chunks.
 - In terminal (local TUI): run the duet launcher to start both the agent and the Textual client with the same environment and dedicated pipes:
 
 ```bash
@@ -35,6 +35,12 @@ python examples/mini_swe_agent/duet.py
 ```
 
 The launcher loads `.env` from the repo root (using python-dotenv) so both processes share the same configuration.
+
+### TUI usage
+
+- Hotkeys: `y` → YOLO, `c` → Confirm, `u` → Human, `Enter` → Continue.
+- In Human mode, you’ll be prompted for a bash command; it will be executed and streamed back as a tool call.
+- Each executed command appears in the “TOOL CALLS” section with live status and output.
 
 ## Files
 
