@@ -1,16 +1,3 @@
-# Agent Client Protocol (Python)
-
-A Python implementation of the Agent Client Protocol (ACP). Build agents that communicate with ACP-capable clients (e.g. Zed) over stdio.
-
-## Install
-
-```bash
-pip install agent-client-protocol
-```
-
-## Minimal usage
-
-```python
 import asyncio
 
 from acp import (
@@ -61,7 +48,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
-
-- Quickstart: [quickstart.md](quickstart.md)
-- Mini SWE Agent example: [mini-swe-agent.md](mini-swe-agent.md)

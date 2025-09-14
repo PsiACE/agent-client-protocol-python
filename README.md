@@ -5,6 +5,7 @@ A Python implementation of the Agent Client Protocol (ACP). Use it to build agen
 - Package name: `agent-client-protocol` (import as `acp`)
 - Repository: https://github.com/psiace/agent-client-protocol-python
 - Docs: https://psiace.github.io/agent-client-protocol-python/
+- Featured: Listed as the first third-party SDK on the official ACP site — see https://agentclientprotocol.com/libraries/community
 
 ## Install
 
@@ -24,51 +25,54 @@ make test      # run tests
 
 ## Minimal agent example
 
+See a complete streaming echo example in [examples/echo_agent.py](examples/echo_agent.py). It streams back each text block using `session/update` and ends the turn.
+
 ```python
 import asyncio
 
 from acp import (
     Agent,
     AgentSideConnection,
-    AuthenticateRequest,
-    CancelNotification,
     InitializeRequest,
     InitializeResponse,
-    LoadSessionRequest,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
+    SessionNotification,
     stdio_streams,
 )
+from acp.schema import ContentBlock1, SessionUpdate2
 
 
 class EchoAgent(Agent):
+    def __init__(self, conn):
+        self._conn = conn
+
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:
         return InitializeResponse(protocolVersion=params.protocolVersion)
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
         return NewSessionResponse(sessionId="sess-1")
 
-    async def loadSession(self, params: LoadSessionRequest) -> None:
-        return None
-
-    async def authenticate(self, params: AuthenticateRequest) -> None:
-        return None
-
     async def prompt(self, params: PromptRequest) -> PromptResponse:
-        # Normally you'd stream updates via sessionUpdate
+        for block in params.prompt:
+            text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
+            await self._conn.sessionUpdate(
+                SessionNotification(
+                    sessionId=params.sessionId,
+                    update=SessionUpdate2(
+                        sessionUpdate="agent_message_chunk",
+                        content=ContentBlock1(type="text", text=text),
+                    ),
+                )
+            )
         return PromptResponse(stopReason="end_turn")
-
-    async def cancel(self, params: CancelNotification) -> None:
-        return None
 
 
 async def main() -> None:
     reader, writer = await stdio_streams()
-    # For an agent process, local writes go to client stdin (writer=stdout)
-    AgentSideConnection(lambda _conn: EchoAgent(), writer, reader)
-    # Keep running; in a real agent you would await tasks or add your own loop
+    AgentSideConnection(lambda conn: EchoAgent(conn), writer, reader)
     await asyncio.Event().wait()
 
 

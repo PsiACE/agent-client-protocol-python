@@ -1,8 +1,8 @@
 # Mini SWE Agent (Python) — ACP Bridge
 
-A minimal Agent Client Protocol (ACP) bridge that wraps mini-swe-agent so it can be run by Zed as an external agent over stdio.
+A minimal Agent Client Protocol (ACP) bridge that wraps mini-swe-agent so it can be run by Zed as an external agent over stdio, and also provides a local Textual UI client.
 
-## Configure in Zed
+## Configure in Zed (recommended for editor integration)
 
 Add an `agent_servers` entry to Zed’s `settings.json`. Point `command` to the Python interpreter that has both `agent-client-protocol` and `mini-swe-agent` installed, and `args` to this example script:
 
@@ -32,16 +32,24 @@ Notes
   - Set `OPENROUTER_API_KEY` to your API key.
 - Alternatively, you can use native OpenAI/Anthropic APIs. Set `MINI_SWE_MODEL` accordingly and provide the vendor-specific API key; `MINI_SWE_MODEL_KWARGS` is optional.
 
-## Requirements
+## Run locally with a TUI (Textual)
 
-Install mini-swe-agent (or at least its core deps) into the same environment:
+Use the duet launcher to run both the ACP agent and the local Textual client connected over dedicated pipes. The client keeps your terminal stdio; ACP messages flow over separate FDs.
 
 ```bash
-pip install agent-client-protocol mini-swe-agent
-# or: pip install litellm jinja2 tenacity
+# From repo root
+python examples/mini_swe_agent/duet.py
 ```
 
-Then in Zed, open the Agents panel and select "Mini SWE Agent (Python)" to start a thread.
+Environment
+- The launcher loads `.env` from the repo root using python-dotenv (override=True) so both child processes inherit the same environment.
+- Minimum for OpenRouter:
+  - `MINI_SWE_MODEL="openrouter/openai/gpt-4o-mini"`
+  - `OPENROUTER_API_KEY="sk-or-..."`
+  - Optional: `MINI_SWE_MODEL_KWARGS='{"api_base":"https://openrouter.ai/api/v1"}'` (auto-injected if missing)
+
+Quit behavior
+- Quit from the TUI cleanly ends the background loop; duet will terminate both processes gracefully and force-kill after a short timeout if needed.
 
 ## Behavior overview
 
