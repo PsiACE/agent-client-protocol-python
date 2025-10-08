@@ -35,6 +35,7 @@ from acp.schema import (
     RequestPermissionResponse,
     TextContentBlock,
     ToolCallStart,
+    ToolCallProgress,
     ToolCallUpdate,
     UserMessageChunk,
 )
@@ -164,7 +165,7 @@ def _create_streaming_mini_agent(
                 status: str = "completed",
             ) -> None:
                 """Send a tool_call_update with the final output and return code."""
-                update = ToolCallUpdate(
+                update = ToolCallProgress(
                     sessionUpdate="tool_call_update",
                     toolCallId=tool_call_id,
                     status=status,
@@ -201,7 +202,6 @@ def _create_streaming_mini_agent(
                         PermissionOption(optionId="reject-once", name="Reject", kind="reject_once"),
                     ],
                     toolCall=ToolCallUpdate(
-                        sessionUpdate="tool_call_update",
                         toolCallId=tool_call_id,
                         title="bash",
                         kind="execute",
@@ -252,7 +252,7 @@ def _create_streaming_mini_agent(
                     # Mark in progress
                     self._schedule(
                         self._send(
-                            ToolCallUpdate(
+                            ToolCallProgress(
                                 sessionUpdate="tool_call_update",
                                 toolCallId=tool_id,
                                 status="in_progress",

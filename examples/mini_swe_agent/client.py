@@ -39,7 +39,7 @@ from acp.schema import (
     PermissionOption,
     TextContentBlock,
     ToolCallStart,
-    ToolCallUpdate,
+    ToolCallProgress,
     UserMessageChunk,
 )
 from acp.stdio import _WritePipeProtocol
@@ -205,7 +205,7 @@ class MiniSweClientImpl(Client):
                 upd.toolCallId, title=upd.title or "", status=upd.status or "pending", content=upd.content
             )
             self._app.call_from_thread(self._app.update_content)
-        elif isinstance(upd, ToolCallUpdate):
+        elif isinstance(upd, ToolCallProgress):
             # tool call update → update structured state
             self._app._update_tool_call(upd.toolCallId, status=upd.status, content=upd.content)
             self._app.call_from_thread(self._app.update_content)
