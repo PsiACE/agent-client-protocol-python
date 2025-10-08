@@ -22,6 +22,7 @@ from .schema import (
     KillTerminalCommandRequest,
     KillTerminalCommandResponse,
     LoadSessionRequest,
+    LoadSessionResponse,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
@@ -33,6 +34,8 @@ from .schema import (
     RequestPermissionRequest,
     RequestPermissionResponse,
     SessionNotification,
+    SetSessionModelRequest,
+    SetSessionModelResponse,
     SetSessionModeRequest,
     SetSessionModeResponse,
     TerminalOutputRequest,
@@ -78,6 +81,11 @@ class RequestError(Exception):
     @staticmethod
     def auth_required(data: dict | None = None) -> RequestError:
         return RequestError(-32000, "Authentication required", data)
+
+    @staticmethod
+    def resource_not_found(uri: str | None = None) -> RequestError:
+        data = {"uri": uri} if uri is not None else None
+        return RequestError(-32002, "Resource not found", data)
 
     def to_error_obj(self) -> dict:
         return {"code": self.code, "message": str(self), "data": self.data}
@@ -253,15 +261,17 @@ class Agent(Protocol):
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse: ...
 
-    async def loadSession(self, params: LoadSessionRequest) -> None: ...
+    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse | None: ...
+
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None: ...
+
+    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse | None: ...
 
     async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None: ...
 
     async def prompt(self, params: PromptRequest) -> PromptResponse: ...
 
     async def cancel(self, params: CancelNotification) -> None: ...
-
-    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None: ...
 
     # Extension hooks (optional)
     async def extMethod(self, method: str, params: dict) -> dict: ...
@@ -332,7 +342,10 @@ class AgentSideConnection:
             if not hasattr(agent, "loadSession"):
                 raise RequestError.method_not_found(method)
             p = LoadSessionRequest.model_validate(params)
-            return await agent.loadSession(p)
+            result = await agent.loadSession(p)
+            if isinstance(result, BaseModel):
+                return result.model_dump()
+            return result or {}
         if method == AGENT_METHODS["session_set_mode"]:
             if not hasattr(agent, "setSessionMode"):
                 raise RequestError.method_not_found(method)
@@ -342,6 +355,12 @@ class AgentSideConnection:
         if method == AGENT_METHODS["session_prompt"]:
             p = PromptRequest.model_validate(params)
             return await agent.prompt(p)
+        if method == AGENT_METHODS["session_set_model"]:
+            if not hasattr(agent, "setSessionModel"):
+                raise RequestError.method_not_found(method)
+            p = SetSessionModelRequest.model_validate(params)
+            result = await agent.setSessionModel(p)
+            return result.model_dump() if isinstance(result, BaseModel) else (result or {})
         if method == AGENT_METHODS["session_cancel"]:
             p = CancelNotification.model_validate(params)
             return await agent.cancel(p)
@@ -548,26 +567,37 @@ class ClientSideConnection:
         )
         return NewSessionResponse.model_validate(resp)
 
-    async def loadSession(self, params: LoadSessionRequest) -> None:
-        await self._conn.send_request(
+    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse:
+        resp = await self._conn.send_request(
             AGENT_METHODS["session_load"],
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
+        payload = resp if isinstance(resp, dict) else {}
+        return LoadSessionResponse.model_validate(payload)
 
-    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None:
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse:
         resp = await self._conn.send_request(
             AGENT_METHODS["session_set_mode"],
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
-        # May be empty object
-        return SetSessionModeResponse.model_validate(resp) if isinstance(resp, dict) else None
+        payload = resp if isinstance(resp, dict) else {}
+        return SetSessionModeResponse.model_validate(payload)
 
-    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:
+    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse:
+        resp = await self._conn.send_request(
+            AGENT_METHODS["session_set_model"],
+            params.model_dump(exclude_none=True, exclude_defaults=True),
+        )
+        payload = resp if isinstance(resp, dict) else {}
+        return SetSessionModelResponse.model_validate(payload)
+
+    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse:
         resp = await self._conn.send_request(
             AGENT_METHODS["authenticate"],
             params.model_dump(exclude_none=True, exclude_defaults=True),
         )
-        return AuthenticateResponse.model_validate(resp) if isinstance(resp, dict) else None
+        payload = resp if isinstance(resp, dict) else {}
+        return AuthenticateResponse.model_validate(payload)
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         resp = await self._conn.send_request(
@@ -609,16 +639,18 @@ class TerminalHandle:
         )
         return WaitForTerminalExitResponse.model_validate(resp)
 
-    async def kill(self) -> KillTerminalCommandResponse | None:
+    async def kill(self) -> KillTerminalCommandResponse:
         resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_kill"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
-        return KillTerminalCommandResponse.model_validate(resp) if isinstance(resp, dict) else None
+        payload = resp if isinstance(resp, dict) else {}
+        return KillTerminalCommandResponse.model_validate(payload)
 
-    async def release(self) -> ReleaseTerminalResponse | None:
+    async def release(self) -> ReleaseTerminalResponse:
         resp = await self._conn.send_request(
             CLIENT_METHODS["terminal_release"],
             {"sessionId": self._session_id, "terminalId": self.id},
         )
-        return ReleaseTerminalResponse.model_validate(resp) if isinstance(resp, dict) else None
+        payload = resp if isinstance(resp, dict) else {}
+        return ReleaseTerminalResponse.model_validate(payload)
