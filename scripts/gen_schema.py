@@ -34,7 +34,7 @@ RENAME_MAP: dict[str, str] = {
     "SessionUpdate2": "AgentMessageChunk",
     "SessionUpdate3": "AgentThoughtChunk",
     "SessionUpdate4": "ToolCallStart",
-    "SessionUpdate5": "ToolCallUpdate",
+    "SessionUpdate5": "ToolCallProgress",
     "SessionUpdate6": "AgentPlanUpdate",
     "SessionUpdate7": "AvailableCommandsUpdate",
     "SessionUpdate8": "CurrentModeUpdate",

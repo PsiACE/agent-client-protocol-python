@@ -974,7 +974,7 @@ class ToolCallStart(BaseModel):
     ]
 
 
-class ToolCallUpdate(BaseModel):
+class ToolCallProgress(BaseModel):
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
@@ -1040,7 +1040,7 @@ class SessionNotification(BaseModel):
             AgentMessageChunk,
             AgentThoughtChunk,
             ToolCallStart,
-            ToolCallUpdate,
+            ToolCallProgress,
             AgentPlanUpdate,
             AvailableCommandsUpdate,
             CurrentModeUpdate,
@@ -1163,7 +1163,7 @@ SessionUpdate1 = UserMessageChunk
 SessionUpdate2 = AgentMessageChunk
 SessionUpdate3 = AgentThoughtChunk
 SessionUpdate4 = ToolCallStart
-SessionUpdate5 = ToolCallUpdate
+SessionUpdate5 = ToolCallProgress
 SessionUpdate6 = AgentPlanUpdate
 SessionUpdate7 = AvailableCommandsUpdate
 SessionUpdate8 = CurrentModeUpdate
