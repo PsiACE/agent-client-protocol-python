@@ -2,6 +2,8 @@
 
 A Python implementation of the Agent Client Protocol (ACP). Use it to build agents that communicate with ACP-capable clients (e.g. Zed) over stdio.
 
+> This library version is compatible with the corresponding ACP version. However, we lack sufficient resources to release each version. Welcome to contribute!
+
 - Package name: `agent-client-protocol` (import as `acp`)
 - Repository: https://github.com/psiace/agent-client-protocol-python
 - Docs: https://psiace.github.io/agent-client-protocol-python/

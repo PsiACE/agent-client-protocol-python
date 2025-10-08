@@ -4,7 +4,7 @@ requires-python = ">=3.10, <4.0"
 
 [[package]]
 name = "agent-client-protocol"
-version = "0.3.0"
+version = "0.4.5"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
