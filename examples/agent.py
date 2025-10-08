@@ -19,7 +19,7 @@ from acp import (
     stdio_streams,
     PROTOCOL_VERSION,
 )
-from acp.schema import ContentBlock1, SessionUpdate2
+from acp.schema import TextContentBlock, AgentMessageChunk
 
 
 class ExampleAgent(Agent):
@@ -50,9 +50,9 @@ class ExampleAgent(Agent):
         await self._conn.sessionUpdate(
             SessionNotification(
                 sessionId=params.sessionId,
-                update=SessionUpdate2(
+                update=AgentMessageChunk(
                     sessionUpdate="agent_message_chunk",
-                    content=ContentBlock1(type="text", text="Client sent: "),
+                    content=TextContentBlock(type="text", text="Client sent: "),
                 ),
             )
         )
@@ -65,14 +65,14 @@ class ExampleAgent(Agent):
                 else:
                     text = f"<{block.get('type', 'content')}>"
             else:
-                # pydantic model ContentBlock1
+                # pydantic model TextContentBlock
                 text = getattr(block, "text", "<content>")
             await self._conn.sessionUpdate(
                 SessionNotification(
                     sessionId=params.sessionId,
-                    update=SessionUpdate2(
+                    update=AgentMessageChunk(
                         sessionUpdate="agent_message_chunk",
-                        content=ContentBlock1(type="text", text=text),
+                        content=TextContentBlock(type="text", text=text),
                     ),
                 )
             )

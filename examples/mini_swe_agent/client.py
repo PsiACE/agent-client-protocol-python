@@ -32,17 +32,15 @@ from acp import (
     SetSessionModeRequest,
 )
 from acp.schema import (
-    ContentBlock1,
+    AgentMessageChunk,
+    AgentThoughtChunk,
+    AllowedOutcome,
+    ContentToolCallContent,
     PermissionOption,
-    RequestPermissionOutcome1,
-    RequestPermissionOutcome2,
-    SessionUpdate1,
-    SessionUpdate2,
-    SessionUpdate3,
-    SessionUpdate4,
-    SessionUpdate5,
-    ToolCallContent1,
+    TextContentBlock,
+    ToolCallStart,
     ToolCallUpdate,
+    UserMessageChunk,
 )
 from acp.stdio import _WritePipeProtocol
 
@@ -190,24 +188,24 @@ class MiniSweClientImpl(Client):
             else:
                 self._app.call_from_thread(lambda: (self._app.enqueue_message(msg), self._app.on_message_added()))
 
-        if isinstance(upd, SessionUpdate2):
+        if isinstance(upd, AgentMessageChunk):
             # agent message
             txt = _content_to_text(upd.content)
             _post(UIMessage("assistant", txt))
-        elif isinstance(upd, SessionUpdate1):
+        elif isinstance(upd, UserMessageChunk):
             txt = _content_to_text(upd.content)
             _post(UIMessage("user", txt))
-        elif isinstance(upd, SessionUpdate3):
+        elif isinstance(upd, AgentThoughtChunk):
             # agent thought chunk (informational)
             txt = _content_to_text(upd.content)
             _post(UIMessage("assistant", f"[thought]\n{txt}"))
-        elif isinstance(upd, SessionUpdate4):
+        elif isinstance(upd, ToolCallStart):
             # tool call start → record structured state
             self._app._update_tool_call(
                 upd.toolCallId, title=upd.title or "", status=upd.status or "pending", content=upd.content
             )
             self._app.call_from_thread(self._app.update_content)
-        elif isinstance(upd, SessionUpdate5):
+        elif isinstance(upd, ToolCallUpdate):
             # tool call update → update structured state
             self._app._update_tool_call(upd.toolCallId, status=upd.status, content=upd.content)
             self._app.call_from_thread(self._app.update_content)
@@ -216,17 +214,13 @@ class MiniSweClientImpl(Client):
         # Respect client-side mode shortcuts
         mode = self._app.mode
         if mode == "yolo":
-            return RequestPermissionResponse(
-                outcome=RequestPermissionOutcome2(outcome="selected", optionId="allow-once")
-            )
+            return RequestPermissionResponse(outcome=AllowedOutcome(outcome="selected", optionId="allow-once"))
         # Prompt user for decision
         prompt = "Approve tool call? Press Enter to allow once, type 'n' to reject"
         ans = self._app.input_container.request_input(prompt).strip().lower()
         if ans in ("", "y", "yes"):
-            return RequestPermissionResponse(
-                outcome=RequestPermissionOutcome2(outcome="selected", optionId="allow-once")
-            )
-        return RequestPermissionResponse(outcome=RequestPermissionOutcome2(outcome="selected", optionId="reject-once"))
+            return RequestPermissionResponse(outcome=AllowedOutcome(outcome="selected", optionId="allow-once"))
+        return RequestPermissionResponse(outcome=AllowedOutcome(outcome="selected", optionId="reject-once"))
 
     # Optional features not used in this example
     async def writeTextFile(self, params):
@@ -293,7 +287,7 @@ class TextualMiniSweClient(App):
         self._conn: Optional[ClientSideConnection] = None
         self._session_id: Optional[str] = None
         self._pending_human_command: Optional[str] = None
-        self._outbox: "queue.Queue[list[ContentBlock1]]" = queue.Queue()
+        self._outbox: "queue.Queue[list[TextContentBlock]]" = queue.Queue()
         # Pagination and metrics
         self._i_step: int = 0
         self.n_steps: int = 1
@@ -322,7 +316,7 @@ class TextualMiniSweClient(App):
 
     def _ask_initial_task(self) -> None:
         task = self.input_container.request_input("Enter your task for mini-swe-agent:")
-        blocks = [ContentBlock1(type="text", text=task)]
+        blocks = [TextContentBlock(type="text", text=task)]
         self._outbox.put(blocks)
         self._start_connection_thread()
 
@@ -417,7 +411,7 @@ class TextualMiniSweClient(App):
 
         # Autostep loop: take queued prompts and send; if none and mode != human, keep stepping
         while self.agent_state != "STOPPED":
-            blocks: list[ContentBlock1]
+            blocks: list[TextContentBlock]
             try:
                 blocks = self._outbox.get_nowait()
             except queue.Empty:
@@ -443,7 +437,7 @@ class TextualMiniSweClient(App):
                             "Turn complete. Type a new task or press Enter to continue:"
                         )
                         if task.strip():
-                            self._outbox.put([ContentBlock1(type="text", text=task)])
+                            self._outbox.put([TextContentBlock(type="text", text=task)])
                         else:
                             self._outbox.put([])
                         self._ask_new_task_pending = False
@@ -463,7 +457,7 @@ class TextualMiniSweClient(App):
         if not cmd.strip():
             return
         code = f"```bash\n{cmd.strip()}\n```"
-        self._outbox.put([ContentBlock1(type="text", text=code)])
+        self._outbox.put([TextContentBlock(type="text", text=code)])
 
     # --- UI updates ---
 
@@ -493,7 +487,7 @@ class TextualMiniSweClient(App):
             # Append any text content blocks
             texts = []
             for c in content:
-                if isinstance(c, ToolCallContent1) and getattr(c.content, "type", None) == "text":
+                if isinstance(c, ContentToolCallContent) and getattr(c.content, "type", None) == "text":
                     texts.append(getattr(c.content, "text", ""))
             if texts:
                 tc.setdefault("content", []).append("\n".join(texts))

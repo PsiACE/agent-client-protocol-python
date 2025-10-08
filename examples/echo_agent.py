@@ -12,7 +12,7 @@ from acp import (
     SessionNotification,
     stdio_streams,
 )
-from acp.schema import ContentBlock1, SessionUpdate2
+from acp.schema import TextContentBlock, AgentMessageChunk
 
 
 class EchoAgent(Agent):
@@ -31,9 +31,9 @@ class EchoAgent(Agent):
             await self._conn.sessionUpdate(
                 SessionNotification(
                     sessionId=params.sessionId,
-                    update=SessionUpdate2(
+                    update=AgentMessageChunk(
                         sessionUpdate="agent_message_chunk",
-                        content=ContentBlock1(type="text", text=text),
+                        content=TextContentBlock(type="text", text=text),
                     ),
                 )
             )
