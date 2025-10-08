@@ -34,11 +34,11 @@ from acp import (
     WriteTextFileResponse,
 )
 from acp.schema import (
-    ContentBlock1,
-    RequestPermissionOutcome1,
-    RequestPermissionOutcome2,
-    SessionUpdate1,
-    SessionUpdate2,
+    AgentMessageChunk,
+    AllowedOutcome,
+    DeniedOutcome,
+    TextContentBlock,
+    UserMessageChunk,
 )
 
 # --------------------- Test Utilities ---------------------
@@ -98,19 +98,17 @@ class TestClient(Client):
         self.ext_notes: list[tuple[str, dict]] = []
 
     def queue_permission_cancelled(self) -> None:
-        self.permission_outcomes.append(
-            RequestPermissionResponse(outcome=RequestPermissionOutcome1(outcome="cancelled"))
-        )
+        self.permission_outcomes.append(RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled")))
 
     def queue_permission_selected(self, option_id: str) -> None:
         self.permission_outcomes.append(
-            RequestPermissionResponse(outcome=RequestPermissionOutcome2(optionId=option_id, outcome="selected"))
+            RequestPermissionResponse(outcome=AllowedOutcome(optionId=option_id, outcome="selected"))
         )
 
     async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
         if self.permission_outcomes:
             return self.permission_outcomes.pop()
-        return RequestPermissionResponse(outcome=RequestPermissionOutcome1(outcome="cancelled"))
+        return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
 
     async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse:
         self.files[str(params.path)] = params.content
@@ -284,18 +282,18 @@ async def test_session_notifications_flow():
         await client_conn.sessionUpdate(
             SessionNotification(
                 sessionId="sess",
-                update=SessionUpdate2(
+                update=AgentMessageChunk(
                     sessionUpdate="agent_message_chunk",
-                    content=ContentBlock1(type="text", text="Hello"),
+                    content=TextContentBlock(type="text", text="Hello"),
                 ),
             )
         )
         await client_conn.sessionUpdate(
             SessionNotification(
                 sessionId="sess",
-                update=SessionUpdate1(
+                update=UserMessageChunk(
                     sessionUpdate="user_message_chunk",
-                    content=ContentBlock1(type="text", text="World"),
+                    content=TextContentBlock(type="text", text="World"),
                 ),
             )
         )
