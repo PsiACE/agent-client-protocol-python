@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from acp import (
@@ -10,189 +10,100 @@ from acp import (
     CancelNotification,
     InitializeRequest,
     InitializeResponse,
+    LoadSessionRequest,
+    LoadSessionResponse,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    SessionNotification,
     SetSessionModeRequest,
     SetSessionModeResponse,
     stdio_streams,
     PROTOCOL_VERSION,
 )
 from acp.schema import (
+    AgentCapabilities,
     AgentMessageChunk,
-    AllowedOutcome,
-    ContentToolCallContent,
-    PermissionOption,
-    RequestPermissionRequest,
+    McpCapabilities,
+    PromptCapabilities,
+    SessionNotification,
     TextContentBlock,
-    ToolCallUpdate,
 )
-
-
-@dataclass
-class SessionState:
-    cancel_event: asyncio.Event = field(default_factory=asyncio.Event)
-    prompt_counter: int = 0
-
-    def begin_prompt(self) -> None:
-        self.prompt_counter += 1
-        self.cancel_event.clear()
-
-    def cancel(self) -> None:
-        self.cancel_event.set()
 
 
 class ExampleAgent(Agent):
     def __init__(self, conn: AgentSideConnection) -> None:
         self._conn = conn
         self._next_session_id = 0
-        self._sessions: dict[str, SessionState] = {}
 
-    def _session(self, session_id: str) -> SessionState:
-        state = self._sessions.get(session_id)
-        if state is None:
-            state = SessionState()
-            self._sessions[session_id] = state
-        return state
-
-    async def _send_text(self, session_id: str, text: str) -> None:
+    async def _send_chunk(self, session_id: str, content: Any) -> None:
         await self._conn.sessionUpdate(
             SessionNotification(
                 sessionId=session_id,
                 update=AgentMessageChunk(
                     sessionUpdate="agent_message_chunk",
-                    content=TextContentBlock(type="text", text=text),
+                    content=content,
                 ),
             )
         )
 
-    def _format_prompt_preview(self, blocks: list[Any]) -> str:
-        parts: list[str] = []
-        for block in blocks:
-            if isinstance(block, dict):
-                if block.get("type") == "text":
-                    parts.append(str(block.get("text", "")))
-                else:
-                    parts.append(f"<{block.get('type', 'content')}>")
-            else:
-                parts.append(getattr(block, "text", "<content>"))
-        preview = " \n".join(filter(None, parts)).strip()
-        return preview or "<empty prompt>"
-
-    async def _request_permission(self, session_id: str, preview: str, state: SessionState) -> str:
-        state.prompt_counter += 1
-        request = RequestPermissionRequest(
-            sessionId=session_id,
-            toolCall=ToolCallUpdate(
-                toolCallId=f"echo-{state.prompt_counter}",
-                title="Echo input",
-                kind="echo",
-                status="pending",
-                content=[
-                    ContentToolCallContent(
-                        type="content",
-                        content=TextContentBlock(type="text", text=preview),
-                    )
-                ],
+    async def initialize(self, params: InitializeRequest) -> InitializeResponse:  # noqa: ARG002
+        logging.info("Received initialize request")
+        return InitializeResponse(
+            protocolVersion=PROTOCOL_VERSION,
+            agentCapabilities=AgentCapabilities(
+                loadSession=False,
+                mcpCapabilities=McpCapabilities(http=False, sse=False),
+                promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
             ),
-            options=[
-                PermissionOption(optionId="allow-once", name="Allow once", kind="allow_once"),
-                PermissionOption(optionId="deny", name="Deny", kind="reject_once"),
-            ],
         )
 
-        permission_task = asyncio.create_task(self._conn.requestPermission(request))
-        cancel_task = asyncio.create_task(state.cancel_event.wait())
-
-        done, pending = await asyncio.wait({permission_task, cancel_task}, return_when=asyncio.FIRST_COMPLETED)
-
-        for task in pending:
-            task.cancel()
-
-        if cancel_task in done:
-            permission_task.cancel()
-            return "cancelled"
-
-        try:
-            response = await permission_task
-        except asyncio.CancelledError:
-            return "cancelled"
-        except Exception as exc:  # noqa: BLE001
-            await self._send_text(session_id, f"Permission failed: {exc}")
-            return "error"
-
-        if isinstance(response.outcome, AllowedOutcome):
-            option_id = response.outcome.optionId
-            if option_id.startswith("allow"):
-                return "allowed"
-            return "denied"
-        return "cancelled"
-
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        return InitializeResponse(protocolVersion=PROTOCOL_VERSION, agentCapabilities=None, authMethods=[])
-
     async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:  # noqa: ARG002
-        return {}
+        logging.info("Received authenticate request")
+        return AuthenticateResponse()
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:  # noqa: ARG002
-        session_id = f"sess-{self._next_session_id}"
+        logging.info("Received new session request")
+        session_id = str(self._next_session_id)
         self._next_session_id += 1
-        self._sessions[session_id] = SessionState()
         return NewSessionResponse(sessionId=session_id)
 
-    async def loadSession(self, params):  # type: ignore[override]
-        return None
+    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse | None:  # noqa: ARG002
+        logging.info("Received load session request")
+        return LoadSessionResponse()
 
     async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None:  # noqa: ARG002
-        return {}
+        logging.info("Received set session mode request")
+        return SetSessionModeResponse()
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
-        state = self._session(params.sessionId)
-        state.begin_prompt()
+        logging.info("Received prompt request")
 
-        preview = self._format_prompt_preview(list(params.prompt))
-        await self._send_text(params.sessionId, "Agent received a prompt. Checking permissions...")
-
-        decision = await self._request_permission(params.sessionId, preview, state)
-        if decision == "cancelled":
-            await self._send_text(params.sessionId, "Prompt cancelled before permission decided.")
-            return PromptResponse(stopReason="cancelled")
-        if decision == "denied":
-            await self._send_text(params.sessionId, "Permission denied by the client.")
-            return PromptResponse(stopReason="permission_denied")
-        if decision == "error":
-            return PromptResponse(stopReason="error")
-
-        await self._send_text(params.sessionId, "Permission granted. Echoing content:")
-
+        # Notify the client what it just sent and then echo each content block back.
+        await self._send_chunk(
+            params.sessionId,
+            TextContentBlock(type="text", text="Client sent:"),
+        )
         for block in params.prompt:
-            if state.cancel_event.is_set():
-                await self._send_text(params.sessionId, "Prompt interrupted by cancellation.")
-                return PromptResponse(stopReason="cancelled")
-            text = self._format_prompt_preview([block])
-            await self._send_text(params.sessionId, text)
-            await asyncio.sleep(0.4)
+            await self._send_chunk(params.sessionId, block)
 
         return PromptResponse(stopReason="end_turn")
 
     async def cancel(self, params: CancelNotification) -> None:  # noqa: ARG002
-        state = self._sessions.get(params.sessionId)
-        if state:
-            state.cancel()
-        await self._send_text(params.sessionId, "Agent received cancel signal.")
+        logging.info("Received cancel notification")
 
     async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
+        logging.info("Received extension method call: %s", method)
         return {"example": "response"}
 
     async def extNotification(self, method: str, params: dict) -> None:  # noqa: ARG002
-        return None
+        logging.info("Received extension notification: %s", method)
 
 
 async def main() -> None:
+    logging.basicConfig(level=logging.INFO)
     reader, writer = await stdio_streams()
-    AgentSideConnection(lambda conn: ExampleAgent(conn), writer, reader)
+    AgentSideConnection(ExampleAgent, writer, reader)
     await asyncio.Event().wait()
 
 

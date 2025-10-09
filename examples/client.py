@@ -1,192 +1,130 @@
 import asyncio
+import contextlib
+import logging
 import os
 import sys
-from dataclasses import dataclass
+from pathlib import Path
 
 from acp import (
     Client,
     ClientSideConnection,
-    PROTOCOL_VERSION,
-    CancelNotification,
     InitializeRequest,
     NewSessionRequest,
     PromptRequest,
-    RequestPermissionRequest,
-    RequestPermissionResponse,
+    RequestError,
     SessionNotification,
+    PROTOCOL_VERSION,
 )
-from acp.schema import AllowedOutcome, DeniedOutcome
-
-
-@dataclass
-class _PendingPermission:
-    request: RequestPermissionRequest
-    future: asyncio.Future[RequestPermissionResponse]
+from acp.schema import TextContentBlock
 
 
 class ExampleClient(Client):
-    def __init__(self) -> None:
-        self._pending_permission: _PendingPermission | None = None
-        self._active_prompt: asyncio.Task | None = None
+    async def requestPermission(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("session/request_permission")
 
-    # --- Helpers -----------------------------------------------------------
+    async def writeTextFile(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("fs/write_text_file")
 
-    def _print(self, message: str) -> None:
-        print(message)
+    async def readTextFile(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("fs/read_text_file")
 
-    def prompt_in_progress(self) -> bool:
-        task = self._active_prompt
-        return task is not None and not task.done()
+    async def createTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/create")
 
-    def _attach_prompt_task(self, task: asyncio.Task) -> None:
-        if self.prompt_in_progress():
-            raise RuntimeError("prompt already running")
-        self._active_prompt = task
+    async def terminalOutput(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/output")
 
-        def _done_callback(fut: asyncio.Future) -> None:
-            try:
-                result = fut.result()
-            except asyncio.CancelledError:
-                self._print("| Prompt cancelled locally.")
-            except Exception as exc:  # noqa: BLE001
-                print(f"error: {exc}", file=sys.stderr)
-            else:
-                stop_reason = getattr(result, "stopReason", "<unknown>")
-                self._print(f"| Prompt finished (stopReason={stop_reason}).")
-            finally:
-                self._active_prompt = None
+    async def releaseTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/release")
 
-        task.add_done_callback(_done_callback)
+    async def waitForTerminalExit(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/wait_for_exit")
 
-    def _set_pending_permission(self, params: RequestPermissionRequest) -> asyncio.Future[RequestPermissionResponse]:
-        if self._pending_permission is not None:
-            raise RuntimeError("permission already pending")
-        fut: asyncio.Future[RequestPermissionResponse] = asyncio.get_running_loop().create_future()
-        self._pending_permission = _PendingPermission(request=params, future=fut)
-        return fut
-
-    def pending_permission(self) -> _PendingPermission | None:
-        return self._pending_permission
-
-    def resolve_permission(self, allowed: bool) -> None:
-        pending = self._pending_permission
-        if pending is None:
-            self._print("| No permission request to resolve.")
-            return
-        if pending.future.done():
-            return
-        allow_option = next((opt for opt in pending.request.options if opt.kind.startswith("allow")), None)
-        deny_option = next((opt for opt in pending.request.options if opt.kind.startswith("reject")), None)
-
-        if allowed and allow_option is not None:
-            outcome = AllowedOutcome(optionId=allow_option.optionId, outcome="selected")
-            self._print("| Permission granted.")
-        elif not allowed and deny_option is not None:
-            outcome = AllowedOutcome(optionId=deny_option.optionId, outcome="selected")
-            self._print("| Permission denied.")
-        else:
-            outcome = DeniedOutcome(outcome="cancelled")
-            self._print("| Permission response unavailable; treating as cancelled.")
-
-        pending.future.set_result(RequestPermissionResponse(outcome=outcome))
-        self._pending_permission = None
-
-    # --- Client protocol callbacks ---------------------------------------
+    async def killTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/kill")
 
     async def sessionUpdate(self, params: SessionNotification) -> None:
         update = params.update
-        kind = getattr(update, "sessionUpdate", None) if not isinstance(update, dict) else update.get("sessionUpdate")
-        if kind == "agent_message_chunk":
-            content = update["content"] if isinstance(update, dict) else getattr(update, "content", None)
-            text = content.get("text") if isinstance(content, dict) else getattr(content, "text", "<content>")
-            self._print(f"| Agent: {text}")
+        if isinstance(update, dict):
+            kind = update.get("sessionUpdate")
+            content = update.get("content")
+        else:
+            kind = getattr(update, "sessionUpdate", None)
+            content = getattr(update, "content", None)
 
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
-        preview_parts = []
-        for item in params.toolCall.content or []:
-            block = item["content"] if isinstance(item, dict) else getattr(item, "content", None)
-            text = block.get("text") if isinstance(block, dict) else getattr(block, "text", None)
-            if text:
-                preview_parts.append(str(text))
-        preview = preview_parts[0] if preview_parts else "<no preview>"
+        if kind != "agent_message_chunk" or content is None:
+            return
 
-        self._print("| Agent requested permission:")
-        self._print(f"|   Tool: {params.toolCall.title}")
-        self._print(f"|   Preview: {preview}")
-        self._print("|   Respond with '/allow' or '/deny'.")
+        if isinstance(content, dict):
+            text = content.get("text", "<content>")
+        else:
+            text = getattr(content, "text", "<content>")
+        print(f"| Agent: {text}")
 
-        future = self._set_pending_permission(params)
-        return await future
+    async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
+        raise RequestError.method_not_found(method)
 
-    async def read_console(self, prompt: str) -> str:
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, lambda: input(prompt))
+    async def extNotification(self, method: str, params: dict) -> None:  # noqa: ARG002
+        raise RequestError.method_not_found(method)
 
 
-async def interactive_loop(conn: ClientSideConnection, session_id: str, ui: ExampleClient) -> None:
-    ui._print(
-        "Type text to send, '/allow' or '/deny' for permission requests, '/cancel' to stop the current prompt, '/quit' to exit."
-    )
+async def read_console(prompt: str) -> str:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: input(prompt))
+
+
+async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
     while True:
-        line: str
         try:
-            line = await ui.read_console("> ")
+            line = await read_console("> ")
         except EOFError:
             break
-        command = line.strip()
-        if not command:
-            continue
-
-        if ui.pending_permission() is not None:
-            cmd = command.lower()
-            if cmd in {"/allow", "allow", "y", "yes"}:
-                ui.resolve_permission(True)
-            elif cmd in {"/deny", "deny", "n", "no"}:
-                ui.resolve_permission(False)
-            else:
-                ui._print("| Awaiting permission decision. Use '/allow' or '/deny'.")
-            continue
-
-        cmd_lower = command.lower()
-        if cmd_lower in {"/quit", "quit", "exit"}:
+        except KeyboardInterrupt:
+            print("", file=sys.stderr)
             break
-        if cmd_lower in {"/allow", "allow", "y", "yes"}:
-            ui._print("| Nothing to allow right now.")
-            continue
-        if cmd_lower in {"/deny", "deny", "n", "no"}:
-            ui._print("| Nothing to deny right now.")
-            continue
-        if cmd_lower == "/cancel":
-            if ui.prompt_in_progress():
-                await conn.cancel(CancelNotification(sessionId=session_id))
-                ui._print("| Sent cancel request.")
-            else:
-                ui._print("| No active prompt.")
+
+        if not line:
             continue
 
-        if ui.prompt_in_progress():
-            ui._print("| Prompt already running. Use '/cancel' or wait for completion.")
-            continue
-
-        ui._print("| Sending prompt to agent...")
-        task = asyncio.create_task(
-            conn.prompt(PromptRequest(sessionId=session_id, prompt=[{"type": "text", "text": command}]))
-        )
-        ui._attach_prompt_task(task)
+        try:
+            await conn.prompt(
+                PromptRequest(
+                    sessionId=session_id,
+                    prompt=[TextContentBlock(type="text", text=line)],
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            logging.error("Prompt failed: %s", exc)
 
 
 async def main(argv: list[str]) -> int:
+    logging.basicConfig(level=logging.INFO)
+
     if len(argv) < 2:
         print("Usage: python examples/client.py AGENT_PROGRAM [ARGS...]", file=sys.stderr)
         return 2
 
+    program = argv[1]
+    args = argv[2:]
+
+    program_path = Path(program)
+    spawn_program = program
+    spawn_args = args
+
+    if program_path.exists() and not os.access(program_path, os.X_OK):
+        spawn_program = sys.executable
+        spawn_args = [str(program_path), *args]
+
     proc = await asyncio.create_subprocess_exec(
-        sys.executable,
-        *argv[1:],
+        spawn_program,
+        *spawn_args,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
     )
-    assert proc.stdin and proc.stdout
+
+    if proc.stdin is None or proc.stdout is None:
+        print("Agent process does not expose stdio pipes", file=sys.stderr)
+        return 1
 
     client_impl = ExampleClient()
     conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
@@ -194,12 +132,13 @@ async def main(argv: list[str]) -> int:
     await conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION, clientCapabilities=None))
     session = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
 
-    await interactive_loop(conn, session.sessionId, client_impl)
+    await interactive_loop(conn, session.sessionId)
 
-    try:
+    if proc.returncode is None:
         proc.terminate()
-    except ProcessLookupError:
-        pass
+        with contextlib.suppress(ProcessLookupError):
+            await proc.wait()
+
     return 0
 
 
