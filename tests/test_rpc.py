@@ -7,25 +7,39 @@ import pytest
 from acp import (
     Agent,
     AgentSideConnection,
+    AuthenticateRequest,
+    AuthenticateResponse,
     CancelNotification,
     Client,
     ClientSideConnection,
     InitializeRequest,
     InitializeResponse,
     LoadSessionRequest,
+    LoadSessionResponse,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
     ReadTextFileRequest,
     ReadTextFileResponse,
+    RequestError,
     RequestPermissionRequest,
     RequestPermissionResponse,
     SessionNotification,
+    SetSessionModelRequest,
+    SetSessionModelResponse,
     SetSessionModeRequest,
+    SetSessionModeResponse,
     WriteTextFileRequest,
+    WriteTextFileResponse,
 )
-from acp.schema import ContentBlock1, SessionUpdate1, SessionUpdate2
+from acp.schema import (
+    AgentMessageChunk,
+    AllowedOutcome,
+    DeniedOutcome,
+    TextContentBlock,
+    UserMessageChunk,
+)
 
 # --------------------- Test Utilities ---------------------
 
@@ -77,18 +91,28 @@ class TestClient(Client):
     __test__ = False  # prevent pytest from collecting this class
 
     def __init__(self) -> None:
-        self.permission_outcomes: list[dict] = []
+        self.permission_outcomes: list[RequestPermissionResponse] = []
         self.files: dict[str, str] = {}
         self.notifications: list[SessionNotification] = []
         self.ext_calls: list[tuple[str, dict]] = []
         self.ext_notes: list[tuple[str, dict]] = []
 
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
-        outcome = self.permission_outcomes.pop() if self.permission_outcomes else {"outcome": "cancelled"}
-        return RequestPermissionResponse.model_validate({"outcome": outcome})
+    def queue_permission_cancelled(self) -> None:
+        self.permission_outcomes.append(RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled")))
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> None:
+    def queue_permission_selected(self, option_id: str) -> None:
+        self.permission_outcomes.append(
+            RequestPermissionResponse(outcome=AllowedOutcome(optionId=option_id, outcome="selected"))
+        )
+
+    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+        if self.permission_outcomes:
+            return self.permission_outcomes.pop()
+        return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
+
+    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse:
         self.files[str(params.path)] = params.content
+        return WriteTextFileResponse()
 
     async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse:
         content = self.files.get(str(params.path), "default content")
@@ -98,24 +122,26 @@ class TestClient(Client):
         self.notifications.append(params)
 
     # Optional terminal methods (not implemented in this test client)
-    async def createTerminal(self, params) -> None:  # pragma: no cover - placeholder
-        pass
+    async def createTerminal(self, params):  # pragma: no cover - placeholder
+        raise NotImplementedError
 
-    async def terminalOutput(self, params) -> None:  # pragma: no cover - placeholder
-        pass
+    async def terminalOutput(self, params):  # pragma: no cover - placeholder
+        raise NotImplementedError
 
-    async def releaseTerminal(self, params) -> None:  # pragma: no cover - placeholder
-        pass
+    async def releaseTerminal(self, params):  # pragma: no cover - placeholder
+        raise NotImplementedError
 
-    async def waitForTerminalExit(self, params) -> None:  # pragma: no cover - placeholder
-        pass
+    async def waitForTerminalExit(self, params):  # pragma: no cover - placeholder
+        raise NotImplementedError
 
-    async def killTerminal(self, params) -> None:  # pragma: no cover - placeholder
-        pass
+    async def killTerminal(self, params):  # pragma: no cover - placeholder
+        raise NotImplementedError
 
     async def extMethod(self, method: str, params: dict) -> dict:
         self.ext_calls.append((method, params))
-        return {"ok": True, "method": method}
+        if method == "example.com/ping":
+            return {"response": "pong", "params": params}
+        raise RequestError.method_not_found(method)
 
     async def extNotification(self, method: str, params: dict) -> None:
         self.ext_notes.append((method, params))
@@ -137,11 +163,11 @@ class TestAgent(Agent):
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
         return NewSessionResponse(sessionId="test-session-123")
 
-    async def loadSession(self, params: LoadSessionRequest) -> None:
-        return None
+    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse:
+        return LoadSessionResponse()
 
-    async def authenticate(self, params) -> None:
-        return None
+    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse:
+        return AuthenticateResponse()
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         self.prompts.append(params)
@@ -150,12 +176,17 @@ class TestAgent(Agent):
     async def cancel(self, params: CancelNotification) -> None:
         self.cancellations.append(params.sessionId)
 
-    async def setSessionMode(self, params):
-        return {}
+    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse:
+        return SetSessionModeResponse()
+
+    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse:
+        return SetSessionModelResponse()
 
     async def extMethod(self, method: str, params: dict) -> dict:
         self.ext_calls.append((method, params))
-        return {"ok": True, "method": method}
+        if method == "example.com/echo":
+            return {"echo": params}
+        raise RequestError.method_not_found(method)
 
     async def extNotification(self, method: str, params: dict) -> None:
         self.ext_notes.append((method, params))
@@ -180,6 +211,22 @@ async def test_initialize_and_new_session():
         new_sess = await agent_conn.newSession(NewSessionRequest(mcpServers=[], cwd="/test"))
         assert new_sess.sessionId == "test-session-123"
 
+        load_resp = await agent_conn.loadSession(
+            LoadSessionRequest(sessionId=new_sess.sessionId, cwd="/test", mcpServers=[])
+        )
+        assert isinstance(load_resp, LoadSessionResponse)
+
+        auth_resp = await agent_conn.authenticate(AuthenticateRequest(methodId="password"))
+        assert isinstance(auth_resp, AuthenticateResponse)
+
+        mode_resp = await agent_conn.setSessionMode(SetSessionModeRequest(sessionId=new_sess.sessionId, modeId="ask"))
+        assert isinstance(mode_resp, SetSessionModeResponse)
+
+        model_resp = await agent_conn.setSessionModel(
+            SetSessionModelRequest(sessionId=new_sess.sessionId, modelId="gpt-4o")
+        )
+        assert isinstance(model_resp, SetSessionModelResponse)
+
 
 @pytest.mark.asyncio
 async def test_bidirectional_file_ops():
@@ -195,9 +242,10 @@ async def test_bidirectional_file_ops():
         assert res.content == "Hello, World!"
 
         # Agent asks client to write
-        await client_conn.writeTextFile(
+        write_result = await client_conn.writeTextFile(
             WriteTextFileRequest(sessionId="sess", path="/test/file.txt", content="Updated")
         )
+        assert isinstance(write_result, WriteTextFileResponse)
         assert client.files["/test/file.txt"] == "Updated"
 
 
@@ -234,18 +282,18 @@ async def test_session_notifications_flow():
         await client_conn.sessionUpdate(
             SessionNotification(
                 sessionId="sess",
-                update=SessionUpdate2(
+                update=AgentMessageChunk(
                     sessionUpdate="agent_message_chunk",
-                    content=ContentBlock1(type="text", text="Hello"),
+                    content=TextContentBlock(type="text", text="Hello"),
                 ),
             )
         )
         await client_conn.sessionUpdate(
             SessionNotification(
                 sessionId="sess",
-                update=SessionUpdate1(
+                update=UserMessageChunk(
                     sessionUpdate="user_message_chunk",
-                    content=ContentBlock1(type="text", text="World"),
+                    content=TextContentBlock(type="text", text="World"),
                 ),
             )
         )
@@ -319,22 +367,29 @@ async def test_set_session_mode_and_extensions():
         agent = TestAgent()
         client = TestClient()
         agent_conn = ClientSideConnection(lambda _conn: client, s.client_writer, s.client_reader)
-        _client_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
+        client_conn = AgentSideConnection(lambda _conn: agent, s.server_writer, s.server_reader)
 
         # setSessionMode
         resp = await agent_conn.setSessionMode(SetSessionModeRequest(sessionId="sess", modeId="yolo"))
-        # Either empty object or typed response depending on implementation
-        assert resp is None or resp.__class__.__name__ == "SetSessionModeResponse"
+        assert isinstance(resp, SetSessionModeResponse)
+
+        model_resp = await agent_conn.setSessionModel(SetSessionModelRequest(sessionId="sess", modelId="gpt-4o-mini"))
+        assert isinstance(model_resp, SetSessionModelResponse)
 
         # extMethod
-        res = await agent_conn.extMethod("ping", {"x": 1})
-        assert res.get("ok") is True
+        echo = await agent_conn.extMethod("example.com/echo", {"x": 1})
+        assert echo == {"echo": {"x": 1}}
 
         # extNotification
         await agent_conn.extNotification("note", {"y": 2})
         # allow dispatch
         await asyncio.sleep(0.05)
         assert agent.ext_notes and agent.ext_notes[-1][0] == "note"
+
+        # client extension method
+        ping = await client_conn.extMethod("example.com/ping", {"k": 3})
+        assert ping == {"response": "pong", "params": {"k": 3}}
+        assert client.ext_calls and client.ext_calls[-1] == ("example.com/ping", {"k": 3})
 
 
 @pytest.mark.asyncio

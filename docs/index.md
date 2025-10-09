@@ -1,67 +1,30 @@
-# Agent Client Protocol (Python)
+# Agent Client Protocol SDK (Python)
 
-A Python implementation of the Agent Client Protocol (ACP). Build agents that communicate with ACP-capable clients (e.g. Zed) over stdio.
+Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships ready-to-use transports, typed protocol models, and examples that stream messages to ACP-aware clients such as Zed.
 
-## Install
+## What you get
 
-```bash
-pip install agent-client-protocol
-```
+- Fully typed dataclasses generated from the upstream ACP schema (`acp.schema`)
+- Async agent base class and stdio helpers to spin up an agent in a few lines
+- Examples that demonstrate streaming updates and tool execution over ACP
 
-## Minimal usage
+## Getting started
 
-```python
-import asyncio
+1. Install the package:
+   ```bash
+   pip install agent-client-protocol
+   ```
+2. Launch the provided echo agent to verify your setup:
+   ```bash
+   python examples/echo_agent.py
+   ```
+3. Point your ACP-capable client at the running process (for Zed, configure an Agent Server entry). The SDK takes care of JSON-RPC framing and lifecycle transitions.
 
-from acp import (
-    Agent,
-    AgentSideConnection,
-    InitializeRequest,
-    InitializeResponse,
-    NewSessionRequest,
-    NewSessionResponse,
-    PromptRequest,
-    PromptResponse,
-    SessionNotification,
-    stdio_streams,
-)
-from acp.schema import ContentBlock1, SessionUpdate2
+Prefer a guided tour? Head to the [Quickstart](quickstart.md) for step-by-step instructions, including how to run the agent from an editor or terminal.
 
+## Documentation map
 
-class EchoAgent(Agent):
-    def __init__(self, conn):
-        self._conn = conn
+- [Quickstart](quickstart.md): install, run, and extend the echo agent
+- [Mini SWE Agent guide](mini-swe-agent.md): bridge mini-swe-agent over ACP, including duet launcher and Textual client
 
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        return InitializeResponse(protocolVersion=params.protocolVersion)
-
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
-        return NewSessionResponse(sessionId="sess-1")
-
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        for block in params.prompt:
-            text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
-            await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=SessionUpdate2(
-                        sessionUpdate="agent_message_chunk",
-                        content=ContentBlock1(type="text", text=text),
-                    ),
-                )
-            )
-        return PromptResponse(stopReason="end_turn")
-
-
-async def main() -> None:
-    reader, writer = await stdio_streams()
-    AgentSideConnection(lambda conn: EchoAgent(conn), writer, reader)
-    await asyncio.Event().wait()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-- Quickstart: [quickstart.md](quickstart.md)
-- Mini SWE Agent example: [mini-swe-agent.md](mini-swe-agent.md)
+Source code lives under `src/acp/`, while tests and additional examples are available in `tests/` and `examples/`. If you plan to contribute, see the repository README for the development workflow.

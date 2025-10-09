@@ -1,73 +1,144 @@
 import asyncio
+import contextlib
+import logging
 import os
 import sys
-from typing import Optional
+from pathlib import Path
 
 from acp import (
     Client,
-    PROTOCOL_VERSION,
     ClientSideConnection,
     InitializeRequest,
     NewSessionRequest,
     PromptRequest,
+    RequestError,
     SessionNotification,
+    PROTOCOL_VERSION,
 )
+from acp.schema import TextContentBlock
 
 
 class ExampleClient(Client):
+    async def requestPermission(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("session/request_permission")
+
+    async def writeTextFile(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("fs/write_text_file")
+
+    async def readTextFile(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("fs/read_text_file")
+
+    async def createTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/create")
+
+    async def terminalOutput(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/output")
+
+    async def releaseTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/release")
+
+    async def waitForTerminalExit(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/wait_for_exit")
+
+    async def killTerminal(self, params):  # type: ignore[override]
+        raise RequestError.method_not_found("terminal/kill")
+
     async def sessionUpdate(self, params: SessionNotification) -> None:
         update = params.update
-        kind = getattr(update, "sessionUpdate", None) if not isinstance(update, dict) else update.get("sessionUpdate")
-        if kind == "agent_message_chunk":
-            # Handle both dict and model shapes
-            content = update["content"] if isinstance(update, dict) else getattr(update, "content", None)
-            text = content.get("text") if isinstance(content, dict) else getattr(content, "text", "<content>")
-            print(f"| Agent: {text}")
+        if isinstance(update, dict):
+            kind = update.get("sessionUpdate")
+            content = update.get("content")
+        else:
+            kind = getattr(update, "sessionUpdate", None)
+            content = getattr(update, "content", None)
+
+        if kind != "agent_message_chunk" or content is None:
+            return
+
+        if isinstance(content, dict):
+            text = content.get("text", "<content>")
+        else:
+            text = getattr(content, "text", "<content>")
+        print(f"| Agent: {text}")
+
+    async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
+        raise RequestError.method_not_found(method)
+
+    async def extNotification(self, method: str, params: dict) -> None:  # noqa: ARG002
+        raise RequestError.method_not_found(method)
+
+
+async def read_console(prompt: str) -> str:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: input(prompt))
 
 
 async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
-    loop = asyncio.get_running_loop()
     while True:
         try:
-            line = await loop.run_in_executor(None, lambda: input("> "))
+            line = await read_console("> ")
         except EOFError:
             break
+        except KeyboardInterrupt:
+            print("", file=sys.stderr)
+            break
+
         if not line:
             continue
+
         try:
-            await conn.prompt(PromptRequest(sessionId=session_id, prompt=[{"type": "text", "text": line}]))
-        except Exception as e:  # noqa: BLE001
-            print(f"error: {e}", file=sys.stderr)
+            await conn.prompt(
+                PromptRequest(
+                    sessionId=session_id,
+                    prompt=[TextContentBlock(type="text", text=line)],
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            logging.error("Prompt failed: %s", exc)
 
 
 async def main(argv: list[str]) -> int:
+    logging.basicConfig(level=logging.INFO)
+
     if len(argv) < 2:
         print("Usage: python examples/client.py AGENT_PROGRAM [ARGS...]", file=sys.stderr)
         return 2
 
-    # Spawn agent subprocess
+    program = argv[1]
+    args = argv[2:]
+
+    program_path = Path(program)
+    spawn_program = program
+    spawn_args = args
+
+    if program_path.exists() and not os.access(program_path, os.X_OK):
+        spawn_program = sys.executable
+        spawn_args = [str(program_path), *args]
+
     proc = await asyncio.create_subprocess_exec(
-        sys.executable,
-        *argv[1:],
+        spawn_program,
+        *spawn_args,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
     )
-    assert proc.stdin and proc.stdout
 
-    # Connect to agent stdio
-    conn = ClientSideConnection(lambda _agent: ExampleClient(), proc.stdin, proc.stdout)
+    if proc.stdin is None or proc.stdout is None:
+        print("Agent process does not expose stdio pipes", file=sys.stderr)
+        return 1
 
-    # Initialize and create session
+    client_impl = ExampleClient()
+    conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
+
     await conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION, clientCapabilities=None))
-    new_sess = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
+    session = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
 
-    # Run REPL until EOF
-    await interactive_loop(conn, new_sess.sessionId)
+    await interactive_loop(conn, session.sessionId)
 
-    try:
+    if proc.returncode is None:
         proc.terminate()
-    except ProcessLookupError:
-        pass
+        with contextlib.suppress(ProcessLookupError):
+            await proc.wait()
+
     return 0
 
 

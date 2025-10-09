@@ -5,7 +5,6 @@ on:
     types: [published]
 
 jobs:
-
   set-version:
     runs-on: ubuntu-24.04
     steps:
@@ -63,4 +62,13 @@ jobs:
         uses: ./.github/actions/setup-python-env
 
       - name: Deploy documentation
-        run: uv run mkdocs gh-deploy --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: acp-bot
+          GIT_AUTHOR_EMAIL: noreply@github.com
+          GIT_COMMITTER_NAME: acp-bot
+          GIT_COMMITTER_EMAIL: noreply@github.com
+        run: |
+          git config user.name "$GIT_AUTHOR_NAME"
+          git config user.email "$GIT_AUTHOR_EMAIL"
+          uv run mkdocs gh-deploy --force --remote-branch gh-pages --remote-name origin

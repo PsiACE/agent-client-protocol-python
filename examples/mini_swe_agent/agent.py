@@ -26,19 +26,18 @@ from acp import (
     PROTOCOL_VERSION,
 )
 from acp.schema import (
-    ContentBlock1,
+    AgentMessageChunk,
+    AgentThoughtChunk,
+    AllowedOutcome,
+    ContentToolCallContent,
     PermissionOption,
     RequestPermissionRequest,
     RequestPermissionResponse,
-    RequestPermissionOutcome1,
-    RequestPermissionOutcome2,
-    SessionUpdate1,
-    SessionUpdate2,
-    SessionUpdate3,
-    SessionUpdate4,
-    SessionUpdate5,
-    ToolCallContent1,
+    TextContentBlock,
+    ToolCallStart,
+    ToolCallProgress,
     ToolCallUpdate,
+    UserMessageChunk,
 )
 
 
@@ -130,9 +129,9 @@ def _create_streaming_mini_agent(
                     cost = float(getattr(self.model, "cost", 0.0))
                 except Exception:
                     cost = 0.0
-                hint = SessionUpdate3(
+                hint = AgentThoughtChunk(
                     sessionUpdate="agent_thought_chunk",
-                    content=ContentBlock1(type="text", text=f"__COST__:{cost:.2f}"),
+                    content=TextContentBlock(type="text", text=f"__COST__:{cost:.2f}"),
                 )
                 try:
                     loop = asyncio.get_running_loop()
@@ -142,15 +141,15 @@ def _create_streaming_mini_agent(
 
             async def on_tool_start(self, title: str, command: str, tool_call_id: str) -> None:
                 """Send a tool_call start notification for a bash command."""
-                update = SessionUpdate4(
+                update = ToolCallStart(
                     sessionUpdate="tool_call",
                     toolCallId=tool_call_id,
                     title=title,
                     kind="execute",
                     status="pending",
                     content=[
-                        ToolCallContent1(
-                            type="content", content=ContentBlock1(type="text", text=f"```bash\n{command}\n```")
+                        ContentToolCallContent(
+                            type="content", content=TextContentBlock(type="text", text=f"```bash\n{command}\n```")
                         )
                     ],
                     rawInput={"command": command},
@@ -166,13 +165,13 @@ def _create_streaming_mini_agent(
                 status: str = "completed",
             ) -> None:
                 """Send a tool_call_update with the final output and return code."""
-                update = SessionUpdate5(
+                update = ToolCallProgress(
                     sessionUpdate="tool_call_update",
                     toolCallId=tool_call_id,
                     status=status,
                     content=[
-                        ToolCallContent1(
-                            type="content", content=ContentBlock1(type="text", text=f"```ansi\n{output}\n```")
+                        ContentToolCallContent(
+                            type="content", content=TextContentBlock(type="text", text=f"```ansi\n{output}\n```")
                         )
                     ],
                     rawOutput={"output": output, "returncode": returncode},
@@ -185,8 +184,8 @@ def _create_streaming_mini_agent(
                 if not getattr(self, "_emit_updates", True) or role != "assistant":
                     return
                 text = str(content)
-                block = ContentBlock1(type="text", text=text)
-                update = SessionUpdate2(sessionUpdate="agent_message_chunk", content=block)
+                block = TextContentBlock(type="text", text=text)
+                update = AgentMessageChunk(sessionUpdate="agent_message_chunk", content=block)
                 try:
                     loop = asyncio.get_running_loop()
                     loop.create_task(self._send(update))
@@ -208,9 +207,9 @@ def _create_streaming_mini_agent(
                         kind="execute",
                         status="pending",
                         content=[
-                            ToolCallContent1(
+                            ContentToolCallContent(
                                 type="content",
-                                content=ContentBlock1(type="text", text=f"```bash\n{command}\n```"),
+                                content=TextContentBlock(type="text", text=f"```bash\n{command}\n```"),
                             )
                         ],
                         rawInput={"command": command},
@@ -222,7 +221,7 @@ def _create_streaming_mini_agent(
                 except Exception:
                     return False
                 out = resp.outcome
-                if isinstance(out, RequestPermissionOutcome2) and out.optionId in ("allow-once", "allow-always"):
+                if isinstance(out, AllowedOutcome) and out.optionId in ("allow-once", "allow-always"):
                     return True
                 return False
 
@@ -253,7 +252,7 @@ def _create_streaming_mini_agent(
                     # Mark in progress
                     self._schedule(
                         self._send(
-                            SessionUpdate5(
+                            ToolCallProgress(
                                 sessionUpdate="tool_call_update",
                                 toolCallId=tool_id,
                                 status="in_progress",
@@ -428,9 +427,9 @@ class MiniSweACPAgent(Agent):
                 await self._client.sessionUpdate(
                     SessionNotification(
                         sessionId=params.sessionId,
-                        update=SessionUpdate2(
+                        update=AgentMessageChunk(
                             sessionUpdate="agent_message_chunk",
-                            content=ContentBlock1(
+                            content=TextContentBlock(
                                 type="text",
                                 text=(
                                     "mini-swe-agent load error: "
@@ -476,9 +475,9 @@ class MiniSweACPAgent(Agent):
                     await self._client.sessionUpdate(
                         SessionNotification(
                             sessionId=params.sessionId,
-                            update=SessionUpdate2(
+                            update=AgentMessageChunk(
                                 sessionUpdate="agent_message_chunk",
-                                content=ContentBlock1(type="text", text="Human mode: please submit a bash command."),
+                                content=TextContentBlock(type="text", text="Human mode: please submit a bash command."),
                             ),
                         )
                     )
@@ -508,9 +507,9 @@ class MiniSweACPAgent(Agent):
                 await self._client.sessionUpdate(
                     SessionNotification(
                         sessionId=params.sessionId,
-                        update=SessionUpdate2(
+                        update=AgentMessageChunk(
                             sessionUpdate="agent_message_chunk",
-                            content=ContentBlock1(
+                            content=TextContentBlock(
                                 type="text",
                                 text=(
                                     "Agent finished. Type a new task in the next message to continue, or do nothing to end."
@@ -528,9 +527,9 @@ class MiniSweACPAgent(Agent):
             await self._client.sessionUpdate(
                 SessionNotification(
                     sessionId=params.sessionId,
-                    update=SessionUpdate2(
+                    update=AgentMessageChunk(
                         sessionUpdate="agent_message_chunk",
-                        content=ContentBlock1(type="text", text=f"Error while processing: {e}"),
+                        content=TextContentBlock(type="text", text=f"Error while processing: {e}"),
                     ),
                 )
             )
