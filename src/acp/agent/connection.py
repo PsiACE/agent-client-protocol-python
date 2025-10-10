@@ -28,7 +28,7 @@ from ..schema import (
 )
 from ..terminal import TerminalHandle
 from ..utils import notify_model, request_model, request_optional_model
-from .handlers import dispatch_agent_method
+from .router import build_agent_router
 
 __all__ = ["AgentSideConnection"]
 
@@ -52,8 +52,13 @@ class AgentSideConnection:
         self._conn = Connection(handler, input_stream, output_stream)
 
     def _create_handler(self, agent: Agent) -> MethodHandler:
+        router = build_agent_router(agent)
+
         async def handler(method: str, params: Any | None, is_notification: bool) -> Any:
-            return await dispatch_agent_method(agent, method, params, is_notification)
+            if is_notification:
+                await router.dispatch_notification(method, params)
+                return None
+            return await router.dispatch_request(method, params)
 
         return handler
 

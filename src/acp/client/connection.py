@@ -29,7 +29,7 @@ from ..utils import (
     request_model,
     request_model_from_dict,
 )
-from .handlers import dispatch_client_method
+from .router import build_client_router
 
 __all__ = ["ClientSideConnection"]
 
@@ -53,8 +53,13 @@ class ClientSideConnection:
         self._conn = Connection(handler, input_stream, output_stream)
 
     def _create_handler(self, client: Client) -> MethodHandler:
+        router = build_client_router(client)
+
         async def handler(method: str, params: Any | None, is_notification: bool) -> Any:
-            return await dispatch_client_method(client, method, params, is_notification)
+            if is_notification:
+                await router.dispatch_notification(method, params)
+                return None
+            return await router.dispatch_request(method, params)
 
         return handler
 
