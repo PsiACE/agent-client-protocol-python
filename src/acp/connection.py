@@ -5,12 +5,26 @@ import contextlib
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
 from .exceptions import RequestError
+from .task import (
+    DefaultMessageDispatcher,
+    InMemoryMessageQueue,
+    InMemoryMessageStateStore,
+    MessageDispatcher,
+    MessageQueue,
+    MessageSender,
+    MessageStateStore,
+    NotificationRunner,
+    RequestRunner,
+    RpcTask,
+    RpcTaskKind,
+    SenderFactory,
+    TaskSupervisor,
+)
 
 JsonValue = Any
 MethodHandler = Callable[[str, JsonValue | None, bool], Awaitable[JsonValue | None]]
@@ -19,9 +33,10 @@ MethodHandler = Callable[[str, JsonValue | None, bool], Awaitable[JsonValue | No
 __all__ = ["Connection", "JsonValue", "MethodHandler"]
 
 
-@dataclass(slots=True)
-class _Pending:
-    future: asyncio.Future[Any]
+DispatcherFactory = Callable[
+    [MessageQueue, TaskSupervisor, MessageStateStore, RequestRunner, NotificationRunner],
+    MessageDispatcher,
+]
 
 
 class Connection:
@@ -32,42 +47,64 @@ class Connection:
         handler: MethodHandler,
         writer: asyncio.StreamWriter,
         reader: asyncio.StreamReader,
+        *,
+        queue: MessageQueue | None = None,
+        state_store: MessageStateStore | None = None,
+        dispatcher_factory: DispatcherFactory | None = None,
+        sender_factory: SenderFactory | None = None,
     ) -> None:
         self._handler = handler
         self._writer = writer
         self._reader = reader
         self._next_request_id = 0
-        self._pending: dict[int, _Pending] = {}
-        self._inflight: set[asyncio.Task[Any]] = set()
-        self._write_lock = asyncio.Lock()
-        self._recv_task = asyncio.create_task(self._receive_loop())
+        self._state = state_store or InMemoryMessageStateStore()
+        self._tasks = TaskSupervisor(source="acp.Connection")
+        self._tasks.add_error_handler(self._on_task_error)
+        self._queue = queue or InMemoryMessageQueue()
+        self._closed = False
+        self._sender = (sender_factory or self._default_sender_factory)(self._writer, self._tasks)
+        self._recv_task = self._tasks.create(
+            self._receive_loop(),
+            name="acp.Connection.receive",
+            on_error=self._on_receive_error,
+        )
+        dispatcher_factory = dispatcher_factory or self._default_dispatcher_factory
+        self._dispatcher = dispatcher_factory(
+            self._queue,
+            self._tasks,
+            self._state,
+            self._run_request,
+            self._run_notification,
+        )
+        self._dispatcher.start()
 
     async def close(self) -> None:
         """Stop the receive loop and cancel any in-flight handler tasks."""
-        if not self._recv_task.done():
-            self._recv_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._recv_task
-        if self._inflight:
-            tasks = list(self._inflight)
-            for task in tasks:
-                task.cancel()
-            for task in tasks:
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
+        if self._closed:
+            return
+        self._closed = True
+        await self._dispatcher.stop()
+        await self._sender.close()
+        await self._tasks.shutdown()
+        self._state.reject_all_outgoing(ConnectionError("Connection closed"))
+
+    async def __aenter__(self) -> Connection:
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()
 
     async def send_request(self, method: str, params: JsonValue | None = None) -> Any:
         request_id = self._next_request_id
         self._next_request_id += 1
-        future: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
-        self._pending[request_id] = _Pending(future)
+        future = self._state.register_outgoing(request_id, method)
         payload = {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}
-        await self._send_obj(payload)
+        await self._sender.send(payload)
         return await future
 
     async def send_notification(self, method: str, params: JsonValue | None = None) -> None:
         payload = {"jsonrpc": "2.0", "method": method, "params": params}
-        await self._send_obj(payload)
+        await self._sender.send(payload)
 
     async def _receive_loop(self) -> None:
         try:
@@ -88,71 +125,87 @@ class Connection:
         method = message.get("method")
         has_id = "id" in message
         if method is not None and has_id:
-            self._schedule(self._handle_request(message))
+            await self._queue.publish(RpcTask(RpcTaskKind.REQUEST, message))
             return
         if method is not None and not has_id:
-            await self._handle_notification(message)
+            await self._queue.publish(RpcTask(RpcTaskKind.NOTIFICATION, message))
             return
         if has_id:
             await self._handle_response(message)
 
-    def _schedule(self, coroutine: Awaitable[Any]) -> None:
-        task = asyncio.create_task(coroutine)
-        self._inflight.add(task)
-        task.add_done_callback(self._task_done)
-
-    def _task_done(self, task: asyncio.Task[Any]) -> None:
-        self._inflight.discard(task)
-        if task.cancelled():
-            return
-        with contextlib.suppress(Exception):
-            task.result()
-
-    async def _handle_request(self, message: dict[str, Any]) -> None:
+    async def _run_request(self, message: dict[str, Any]) -> Any:
         payload: dict[str, Any] = {"jsonrpc": "2.0", "id": message["id"]}
         try:
             result = await self._handler(message["method"], message.get("params"), False)
             if isinstance(result, BaseModel):
                 result = result.model_dump()
             payload["result"] = result if result is not None else None
+            await self._sender.send(payload)
+            return payload.get("result")
         except RequestError as exc:
             payload["error"] = exc.to_error_obj()
+            await self._sender.send(payload)
+            raise
         except ValidationError as exc:
-            payload["error"] = RequestError.invalid_params({"errors": exc.errors()}).to_error_obj()
+            err = RequestError.invalid_params({"errors": exc.errors()})
+            payload["error"] = err.to_error_obj()
+            await self._sender.send(payload)
+            raise err from None
         except Exception as exc:
             try:
                 data = json.loads(str(exc))
             except Exception:
                 data = {"details": str(exc)}
-            payload["error"] = RequestError.internal_error(data).to_error_obj()
-        await self._send_obj(payload)
+            err = RequestError.internal_error(data)
+            payload["error"] = err.to_error_obj()
+            await self._sender.send(payload)
+            raise err from None
 
-    async def _handle_notification(self, message: dict[str, Any]) -> None:
+    async def _run_notification(self, message: dict[str, Any]) -> None:
         with contextlib.suppress(Exception):
             await self._handler(message["method"], message.get("params"), True)
 
     async def _handle_response(self, message: dict[str, Any]) -> None:
-        pending = self._pending.pop(message["id"], None)
-        if pending is None:
-            return
+        request_id = message["id"]
+        result = message.get("result")
         if "result" in message:
-            pending.future.set_result(message.get("result"))
+            self._state.resolve_outgoing(request_id, result)
             return
         if "error" in message:
             error_obj = message.get("error") or {}
-            pending.future.set_exception(
+            self._state.reject_outgoing(
+                request_id,
                 RequestError(
                     error_obj.get("code", -32603),
                     error_obj.get("message", "Error"),
                     error_obj.get("data"),
-                )
+                ),
             )
             return
-        pending.future.set_result(None)
+        self._state.resolve_outgoing(request_id, None)
 
-    async def _send_obj(self, payload: dict[str, Any]) -> None:
-        data = (json.dumps(payload, separators=(",", ":")) + "\n").encode("utf-8")
-        async with self._write_lock:
-            self._writer.write(data)
-            with contextlib.suppress(ConnectionError, RuntimeError):
-                await self._writer.drain()
+    def _on_receive_error(self, task: asyncio.Task[Any], exc: BaseException) -> None:
+        logging.exception("Receive loop failed", exc_info=exc)
+        self._state.reject_all_outgoing(exc)
+
+    def _on_task_error(self, task: asyncio.Task[Any], exc: BaseException) -> None:
+        logging.exception("Background task failed", exc_info=exc)
+
+    def _default_dispatcher_factory(
+        self,
+        queue: MessageQueue,
+        supervisor: TaskSupervisor,
+        state: MessageStateStore,
+        request_runner: RequestRunner,
+        notification_runner: NotificationRunner,
+    ) -> MessageDispatcher:
+        return DefaultMessageDispatcher(
+            queue=queue,
+            supervisor=supervisor,
+            store=state,
+            request_runner=request_runner,
+            notification_runner=notification_runner,
+        )
+
+    def _default_sender_factory(self, writer: asyncio.StreamWriter, supervisor: TaskSupervisor) -> MessageSender:
+        return MessageSender(writer, supervisor)
