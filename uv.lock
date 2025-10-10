@@ -13,6 +13,7 @@ dependencies = [
 [package.optional-dependencies]
 logfire = [
     { name = "logfire" },
+    { name = "opentelemetry-sdk" },
 ]
 
 [package.dev-dependencies]
@@ -35,6 +36,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "logfire", marker = "extra == 'logfire'", specifier = ">=0.14" },
+    { name = "opentelemetry-sdk", marker = "extra == 'logfire'", specifier = ">=1.28.0" },
     { name = "pydantic", specifier = ">=2.7" },
 ]
 provides-extras = ["logfire"]

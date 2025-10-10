@@ -44,7 +44,7 @@ dev = [
 ]
 
 [project.optional-dependencies]
-logfire = ["logfire>=0.14"]
+logfire = ["logfire>=0.14", "opentelemetry-sdk>=1.28.0"]
 
 [build-system]
 requires = ["hatchling"]
