@@ -25,6 +25,7 @@ from .task import (
     SenderFactory,
     TaskSupervisor,
 )
+from .telemetry import span_context
 
 JsonValue = Any
 MethodHandler = Callable[[str, JsonValue | None, bool], Awaitable[JsonValue | None]]
@@ -135,35 +136,41 @@ class Connection:
 
     async def _run_request(self, message: dict[str, Any]) -> Any:
         payload: dict[str, Any] = {"jsonrpc": "2.0", "id": message["id"]}
-        try:
-            result = await self._handler(message["method"], message.get("params"), False)
-            if isinstance(result, BaseModel):
-                result = result.model_dump()
-            payload["result"] = result if result is not None else None
-            await self._sender.send(payload)
-            return payload.get("result")
-        except RequestError as exc:
-            payload["error"] = exc.to_error_obj()
-            await self._sender.send(payload)
-            raise
-        except ValidationError as exc:
-            err = RequestError.invalid_params({"errors": exc.errors()})
-            payload["error"] = err.to_error_obj()
-            await self._sender.send(payload)
-            raise err from None
-        except Exception as exc:
+        method = message["method"]
+        with span_context(
+            "acp.request",
+            attributes={"method": method},
+        ):
             try:
-                data = json.loads(str(exc))
-            except Exception:
-                data = {"details": str(exc)}
-            err = RequestError.internal_error(data)
-            payload["error"] = err.to_error_obj()
-            await self._sender.send(payload)
-            raise err from None
+                result = await self._handler(method, message.get("params"), False)
+                if isinstance(result, BaseModel):
+                    result = result.model_dump()
+                payload["result"] = result if result is not None else None
+                await self._sender.send(payload)
+                return payload.get("result")
+            except RequestError as exc:
+                payload["error"] = exc.to_error_obj()
+                await self._sender.send(payload)
+                raise
+            except ValidationError as exc:
+                err = RequestError.invalid_params({"errors": exc.errors()})
+                payload["error"] = err.to_error_obj()
+                await self._sender.send(payload)
+                raise err from None
+            except Exception as exc:
+                try:
+                    data = json.loads(str(exc))
+                except Exception:
+                    data = {"details": str(exc)}
+                err = RequestError.internal_error(data)
+                payload["error"] = err.to_error_obj()
+                await self._sender.send(payload)
+                raise err from None
 
     async def _run_notification(self, message: dict[str, Any]) -> None:
-        with contextlib.suppress(Exception):
-            await self._handler(message["method"], message.get("params"), True)
+        method = message["method"]
+        with span_context("acp.notification", attributes={"method": method}), contextlib.suppress(Exception):
+            await self._handler(method, message.get("params"), True)
 
     async def _handle_response(self, message: dict[str, Any]) -> None:
         request_id = message["id"]
