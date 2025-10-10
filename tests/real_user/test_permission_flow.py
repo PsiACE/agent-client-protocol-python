@@ -2,16 +2,11 @@ import asyncio
 
 import pytest
 
-from acp import (
-    AgentSideConnection,
-    ClientSideConnection,
-    PromptRequest,
-    PromptResponse,
-    RequestPermissionRequest,
-    RequestPermissionResponse,
-)
+from acp import AgentSideConnection, ClientSideConnection, PromptRequest, PromptResponse, RequestPermissionRequest
 from acp.schema import PermissionOption, TextContentBlock, ToolCallUpdate
 from tests.test_rpc import TestAgent, TestClient, _Server
+
+# Regression from real-world runs where agents paused prompts to obtain user permission.
 
 
 class PermissionRequestAgent(TestAgent):
@@ -20,7 +15,7 @@ class PermissionRequestAgent(TestAgent):
     def __init__(self, conn: AgentSideConnection) -> None:
         super().__init__()
         self._conn = conn
-        self.permission_responses: list[RequestPermissionResponse] = []
+        self.permission_responses = []
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         permission = await self._conn.requestPermission(
@@ -43,7 +38,7 @@ async def test_agent_request_permission_roundtrip() -> None:
         client = TestClient()
         client.queue_permission_selected("allow")
 
-        captured_agent: list[PermissionRequestAgent] = []
+        captured_agent = []
 
         agent_conn = ClientSideConnection(lambda _conn: client, server.client_writer, server.client_reader)
         _agent_conn = AgentSideConnection(
