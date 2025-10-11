@@ -2,15 +2,11 @@ import asyncio
 
 import pytest
 
-from acp import (
-    AgentSideConnection,
-    CancelNotification,
-    ClientSideConnection,
-    PromptRequest,
-    PromptResponse,
-)
+from acp import AgentSideConnection, CancelNotification, ClientSideConnection, PromptRequest, PromptResponse
 from acp.schema import TextContentBlock
 from tests.test_rpc import TestAgent, TestClient, _Server
+
+# Regression from a real user session where cancel needed to interrupt a long-running prompt.
 
 
 class LongRunningAgent(TestAgent):

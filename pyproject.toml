@@ -43,6 +43,9 @@ dev = [
     "python-dotenv>=1.1.1",
 ]
 
+[project.optional-dependencies]
+logfire = ["logfire>=0.14", "opentelemetry-sdk>=1.28.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
