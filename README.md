@@ -36,51 +36,58 @@ Embed the agent inside another Python process without spawning your own pipes:
 
 ```python
 import asyncio
+import sys
+from pathlib import Path
+
+from acp import spawn_agent_process
+from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, TextContentBlock
+
+
+async def main() -> None:
+    agent_script = Path("examples/echo_agent.py")
+    async with spawn_agent_process(lambda _agent: YourClient(), sys.executable, str(agent_script)) as (conn, _proc):
+        await conn.initialize(InitializeRequest(protocolVersion=1))
+        session = await conn.newSession(NewSessionRequest(cwd=str(agent_script.parent), mcpServers=[]))
+        await conn.prompt(
+            PromptRequest(
+                sessionId=session.sessionId,
+                prompt=[TextContentBlock(type="text", text="Hello!")],
+            )
+        )
+
+
+asyncio.run(main())
+```
+
+`spawn_client_process` mirrors this pattern for the inverse direction.
+
+### Minimal agent sketch
+
+```python
+import asyncio
 
 from acp import (
     Agent,
     AgentSideConnection,
-    AuthenticateRequest,
-    AuthenticateResponse,
-    CancelNotification,
     InitializeRequest,
     InitializeResponse,
-    LoadSessionRequest,
-    LoadSessionResponse,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    SetSessionModeRequest,
-    SetSessionModeResponse,
-    stdio_streams,
-    PROTOCOL_VERSION,
-)
-from acp.schema import (
-    AgentCapabilities,
-    AgentMessageChunk,
-    McpCapabilities,
-    PromptCapabilities,
     SessionNotification,
-    TextContentBlock,
+    stdio_streams,
 )
+from acp.schema import TextContentBlock, AgentMessageChunk
+
 
 class EchoAgent(Agent):
     def __init__(self, conn):
         self._conn = conn
 
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        mcp_caps: McpCapabilities = McpCapabilities(http=False, sse=False)
-        prompt_caps: PromptCapabilities = PromptCapabilities(audio=False, embeddedContext=False, image=False)
-        agent_caps: AgentCapabilities = AgentCapabilities(
-            loadSession=False,
-            mcpCapabilities=mcp_caps,
-            promptCapabilities=prompt_caps,
-        )
-        return InitializeResponse(
-            protocolVersion=PROTOCOL_VERSION,
-            agentCapabilities=agent_caps,
-        )
+        return InitializeResponse(protocolVersion=params.protocolVersion)
+
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
         return NewSessionResponse(sessionId="sess-1")
 

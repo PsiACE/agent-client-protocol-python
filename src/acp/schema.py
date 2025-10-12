@@ -402,11 +402,11 @@ class AgentCapabilities(BaseModel):
     mcpCapabilities: Annotated[
         Optional[McpCapabilities],
         Field(description="MCP capabilities supported by the agent."),
-    ] = None
+    ] = McpCapabilities(http=False, sse=False)
     promptCapabilities: Annotated[
         Optional[PromptCapabilities],
         Field(description="Prompt capabilities supported by the agent."),
-    ] = None
+    ] = PromptCapabilities(audio=False, embeddedContext=False, image=False)
 
 
 class Annotations(BaseModel):
@@ -476,11 +476,11 @@ class ClientCapabilities(BaseModel):
         Field(
             description="File system capabilities supported by the client.\nDetermines which file operations the agent can request."
         ),
-    ] = None
+    ] = FileSystemCapability(readTextFile=False, writeTextFile=False)
     terminal: Annotated[
         Optional[bool],
         Field(description="Whether the Client support all `terminal/*` methods."),
-    ] = None
+    ] = False
 
 
 class TextContentBlock(BaseModel):
@@ -575,7 +575,7 @@ class InitializeRequest(BaseModel):
     clientCapabilities: Annotated[
         Optional[ClientCapabilities],
         Field(description="Capabilities supported by the client."),
-    ] = None
+    ] = ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)
     protocolVersion: Annotated[
         int,
         Field(
@@ -594,7 +594,11 @@ class InitializeResponse(BaseModel):
     agentCapabilities: Annotated[
         Optional[AgentCapabilities],
         Field(description="Capabilities supported by the agent."),
-    ] = None
+    ] = AgentCapabilities(
+        loadSession=False,
+        mcpCapabilities=McpCapabilities(http=False, sse=False),
+        promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
+    )
     authMethods: Annotated[
         Optional[List[AuthMethod]],
         Field(description="Authentication methods supported by the agent."),

@@ -74,12 +74,24 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
 )
 
 DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
-    ("AgentCapabilities", "mcpCapabilities", "None"),
-    ("AgentCapabilities", "promptCapabilities", "None"),
-    ("ClientCapabilities", "fs", "None"),
-    ("ClientCapabilities", "terminal", "None"),
-    ("InitializeRequest", "clientCapabilities", "None"),
-    ("InitializeResponse", "agentCapabilities", "None"),
+    ("AgentCapabilities", "mcpCapabilities", "McpCapabilities(http=False, sse=False)"),
+    (
+        "AgentCapabilities",
+        "promptCapabilities",
+        "PromptCapabilities(audio=False, embeddedContext=False, image=False)",
+    ),
+    ("ClientCapabilities", "fs", "FileSystemCapability(readTextFile=False, writeTextFile=False)"),
+    ("ClientCapabilities", "terminal", "False"),
+    (
+        "InitializeRequest",
+        "clientCapabilities",
+        "ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)",
+    ),
+    (
+        "InitializeResponse",
+        "agentCapabilities",
+        "AgentCapabilities(loadSession=False, mcpCapabilities=McpCapabilities(http=False, sse=False), promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False))",
+    ),
 )
 
 
