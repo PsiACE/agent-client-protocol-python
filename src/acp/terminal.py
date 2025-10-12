@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
+
 from .connection import Connection
 from .meta import CLIENT_METHODS
 from .schema import (
@@ -47,3 +49,17 @@ class TerminalHandle:
         )
         payload = response if isinstance(response, dict) else {}
         return ReleaseTerminalResponse.model_validate(payload)
+
+    async def aclose(self) -> None:
+        """Release the terminal, ignoring errors that occur during shutdown."""
+        with suppress(Exception):
+            await self.release()
+
+    async def close(self) -> None:
+        await self.aclose()
+
+    async def __aenter__(self) -> TerminalHandle:
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.aclose()

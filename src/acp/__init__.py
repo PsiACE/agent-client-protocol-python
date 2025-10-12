@@ -45,7 +45,8 @@ from .schema import (
     WriteTextFileRequest,
     WriteTextFileResponse,
 )
-from .stdio import stdio_streams
+from .stdio import spawn_agent_process, spawn_client_process, spawn_stdio_connection, stdio_streams
+from .transports import default_environment, spawn_stdio_transport
 
 __all__ = [  # noqa: RUF022
     # constants
@@ -95,4 +96,9 @@ __all__ = [  # noqa: RUF022
     "TerminalHandle",
     # stdio helper
     "stdio_streams",
+    "spawn_stdio_connection",
+    "spawn_agent_process",
+    "spawn_client_process",
+    "default_environment",
+    "spawn_stdio_transport",
 ]

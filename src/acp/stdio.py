@@ -1,12 +1,29 @@
 from __future__ import annotations
 
 import asyncio
+import asyncio.subprocess as aio_subprocess
 import contextlib
 import logging
 import platform
 import sys
 from asyncio import transports as aio_transports
-from typing import cast
+from collections.abc import AsyncIterator, Callable, Mapping
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, cast
+
+from .agent.connection import AgentSideConnection
+from .client.connection import ClientSideConnection
+from .connection import Connection, MethodHandler, StreamObserver
+from .interfaces import Agent, Client
+from .transports import spawn_stdio_transport
+
+__all__ = [
+    "spawn_agent_process",
+    "spawn_client_process",
+    "spawn_stdio_connection",
+    "stdio_streams",
+]
 
 
 class _WritePipeProtocol(asyncio.BaseProtocol):
@@ -110,3 +127,72 @@ async def stdio_streams() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     if platform.system() == "Windows":
         return await _windows_stdio_streams(loop)
     return await _posix_stdio_streams(loop)
+
+
+@asynccontextmanager
+async def spawn_stdio_connection(
+    handler: MethodHandler,
+    command: str,
+    *args: str,
+    env: Mapping[str, str] | None = None,
+    cwd: str | Path | None = None,
+    observers: list[StreamObserver] | None = None,
+    **transport_kwargs: Any,
+) -> AsyncIterator[tuple[Connection, aio_subprocess.Process]]:
+    """Spawn a subprocess and bind its stdio to a low-level Connection."""
+    async with spawn_stdio_transport(command, *args, env=env, cwd=cwd, **transport_kwargs) as (reader, writer, process):
+        conn = Connection(handler, writer, reader, observers=observers)
+        try:
+            yield conn, process
+        finally:
+            await conn.close()
+
+
+@asynccontextmanager
+async def spawn_agent_process(
+    to_client: Callable[[Agent], Client],
+    command: str,
+    *args: str,
+    env: Mapping[str, str] | None = None,
+    cwd: str | Path | None = None,
+    transport_kwargs: Mapping[str, Any] | None = None,
+    **connection_kwargs: Any,
+) -> AsyncIterator[tuple[ClientSideConnection, aio_subprocess.Process]]:
+    """Spawn an ACP agent subprocess and return a ClientSideConnection to it."""
+    async with spawn_stdio_transport(
+        command,
+        *args,
+        env=env,
+        cwd=cwd,
+        **(dict(transport_kwargs) if transport_kwargs else {}),
+    ) as (reader, writer, process):
+        conn = ClientSideConnection(to_client, writer, reader, **connection_kwargs)
+        try:
+            yield conn, process
+        finally:
+            await conn.close()
+
+
+@asynccontextmanager
+async def spawn_client_process(
+    to_agent: Callable[[AgentSideConnection], Agent],
+    command: str,
+    *args: str,
+    env: Mapping[str, str] | None = None,
+    cwd: str | Path | None = None,
+    transport_kwargs: Mapping[str, Any] | None = None,
+    **connection_kwargs: Any,
+) -> AsyncIterator[tuple[AgentSideConnection, aio_subprocess.Process]]:
+    """Spawn an ACP client subprocess and return an AgentSideConnection to it."""
+    async with spawn_stdio_transport(
+        command,
+        *args,
+        env=env,
+        cwd=cwd,
+        **(dict(transport_kwargs) if transport_kwargs else {}),
+    ) as (reader, writer, process):
+        conn = AgentSideConnection(to_agent, writer, reader, **connection_kwargs)
+        try:
+            yield conn, process
+        finally:
+            await conn.close()

@@ -71,15 +71,15 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 
 ## Examples
 
-- `examples/mini_swe_agent`: bridges mini-swe-agent into ACP, including a duet launcher and Textual TUI client
-- Additional transport helpers are documented in the [Mini SWE guide](docs/mini-swe-agent.md)
+- `examples/echo_agent.py`: self-contained streaming agent suitable for smoke tests
+- `examples/client.py`: interactive console client that can spawn any ACP agent subprocess
+- `examples/duet.py`: demo launcher that starts both the example client and agent together
 
 ## Documentation
 
 - Project docs (MkDocs): https://psiace.github.io/agent-client-protocol-python/
 - Local sources: `docs/`
   - [Quickstart](docs/quickstart.md)
-  - [Mini SWE Agent bridge](docs/mini-swe-agent.md)
 
 ## Development workflow
 

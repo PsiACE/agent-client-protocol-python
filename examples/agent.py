@@ -49,13 +49,16 @@ class ExampleAgent(Agent):
 
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:  # noqa: ARG002
         logging.info("Received initialize request")
+        mcp_caps: McpCapabilities = McpCapabilities(http=False, sse=False)
+        prompt_caps: PromptCapabilities = PromptCapabilities(audio=False, embeddedContext=False, image=False)
+        agent_caps: AgentCapabilities = AgentCapabilities(
+            loadSession=False,
+            mcpCapabilities=mcp_caps,
+            promptCapabilities=prompt_caps,
+        )
         return InitializeResponse(
             protocolVersion=PROTOCOL_VERSION,
-            agentCapabilities=AgentCapabilities(
-                loadSession=False,
-                mcpCapabilities=McpCapabilities(http=False, sse=False),
-                promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
-            ),
+            agentCapabilities=agent_caps,
         )
 
     async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:  # noqa: ARG002

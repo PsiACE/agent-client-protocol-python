@@ -1,4 +1,5 @@
 import asyncio
+import asyncio.subprocess as aio_subprocess
 import contextlib
 import logging
 import os
@@ -118,8 +119,8 @@ async def main(argv: list[str]) -> int:
     proc = await asyncio.create_subprocess_exec(
         spawn_program,
         *spawn_args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
+        stdin=aio_subprocess.PIPE,
+        stdout=aio_subprocess.PIPE,
     )
 
     if proc.stdin is None or proc.stdout is None:

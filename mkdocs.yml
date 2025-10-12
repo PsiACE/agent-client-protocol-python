@@ -10,7 +10,6 @@ copyright: Maintained by <a href="https://github.com/psiace">psiace</a>.
 nav:
   - Home: index.md
   - Quick Start: quickstart.md
-  - Mini SWE Agent: mini-swe-agent.md
 plugins:
   - search
   - mkdocstrings:

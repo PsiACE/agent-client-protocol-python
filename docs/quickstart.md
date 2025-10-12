@@ -50,6 +50,62 @@ Open the Agents panel and start the session. Each message you send should be ech
 
 Any ACP client that communicates over stdio can spawn the same script; no additional transport configuration is required.
 
+### Programmatic launch
+
+You can also embed the agent inside another Python process without shelling out manually. Use
+`acp.spawn_agent_process` to bootstrap the child and receive a `ClientSideConnection`:
+
+```python
+import asyncio
+import sys
+from pathlib import Path
+
+from acp import spawn_agent_process
+from acp.interfaces import Client
+from acp.schema import (
+    DeniedOutcome,
+    InitializeRequest,
+    NewSessionRequest,
+    PromptRequest,
+    RequestPermissionRequest,
+    RequestPermissionResponse,
+    SessionNotification,
+    TextContentBlock,
+)
+
+
+class SimpleClient(Client):
+    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+        return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
+
+    async def sessionUpdate(self, params: SessionNotification) -> None:  # noqa: D401 - logging only
+        print("update:", params)
+
+    # Optional client methods omitted for brevity
+
+
+async def main() -> None:
+    script = Path("examples/echo_agent.py").resolve()
+
+    async with spawn_agent_process(lambda agent: SimpleClient(), sys.executable, str(script)) as (
+        conn,
+        _process,
+    ):
+        await conn.initialize(InitializeRequest(protocolVersion=1))
+        session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcpServers=[]))
+        await conn.prompt(
+            PromptRequest(
+                sessionId=session.sessionId,
+                prompt=[TextContentBlock(type="text", text="Hello from spawn!")],
+            )
+        )
+
+asyncio.run(main())
+```
+
+Inside the context manager the subprocess is monitored, stdin/stdout are tied into ACP, and the
+connection cleans itself up on exit.
+
 ## 4. Extend the agent
 
 Create your own agent by subclassing `acp.Agent`. The pattern mirrors the echo example:
@@ -65,14 +121,3 @@ class MyAgent(Agent):
 ```
 
 Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to [examples/echo_agent.py](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/echo_agent.py) for the complete structure, including lifetime hooks (`initialize`, `newSession`) and streaming responses.
-
-## Optional: Mini SWE Agent bridge
-
-The repository also ships a bridge for [mini-swe-agent](https://github.com/groundx-ai/mini-swe-agent). To try it:
-
-1. Install the dependency:
-   ```bash
-   pip install mini-swe-agent
-   ```
-2. Configure Zed to run `examples/mini_swe_agent/agent.py` and supply environment variables such as `MINI_SWE_MODEL` and `OPENROUTER_API_KEY`.
-3. Review the [Mini SWE Agent guide](mini-swe-agent.md) for environment options, tool-call mapping, and a duet launcher that starts both the bridge and a Textual client (`python examples/mini_swe_agent/duet.py`).

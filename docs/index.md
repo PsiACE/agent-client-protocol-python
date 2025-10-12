@@ -25,6 +25,5 @@ Prefer a guided tour? Head to the [Quickstart](quickstart.md) for step-by-step i
 ## Documentation map
 
 - [Quickstart](quickstart.md): install, run, and extend the echo agent
-- [Mini SWE Agent guide](mini-swe-agent.md): bridge mini-swe-agent over ACP, including duet launcher and Textual client
 
 Source code lives under `src/acp/`, while tests and additional examples are available in `tests/` and `examples/`. If you plan to contribute, see the repository README for the development workflow.

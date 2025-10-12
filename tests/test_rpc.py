@@ -1,6 +1,8 @@
 import asyncio
 import contextlib
 import json
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -32,6 +34,7 @@ from acp import (
     SetSessionModeResponse,
     WriteTextFileRequest,
     WriteTextFileResponse,
+    spawn_agent_process,
 )
 from acp.schema import (
     AgentMessageChunk,
@@ -411,3 +414,31 @@ async def test_ignore_invalid_messages():
         # Should not receive any response lines
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(s.client_reader.readline(), timeout=0.1)
+
+
+@pytest.mark.asyncio
+async def test_spawn_agent_process_roundtrip(tmp_path):
+    script = Path(__file__).parents[1] / "examples" / "echo_agent.py"
+    assert script.exists()
+
+    test_client = TestClient()
+
+    async with spawn_agent_process(lambda _agent: test_client, sys.executable, str(script)) as (client_conn, process):
+        init = await client_conn.initialize(InitializeRequest(protocolVersion=1))
+        assert isinstance(init, InitializeResponse)
+        session = await client_conn.newSession(NewSessionRequest(cwd=str(tmp_path), mcpServers=[]))
+        prompt = PromptRequest(
+            sessionId=session.sessionId,
+            prompt=[TextContentBlock(type="text", text="hi spawn")],
+        )
+        await client_conn.prompt(prompt)
+
+        # Wait for echo agent notification to arrive
+        for _ in range(50):
+            if test_client.notifications:
+                break
+            await asyncio.sleep(0.02)
+
+        assert test_client.notifications
+
+    assert process.returncode is not None

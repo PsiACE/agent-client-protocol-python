@@ -43,6 +43,44 @@ RENAME_MAP: dict[str, str] = {
     "ToolCallContent3": "TerminalToolCallContent",
 }
 
+ENUM_LITERAL_MAP: dict[str, tuple[str, ...]] = {
+    "PermissionOptionKind": (
+        "allow_once",
+        "allow_always",
+        "reject_once",
+        "reject_always",
+    ),
+    "PlanEntryPriority": ("high", "medium", "low"),
+    "PlanEntryStatus": ("pending", "in_progress", "completed"),
+    "StopReason": ("end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"),
+    "ToolCallStatus": ("pending", "in_progress", "completed", "failed"),
+    "ToolKind": ("read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"),
+}
+
+FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
+    ("PermissionOption", "kind", "PermissionOptionKind", False),
+    ("PlanEntry", "priority", "PlanEntryPriority", False),
+    ("PlanEntry", "status", "PlanEntryStatus", False),
+    ("PromptResponse", "stopReason", "StopReason", False),
+    ("ToolCallUpdate", "kind", "ToolKind", True),
+    ("ToolCallUpdate", "status", "ToolCallStatus", True),
+    ("ToolCallProgress", "kind", "ToolKind", True),
+    ("ToolCallProgress", "status", "ToolCallStatus", True),
+    ("ToolCallStart", "kind", "ToolKind", True),
+    ("ToolCallStart", "status", "ToolCallStatus", True),
+    ("ToolCall", "kind", "ToolKind", True),
+    ("ToolCall", "status", "ToolCallStatus", True),
+)
+
+DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
+    ("AgentCapabilities", "mcpCapabilities", "None"),
+    ("AgentCapabilities", "promptCapabilities", "None"),
+    ("ClientCapabilities", "fs", "None"),
+    ("ClientCapabilities", "terminal", "None"),
+    ("InitializeRequest", "clientCapabilities", "None"),
+    ("InitializeResponse", "agentCapabilities", "None"),
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate src/acp/schema.py from the ACP JSON schema.")
@@ -131,9 +169,13 @@ def rename_types(output_path: Path) -> list[str]:
     leftover_classes = sorted(set(leftover_class_pattern.findall(content)))
 
     header_block = "\n".join(header_lines) + "\n\n"
+    content = _apply_field_overrides(content)
+    content = _apply_default_overrides(content)
+
     alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
     alias_block = BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
 
+    content = _inject_enum_aliases(content)
     content = header_block + content.rstrip() + "\n\n" + alias_block
     if not content.endswith("\n"):
         content += "\n"
@@ -148,6 +190,78 @@ def rename_types(output_path: Path) -> list[str]:
         )
 
     return warnings
+
+
+def _apply_field_overrides(content: str) -> str:
+    for class_name, field_name, new_type, optional in FIELD_TYPE_OVERRIDES:
+        if optional:
+            pattern = re.compile(
+                rf"(class {class_name}\(BaseModel\):.*?\n\s+{field_name}:\s+Annotated\[\s*)Optional\[str],",
+                re.DOTALL,
+            )
+            content, count = pattern.subn(rf"\1Optional[{new_type}],", content)
+        else:
+            pattern = re.compile(
+                rf"(class {class_name}\(BaseModel\):.*?\n\s+{field_name}:\s+Annotated\[\s*)str,",
+                re.DOTALL,
+            )
+            content, count = pattern.subn(rf"\1{new_type},", content)
+        if count == 0:
+            print(
+                f"Warning: failed to apply type override for {class_name}.{field_name} -> {new_type}",
+                file=sys.stderr,
+            )
+    return content
+
+
+def _apply_default_overrides(content: str) -> str:
+    for class_name, field_name, replacement in DEFAULT_VALUE_OVERRIDES:
+        class_pattern = re.compile(
+            rf"(class {class_name}\(BaseModel\):)(.*?)(?=\nclass |\Z)",
+            re.DOTALL,
+        )
+
+        def replace_block(
+            match: re.Match[str],
+            _field_name: str = field_name,
+            _replacement: str = replacement,
+            _class_name: str = class_name,
+        ) -> str:
+            header, block = match.group(1), match.group(2)
+            field_pattern = re.compile(
+                rf"(\n\s+{_field_name}:[^\n]*=)\s*[^\n]+",
+                re.MULTILINE,
+            )
+            new_block, count = field_pattern.subn(rf"\1 {_replacement}", block, count=1)
+            if count == 0:
+                print(
+                    f"Warning: failed to override default for {_class_name}.{_field_name}",
+                    file=sys.stderr,
+                )
+                return match.group(0)
+            return header + new_block
+
+        content, count = class_pattern.subn(replace_block, content, count=1)
+        if count == 0:
+            print(
+                f"Warning: class {class_name} not found for default override on {field_name}",
+                file=sys.stderr,
+            )
+    return content
+
+
+def _inject_enum_aliases(content: str) -> str:
+    enum_lines = [
+        f"{name} = Literal[{', '.join(repr(value) for value in values)}]" for name, values in ENUM_LITERAL_MAP.items()
+    ]
+    if not enum_lines:
+        return content
+    block = "\n".join(enum_lines) + "\n\n"
+    class_index = content.find("\nclass ")
+    if class_index == -1:
+        return content
+    insertion_point = class_index + 1  # include leading newline
+    return content[:insertion_point] + block + content[insertion_point:]
 
 
 def format_with_ruff(file_path: Path) -> None:

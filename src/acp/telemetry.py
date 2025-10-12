@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, ExitStack, nullcontext
-from typing import Any
+from typing import Any, cast
 
 try:
     from logfire import span as logfire_span
@@ -38,4 +38,4 @@ def span_context(name: str, *, attributes: Mapping[str, Any] | None = None) -> A
     if logfire_span is not None:
         stack.enter_context(logfire_span(name, attributes=attrs))
     stack.enter_context(_start_tracer_span(name, attributes=attributes))
-    return stack
+    return cast(AbstractContextManager[None], stack)
