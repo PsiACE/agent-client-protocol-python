@@ -8,23 +8,13 @@ from typing import Annotated, Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, RootModel
 
+
 PermissionOptionKind = Literal["allow_once", "allow_always", "reject_once", "reject_always"]
 PlanEntryPriority = Literal["high", "medium", "low"]
 PlanEntryStatus = Literal["pending", "in_progress", "completed"]
 StopReason = Literal["end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"]
 ToolCallStatus = Literal["pending", "in_progress", "completed", "failed"]
-ToolKind = Literal[
-    "read",
-    "edit",
-    "delete",
-    "move",
-    "search",
-    "execute",
-    "think",
-    "fetch",
-    "switch_mode",
-    "other",
-]
+ToolKind = Literal["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"]
 
 
 class AuthenticateRequest(BaseModel):
@@ -646,10 +636,7 @@ class PermissionOption(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    kind: Annotated[
-        PermissionOptionKind,
-        Field(description="Hint about the nature of this permission option."),
-    ]
+    kind: Annotated[PermissionOptionKind, Field(description="Hint about the nature of this permission option.")]
     name: Annotated[str, Field(description="Human-readable label to display to the user.")]
     optionId: Annotated[str, Field(description="Unique identifier for this permission option.")]
 
@@ -669,10 +656,7 @@ class PlanEntry(BaseModel):
             description="The relative importance of this task.\nUsed to indicate which tasks are most critical to the overall goal."
         ),
     ]
-    status: Annotated[
-        PlanEntryStatus,
-        Field(description="Current execution status of this task."),
-    ]
+    status: Annotated[PlanEntryStatus, Field(description="Current execution status of this task.")]
 
 
 class PromptResponse(BaseModel):
@@ -680,10 +664,7 @@ class PromptResponse(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    stopReason: Annotated[
-        StopReason,
-        Field(description="Indicates why the agent stopped processing the turn."),
-    ]
+    stopReason: Annotated[StopReason, Field(description="Indicates why the agent stopped processing the turn.")]
 
 
 class ReadTextFileRequest(BaseModel):
@@ -932,20 +913,14 @@ class ToolCallUpdate(BaseModel):
         Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
         Field(description="Replace the content collection."),
     ] = None
-    kind: Annotated[
-        Optional[ToolKind],
-        Field(description="Update the tool kind."),
-    ] = None
+    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
     locations: Annotated[
         Optional[List[ToolCallLocation]],
         Field(description="Replace the locations collection."),
     ] = None
     rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
-    status: Annotated[
-        Optional[ToolCallStatus],
-        Field(description="Update the execution status."),
-    ] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
 
@@ -988,10 +963,7 @@ class ToolCallStart(BaseModel):
     rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
     sessionUpdate: Literal["tool_call"]
-    status: Annotated[
-        Optional[ToolCallStatus],
-        Field(description="Current execution status of the tool call."),
-    ] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     title: Annotated[
         str,
         Field(description="Human-readable title describing what the tool is doing."),
@@ -1011,10 +983,7 @@ class ToolCallProgress(BaseModel):
         Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
         Field(description="Replace the content collection."),
     ] = None
-    kind: Annotated[
-        Optional[ToolKind],
-        Field(description="Update the tool kind."),
-    ] = None
+    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
     locations: Annotated[
         Optional[List[ToolCallLocation]],
         Field(description="Replace the locations collection."),
@@ -1022,10 +991,7 @@ class ToolCallProgress(BaseModel):
     rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
     sessionUpdate: Literal["tool_call_update"]
-    status: Annotated[
-        Optional[ToolCallStatus],
-        Field(description="Update the execution status."),
-    ] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
 
@@ -1051,10 +1017,7 @@ class ToolCall(BaseModel):
     ] = None
     rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
-    status: Annotated[
-        Optional[ToolCallStatus],
-        Field(description="Current execution status of the tool call."),
-    ] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     title: Annotated[
         str,
         Field(description="Human-readable title describing what the tool is doing."),

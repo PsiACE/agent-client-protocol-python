@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -228,18 +229,31 @@ def _apply_default_overrides(content: str) -> str:
             _class_name: str = class_name,
         ) -> str:
             header, block = match.group(1), match.group(2)
-            field_pattern = re.compile(
-                rf"(\n\s+{_field_name}:[^\n]*=)\s*[^\n]+",
-                re.MULTILINE,
+            field_patterns: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], str]], ...] = (
+                (
+                    re.compile(
+                        rf"(\n\s+{_field_name}:.*?\]\s*=\s*)([\s\S]*?)(?=\n\s{{4}}[A-Za-z_]|$)",
+                        re.DOTALL,
+                    ),
+                    lambda m, _rep=_replacement: m.group(1) + _rep,
+                ),
+                (
+                    re.compile(
+                        rf"(\n\s+{_field_name}:[^\n]*=)\s*([^\n]+)",
+                        re.MULTILINE,
+                    ),
+                    lambda m, _rep=_replacement: m.group(1) + " " + _rep,
+                ),
             )
-            new_block, count = field_pattern.subn(rf"\1 {_replacement}", block, count=1)
-            if count == 0:
-                print(
-                    f"Warning: failed to override default for {_class_name}.{_field_name}",
-                    file=sys.stderr,
-                )
-                return match.group(0)
-            return header + new_block
+            for pattern, replacer in field_patterns:
+                new_block, count = pattern.subn(replacer, block, count=1)
+                if count:
+                    return header + new_block
+            print(
+                f"Warning: failed to override default for {_class_name}.{_field_name}",
+                file=sys.stderr,
+            )
+            return match.group(0)
 
         content, count = class_pattern.subn(replace_block, content, count=1)
         if count == 0:
