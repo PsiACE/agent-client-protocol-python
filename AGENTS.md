@@ -1,24 +1,34 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The runtime package lives in `src/acp`, exposing the top-level agent entrypoints, transport adapters, and the generated `schema.py`. Regenerate protocol artifacts via `scripts/gen_all.py`, which refreshes both `schema/` and `src/acp/schema.py`. Examples demonstrating stdio bridges and quick-start flows are under `examples/`, while async-focused tests and fixtures sit in `tests/`. Documentation sources for MkDocs reside in `docs/`, and built artifacts land in `dist/` after release builds.
+- `src/acp/`: runtime package exposing agent/client abstractions, transports, and the generated `schema.py`.
+- `schema/`: upstream JSON schema sources; regenerate Python bindings with `make gen-all`.
+- `examples/`: runnable scripts (`echo_agent.py`, `client.py`, `gemini.py`, etc.) demonstrating stdio orchestration patterns.
+- `tests/`: pytest suite, including opt-in Gemini smoke checks under `tests/test_gemini_example.py`.
+- `docs/`: MkDocs content powering the hosted documentation.
 
 ## Build, Test, and Development Commands
-- `make install`: Provisions a `uv`-managed virtualenv and installs pre-commit hooks.
-- `make check`: Runs lock verification, Ruff linting, `ty` type analysis, and deptry dependency checks.
-- `make test`: Executes `uv run python -m pytest --doctest-modules` across the suite.
-- `make gen-all`: Regenerates protocol schemas (set `ACP_SCHEMA_VERSION=<ref>` to target a specific upstream tag).
-- `make build` / `make build-and-publish`: Produce or ship distribution artifacts.
-- `make docs` and `make docs-test`: Serve or validate MkDocs documentation locally.
+- `make install` — provision the `uv` virtualenv and install pre-commit hooks.
+- `make check` — run Ruff linting/formatting, type analysis, dependency hygiene, and lock verification.
+- `make test` — execute `pytest` (with doctests) inside the managed environment.
+- `make gen-all` — refresh protocol artifacts when the ACP schema version advances (`ACP_SCHEMA_VERSION=<ref>` to pin an upstream tag).
 
 ## Coding Style & Naming Conventions
-Target Python 3.10+ with 4-space indentation and type hints on public APIs. Ruff (configured via `pyproject.toml`) enforces formatting, 120-character lines, and linting; keep `ruff --fix` output clean before opening a PR. Prefer dataclasses and Pydantic models generated in `acp.schema` over ad-hoc dicts. Place shared utilities in `_`-prefixed internal modules and keep public surfaces lean.
+- Target Python 3.10+ with four-space indentation and type hints on public APIs.
+- Ruff enforces formatting and lint rules (`uv run ruff check`, `uv run ruff format`); keep both clean before publishing.
+- Prefer dataclasses or generated Pydantic models from `acp.schema` over ad-hoc dicts. Place shared utilities in `_`-prefixed internal modules.
 
 ## Testing Guidelines
-Pytest with `pytest-asyncio` powers the suite, and doctests are enabled for modules. Name test files `test_*.py`, keep fixtures in `tests/conftest.py`, and run `make test` before pushing. For deeper coverage investigation, run `tox -e py310` and review the HTML report in `.tox/py310/tmp/coverage`.
+- Tests live in `tests/` and must be named `test_*.py`. Use `pytest.mark.asyncio` for coroutine coverage.
+- Run `make test` (or `uv run python -m pytest`) prior to commits; include reproducing steps for any added fixtures.
+- Gemini CLI coverage is disabled by default. Set `ACP_ENABLE_GEMINI_TESTS=1` (and `ACP_GEMINI_BIN=/path/to/gemini`) to exercise `tests/test_gemini_example.py`.
 
 ## Commit & Pull Request Guidelines
-Follow Conventional Commits (`feat:`, `fix:`, `docs:`) with narrow scopes and mention schema regeneration when applicable. PRs should describe exercised agent behaviors, link related issues, and attach `make check` (or targeted pytest) output. Update docs and examples whenever public agent APIs change, and include environment notes for new agent integrations.
+- Follow Conventional Commits (`feat:`, `fix:`, `docs:`, etc.) with succinct scopes, noting schema regenerations when applicable.
+- PRs should describe exercised agent behaviours, link relevant issues, and include output from `make check` or focused pytest runs.
+- Update documentation and examples whenever public APIs or transport behaviours change, and call out environment prerequisites for new integrations.
 
 ## Agent Integration Tips
-Use `examples/echo_agent.py` as the minimal agent template, or look at `examples/client.py` and `examples/duet.py` for spawning patterns that rely on `spawn_agent_process`/`spawn_client_process`. Document any environment requirements in `README.md`, and verify round-trip messaging with the echo agent before extending transports.
+- Bootstrap agents from `examples/echo_agent.py` or `examples/agent.py`; pair with `examples/client.py` for round-trip validation.
+- Use `spawn_agent_process` / `spawn_client_process` to embed ACP parties directly in Python applications.
+- Validate new transports against `tests/test_rpc.py` and, when applicable, the Gemini example to ensure streaming updates and permission flows stay compliant.
