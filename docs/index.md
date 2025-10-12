@@ -1,3 +1,7 @@
+<a href="https://agentclientprotocol.com/" >
+  <img alt="Agent Client Protocol" src="https://zed.dev/img/acp/banner-dark.webp">
+</a>
+
 # Agent Client Protocol SDK (Python)
 
 Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships ready-to-use transports, typed protocol models, and examples that stream messages to ACP-aware clients such as Zed.
@@ -7,7 +11,7 @@ Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships
 - Pydantic models generated from the upstream ACP schema (`acp.schema`)
 - Async agent/client wrappers with JSON-RPC task supervision built in
 - Process helpers (`spawn_agent_process`, `spawn_client_process`) for embedding ACP nodes inside Python applications
-- Examples that showcase streaming updates, file operations, and permission flows
+- Examples that showcase streaming updates, file operations, permission flows, and even a Gemini CLI bridge (`examples/gemini.py`)
 
 ## Getting started
 
@@ -22,6 +26,22 @@ Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships
 3. Point your ACP-capable client at the running process (for Zed, configure an Agent Server entry). The SDK takes care of JSON-RPC framing and lifecycle transitions.
 
 Prefer a guided tour? Head to the [Quickstart](quickstart.md) for terminal, editor, and programmatic launch walkthroughs.
+
+## Gemini CLI bridge
+
+If you have access to the Gemini CLI (`gemini --experimental-acp`), run:
+
+```bash
+python examples/gemini.py --yolo
+```
+
+Flags mirror the Go SDK example:
+
+- `--gemini /path/to/cli` or `ACP_GEMINI_BIN` to override discovery
+- `--model`, `--sandbox`, `--debug` forwarded verbatim
+- `--yolo` auto-approves permission prompts with sensible defaults
+
+An opt-in smoke test lives at `tests/test_gemini_example.py`. Enable it with `ACP_ENABLE_GEMINI_TESTS=1` (and optionally `ACP_GEMINI_TEST_ARGS`) when the CLI is authenticated; otherwise the test stays skipped.
 
 ## Documentation map
 

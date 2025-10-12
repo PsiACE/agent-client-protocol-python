@@ -1,3 +1,7 @@
+<a href="https://agentclientprotocol.com/" >
+  <img alt="Agent Client Protocol" src="https://zed.dev/img/acp/banner-dark.webp">
+</a>
+
 # Agent Client Protocol (Python)
 
 Python SDK for the Agent Client Protocol (ACP). Build agents that speak ACP over stdio so tools like Zed can orchestrate them.
@@ -10,6 +14,7 @@ Python SDK for the Agent Client Protocol (ACP). Build agents that speak ACP over
 - Async base classes and JSON-RPC plumbing that keep stdio agents tiny
 - Process helpers such as `spawn_agent_process` for embedding agents and clients directly in Python
 - Batteries-included examples that exercise streaming updates, file I/O, and permission flows
+- Optional Gemini CLI bridge (`examples/gemini.py`) for the `gemini --experimental-acp` integration
 
 ## Install
 
@@ -124,12 +129,32 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 - `examples/client.py`: interactive console client that can launch any ACP agent via stdio
 - `examples/agent.py`: richer agent showcasing initialization, authentication, and chunked updates
 - `examples/duet.py`: launches both example agent and client using `spawn_agent_process`
+- `examples/gemini.py`: connects to the Gemini CLI in `--experimental-acp` mode, with optional auto-approval and sandbox flags
 
 ## Documentation
 
 - Project docs (MkDocs): https://psiace.github.io/agent-client-protocol-python/
 - Local sources: `docs/`
   - [Quickstart](docs/quickstart.md)
+
+## Gemini CLI bridge
+
+Want to exercise the `gemini` CLI over ACP? The repository includes a Python replica of the Go SDK's REPL:
+
+```bash
+python examples/gemini.py --yolo  # auto-approve permissions
+python examples/gemini.py --sandbox --model gemini-2.5-pro
+```
+
+Defaults assume the CLI is discoverable via `PATH`; override with `--gemini` or `ACP_GEMINI_BIN=/path/to/gemini`.
+
+The smoke test (`tests/test_gemini_example.py`) is opt-in to avoid false negatives when the CLI is unavailable or lacks credentials. Enable it locally with:
+
+```bash
+ACP_ENABLE_GEMINI_TESTS=1 ACP_GEMINI_BIN=/path/to/gemini uv run python -m pytest tests/test_gemini_example.py
+```
+
+The test gracefully skips when authentication prompts (e.g. missing `GOOGLE_CLOUD_PROJECT`) block the interaction.
 
 ## Development workflow
 
