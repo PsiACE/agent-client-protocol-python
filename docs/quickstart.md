@@ -15,17 +15,17 @@ pip install agent-client-protocol
 uv add agent-client-protocol
 ```
 
-## 2. Run the echo agent
+## 2. Launch the Echo agent (terminal)
 
-Launch the ready-made echo example, which streams text blocks back over ACP:
+Start the ready-made echo example — it streams text blocks back to any ACP client:
 
 ```bash
 python examples/echo_agent.py
 ```
 
-Keep it running while you connect your client.
+Leave this process running while you connect from an editor or another program.
 
-## 3. Connect from your client
+## 3. Connect from an editor
 
 ### Zed
 
@@ -52,9 +52,6 @@ Any ACP client that communicates over stdio can spawn the same script; no additi
 
 ### Programmatic launch
 
-You can also embed the agent inside another Python process without shelling out manually. Use
-`acp.spawn_agent_process` to bootstrap the child and receive a `ClientSideConnection`:
-
 ```python
 import asyncio
 import sys
@@ -62,35 +59,20 @@ from pathlib import Path
 
 from acp import spawn_agent_process
 from acp.interfaces import Client
-from acp.schema import (
-    DeniedOutcome,
-    InitializeRequest,
-    NewSessionRequest,
-    PromptRequest,
-    RequestPermissionRequest,
-    RequestPermissionResponse,
-    SessionNotification,
-    TextContentBlock,
-)
+from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, SessionNotification, TextContentBlock
 
 
 class SimpleClient(Client):
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
-        return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
+    async def requestPermission(self, params):  # pragma: no cover - minimal stub
+        return {"outcome": {"outcome": "cancelled"}}
 
-    async def sessionUpdate(self, params: SessionNotification) -> None:  # noqa: D401 - logging only
-        print("update:", params)
-
-    # Optional client methods omitted for brevity
+    async def sessionUpdate(self, params: SessionNotification) -> None:
+        print("update:", params.sessionId, params.update)
 
 
 async def main() -> None:
-    script = Path("examples/echo_agent.py").resolve()
-
-    async with spawn_agent_process(lambda agent: SimpleClient(), sys.executable, str(script)) as (
-        conn,
-        _process,
-    ):
+    script = Path("examples/echo_agent.py")
+    async with spawn_agent_process(lambda _agent: SimpleClient(), sys.executable, str(script)) as (conn, _proc):
         await conn.initialize(InitializeRequest(protocolVersion=1))
         session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcpServers=[]))
         await conn.prompt(
@@ -103,8 +85,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-Inside the context manager the subprocess is monitored, stdin/stdout are tied into ACP, and the
-connection cleans itself up on exit.
+`spawn_agent_process` manages the child process, wires its stdio into ACP framing, and closes everything when the block exits. The mirror helper `spawn_client_process` lets you drive an ACP client from Python as well.
 
 ## 4. Extend the agent
 
@@ -120,4 +101,8 @@ class MyAgent(Agent):
         return PromptResponse(stopReason="end_turn")
 ```
 
-Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to [examples/echo_agent.py](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/echo_agent.py) for the complete structure, including lifetime hooks (`initialize`, `newSession`) and streaming responses.
+Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to:
+
+- [`examples/echo_agent.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/echo_agent.py) for the smallest streaming agent
+- [`examples/agent.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/agent.py) for an implementation that negotiates capabilities and streams richer updates
+- [`examples/duet.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/duet.py) to see `spawn_agent_process` in action alongside the interactive client

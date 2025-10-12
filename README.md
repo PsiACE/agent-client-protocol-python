@@ -6,9 +6,10 @@ Python SDK for the Agent Client Protocol (ACP). Build agents that speak ACP over
 
 **Highlights**
 
-- Typed dataclasses generated from the upstream ACP schema (`acp.schema`)
-- Async agent base class plus stdio transport helpers for quick bootstrapping
-- Included examples that stream content updates and tool calls end-to-end
+- Generated `pydantic` models that track the upstream ACP schema (`acp.schema`)
+- Async base classes and JSON-RPC plumbing that keep stdio agents tiny
+- Process helpers such as `spawn_agent_process` for embedding agents and clients directly in Python
+- Batteries-included examples that exercise streaming updates, file I/O, and permission flows
 
 ## Install
 
@@ -28,6 +29,37 @@ uv add agent-client-protocol
 2. Wire it into your client (e.g. Zed → Agents panel) so stdio is connected; the SDK handles JSON-RPC framing and lifecycle messages.
 
 Prefer a step-by-step walkthrough? Read the [Quickstart guide](docs/quickstart.md) or the hosted docs: https://psiace.github.io/agent-client-protocol-python/.
+
+### Launching from Python
+
+Embed the agent inside another Python process without spawning your own pipes:
+
+```python
+import asyncio
+import sys
+from pathlib import Path
+
+from acp import spawn_agent_process
+from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, TextContentBlock
+
+
+async def main() -> None:
+    agent_script = Path("examples/echo_agent.py")
+    async with spawn_agent_process(lambda _agent: YourClient(), sys.executable, str(agent_script)) as (conn, _proc):
+        await conn.initialize(InitializeRequest(protocolVersion=1))
+        session = await conn.newSession(NewSessionRequest(cwd=str(agent_script.parent), mcpServers=[]))
+        await conn.prompt(
+            PromptRequest(
+                sessionId=session.sessionId,
+                prompt=[TextContentBlock(type="text", text="Hello!")],
+            )
+        )
+
+
+asyncio.run(main())
+```
+
+`spawn_client_process` mirrors this pattern for the inverse direction.
 
 ### Minimal agent sketch
 
@@ -71,9 +103,10 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 
 ## Examples
 
-- `examples/echo_agent.py`: self-contained streaming agent suitable for smoke tests
-- `examples/client.py`: interactive console client that can spawn any ACP agent subprocess
-- `examples/duet.py`: demo launcher that starts both the example client and agent together
+- `examples/echo_agent.py`: the canonical streaming agent with lifecycle hooks
+- `examples/client.py`: interactive console client that can launch any ACP agent via stdio
+- `examples/agent.py`: richer agent showcasing initialization, authentication, and chunked updates
+- `examples/duet.py`: launches both example agent and client using `spawn_agent_process`
 
 ## Documentation
 
