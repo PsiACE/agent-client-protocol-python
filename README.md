@@ -136,6 +136,7 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 - Project docs (MkDocs): https://psiace.github.io/agent-client-protocol-python/
 - Local sources: `docs/`
   - [Quickstart](docs/quickstart.md)
+  - [Releasing](docs/releasing.md)
 
 ## Gemini CLI bridge
 

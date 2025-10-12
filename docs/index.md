@@ -46,5 +46,6 @@ An opt-in smoke test lives at `tests/test_gemini_example.py`. Enable it with `AC
 ## Documentation map
 
 - [Quickstart](quickstart.md): install, run, and embed the echo agent, plus next steps for extending it
+- [Releasing](releasing.md): schema upgrade workflow, version bumps, and publishing checklist
 
 Source code lives under `src/acp/`, while tests and additional examples are available in `tests/` and `examples/`. If you plan to contribute, see the repository README for the development workflow.
