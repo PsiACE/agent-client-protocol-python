@@ -17,6 +17,7 @@
 - Target Python 3.10+ with four-space indentation and type hints on public APIs.
 - Ruff enforces formatting and lint rules (`uv run ruff check`, `uv run ruff format`); keep both clean before publishing.
 - Prefer dataclasses or generated Pydantic models from `acp.schema` over ad-hoc dicts. Place shared utilities in `_`-prefixed internal modules.
+- When constructing ACP payloads, use the builders in `acp.helpers` (for example `text_block`, `start_tool_call`). These helpers keep the generated Pydantic models authoritative while hiding required literal fields, and the golden tests (`tests/test_golden.py`) ensure they always match the schema.
 
 ## Testing Guidelines
 - Tests live in `tests/` and must be named `test_*.py`. Use `pytest.mark.asyncio` for coroutine coverage.

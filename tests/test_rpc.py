@@ -34,7 +34,11 @@ from acp import (
     SetSessionModeResponse,
     WriteTextFileRequest,
     WriteTextFileResponse,
+    session_notification,
     spawn_agent_process,
+    start_tool_call,
+    update_agent_message_text,
+    update_tool_call,
 )
 from acp.schema import (
     AgentMessageChunk,
@@ -444,26 +448,22 @@ class _ExampleAgent(Agent):
         self.prompt_requests.append(params)
 
         await self._conn.sessionUpdate(
-            SessionNotification(
-                sessionId=params.sessionId,
-                update=AgentMessageChunk(
-                    sessionUpdate="agent_message_chunk",
-                    content=TextContentBlock(type="text", text="I'll help you with that."),
-                ),
+            session_notification(
+                params.sessionId,
+                update_agent_message_text("I'll help you with that."),
             )
         )
 
         await self._conn.sessionUpdate(
-            SessionNotification(
-                sessionId=params.sessionId,
-                update=ToolCallStart(
-                    sessionUpdate="tool_call",
-                    toolCallId="call_1",
-                    title="Modifying configuration",
+            session_notification(
+                params.sessionId,
+                start_tool_call(
+                    "call_1",
+                    "Modifying configuration",
                     kind="edit",
                     status="pending",
                     locations=[ToolCallLocation(path="/project/config.json")],
-                    rawInput={"path": "/project/config.json"},
+                    raw_input={"path": "/project/config.json"},
                 ),
             )
         )
@@ -488,23 +488,19 @@ class _ExampleAgent(Agent):
 
         if isinstance(response.outcome, AllowedOutcome) and response.outcome.optionId == "allow":
             await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=ToolCallProgress(
-                        sessionUpdate="tool_call_update",
-                        toolCallId="call_1",
+                session_notification(
+                    params.sessionId,
+                    update_tool_call(
+                        "call_1",
                         status="completed",
-                        rawOutput={"success": True},
+                        raw_output={"success": True},
                     ),
                 )
             )
             await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=AgentMessageChunk(
-                        sessionUpdate="agent_message_chunk",
-                        content=TextContentBlock(type="text", text="Done."),
-                    ),
+                session_notification(
+                    params.sessionId,
+                    update_agent_message_text("Done."),
                 )
             )
 
@@ -559,6 +555,7 @@ async def test_example_agent_permission_flow():
 
         first_message = client.notifications[0].update
         assert isinstance(first_message, AgentMessageChunk)
+        assert isinstance(first_message.content, TextContentBlock)
         assert first_message.content.text == "I'll help you with that."
 
         tool_call = client.notifications[1].update
@@ -573,6 +570,7 @@ async def test_example_agent_permission_flow():
 
         final_message = client.notifications[3].update
         assert isinstance(final_message, AgentMessageChunk)
+        assert isinstance(final_message.content, TextContentBlock)
         assert final_message.content.text == "Done."
 
         assert len(client.permission_requests) == 1

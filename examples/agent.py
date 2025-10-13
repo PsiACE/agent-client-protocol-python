@@ -18,17 +18,13 @@ from acp import (
     PromptResponse,
     SetSessionModeRequest,
     SetSessionModeResponse,
+    session_notification,
     stdio_streams,
+    text_block,
+    update_agent_message,
     PROTOCOL_VERSION,
 )
-from acp.schema import (
-    AgentCapabilities,
-    AgentMessageChunk,
-    McpCapabilities,
-    PromptCapabilities,
-    SessionNotification,
-    TextContentBlock,
-)
+from acp.schema import AgentCapabilities, McpCapabilities, PromptCapabilities
 
 
 class ExampleAgent(Agent):
@@ -38,12 +34,9 @@ class ExampleAgent(Agent):
 
     async def _send_chunk(self, session_id: str, content: Any) -> None:
         await self._conn.sessionUpdate(
-            SessionNotification(
-                sessionId=session_id,
-                update=AgentMessageChunk(
-                    sessionUpdate="agent_message_chunk",
-                    content=content,
-                ),
+            session_notification(
+                session_id,
+                update_agent_message(content),
             )
         )
 
@@ -85,7 +78,7 @@ class ExampleAgent(Agent):
         # Notify the client what it just sent and then echo each content block back.
         await self._send_chunk(
             params.sessionId,
-            TextContentBlock(type="text", text="Client sent:"),
+            text_block("Client sent:"),
         )
         for block in params.prompt:
             await self._send_chunk(params.sessionId, block)

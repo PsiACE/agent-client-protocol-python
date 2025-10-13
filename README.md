@@ -44,8 +44,8 @@ import asyncio
 import sys
 from pathlib import Path
 
-from acp import spawn_agent_process
-from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, TextContentBlock
+from acp import spawn_agent_process, text_block
+from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest
 
 
 async def main() -> None:
@@ -56,7 +56,7 @@ async def main() -> None:
         await conn.prompt(
             PromptRequest(
                 sessionId=session.sessionId,
-                prompt=[TextContentBlock(type="text", text="Hello!")],
+                prompt=[text_block("Hello!")],
             )
         )
 
@@ -80,10 +80,11 @@ from acp import (
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    SessionNotification,
+    session_notification,
     stdio_streams,
+    text_block,
+    update_agent_message,
 )
-from acp.schema import TextContentBlock, AgentMessageChunk
 
 
 class EchoAgent(Agent):
@@ -100,12 +101,9 @@ class EchoAgent(Agent):
         for block in params.prompt:
             text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
             await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=AgentMessageChunk(
-                        sessionUpdate="agent_message_chunk",
-                        content=TextContentBlock(type="text", text=text),
-                    ),
+                session_notification(
+                    params.sessionId,
+                    update_agent_message(text_block(text)),
                 )
             )
         return PromptResponse(stopReason="end_turn")
@@ -130,6 +128,23 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 - `examples/agent.py`: richer agent showcasing initialization, authentication, and chunked updates
 - `examples/duet.py`: launches both example agent and client using `spawn_agent_process`
 - `examples/gemini.py`: connects to the Gemini CLI in `--experimental-acp` mode, with optional auto-approval and sandbox flags
+
+## Helper APIs
+
+Use `acp.helpers` to build protocol payloads without manually shaping dictionaries:
+
+```python
+from acp import start_tool_call, text_block, tool_content, update_tool_call
+
+start = start_tool_call("call-1", "Inspect config", kind="read", status="pending")
+update = update_tool_call(
+    "call-1",
+    status="completed",
+    content=[tool_content(text_block("Inspection finished."))],
+)
+```
+
+Helpers cover content blocks (`text_block`, `resource_link_block`), embedded resources, tool calls (`start_edit_tool_call`, `update_tool_call`), and session updates (`update_agent_message_text`, `session_notification`).
 
 ## Documentation
 

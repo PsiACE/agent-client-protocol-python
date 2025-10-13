@@ -14,9 +14,9 @@ from acp import (
     PromptRequest,
     RequestError,
     SessionNotification,
+    text_block,
     PROTOCOL_VERSION,
 )
-from acp.schema import TextContentBlock
 
 
 class ExampleClient(Client):
@@ -91,7 +91,7 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
             await conn.prompt(
                 PromptRequest(
                     sessionId=session_id,
-                    prompt=[TextContentBlock(type="text", text=line)],
+                    prompt=[text_block(line)],
                 )
             )
         except Exception as exc:  # noqa: BLE001

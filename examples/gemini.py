@@ -16,6 +16,7 @@ from acp import (
     ClientSideConnection,
     PROTOCOL_VERSION,
     RequestError,
+    text_block,
 )
 from acp.schema import (
     AgentMessageChunk,
@@ -252,7 +253,7 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
             await conn.prompt(
                 PromptRequest(
                     sessionId=session_id,
-                    prompt=[TextContentBlock(type="text", text=line)],
+                    prompt=[text_block(line)],
                 )
             )
         except RequestError as err:

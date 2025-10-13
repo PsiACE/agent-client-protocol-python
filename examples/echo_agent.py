@@ -10,10 +10,11 @@ from acp import (
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    SessionNotification,
+    session_notification,
     stdio_streams,
+    text_block,
+    update_agent_message,
 )
-from acp.schema import AgentMessageChunk, TextContentBlock
 
 
 class EchoAgent(Agent):
@@ -30,12 +31,9 @@ class EchoAgent(Agent):
         for block in params.prompt:
             text = getattr(block, "text", "")
             await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=AgentMessageChunk(
-                        sessionUpdate="agent_message_chunk",
-                        content=TextContentBlock(type="text", text=text),
-                    ),
+                session_notification(
+                    params.sessionId,
+                    update_agent_message(text_block(text)),
                 )
             )
         return PromptResponse(stopReason="end_turn")

@@ -57,9 +57,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-from acp import spawn_agent_process
+from acp import spawn_agent_process, text_block
 from acp.interfaces import Client
-from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, SessionNotification, TextContentBlock
+from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, SessionNotification
 
 
 class SimpleClient(Client):
@@ -78,7 +78,7 @@ async def main() -> None:
         await conn.prompt(
             PromptRequest(
                 sessionId=session.sessionId,
-                prompt=[TextContentBlock(type="text", text="Hello from spawn!")],
+                prompt=[text_block("Hello from spawn!")],
             )
         )
 
@@ -107,6 +107,19 @@ Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to 
 - [`examples/agent.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/agent.py) for an implementation that negotiates capabilities and streams richer updates
 - [`examples/duet.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/duet.py) to see `spawn_agent_process` in action alongside the interactive client
 - [`examples/gemini.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/gemini.py) to drive the Gemini CLI (`--experimental-acp`) directly from Python
+
+Need builders for common payloads? `acp.helpers` mirrors the Go/TS helper APIs:
+
+```python
+from acp import start_tool_call, update_tool_call, text_block, tool_content
+
+start_update = start_tool_call("call-42", "Open file", kind="read", status="pending")
+finish_update = update_tool_call(
+    "call-42",
+    status="completed",
+    content=[tool_content(text_block("File opened."))],
+)
+```
 
 ## 5. Optional: Talk to the Gemini CLI
 
