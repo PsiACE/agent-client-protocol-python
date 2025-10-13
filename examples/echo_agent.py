@@ -1,4 +1,5 @@
 import asyncio
+from uuid import uuid4
 
 from acp import (
     Agent,
@@ -9,10 +10,11 @@ from acp import (
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    SessionNotification,
+    session_notification,
     stdio_streams,
+    text_block,
+    update_agent_message,
 )
-from acp.schema import TextContentBlock, AgentMessageChunk
 
 
 class EchoAgent(Agent):
@@ -23,18 +25,15 @@ class EchoAgent(Agent):
         return InitializeResponse(protocolVersion=params.protocolVersion)
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
-        return NewSessionResponse(sessionId="sess-1")
+        return NewSessionResponse(sessionId=uuid4().hex)
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         for block in params.prompt:
-            text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
+            text = getattr(block, "text", "")
             await self._conn.sessionUpdate(
-                SessionNotification(
-                    sessionId=params.sessionId,
-                    update=AgentMessageChunk(
-                        sessionUpdate="agent_message_chunk",
-                        content=TextContentBlock(type="text", text=text),
-                    ),
+                session_notification(
+                    params.sessionId,
+                    update_agent_message(text_block(text)),
                 )
             )
         return PromptResponse(stopReason="end_turn")

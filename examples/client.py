@@ -1,4 +1,5 @@
 import asyncio
+import asyncio.subprocess as aio_subprocess
 import contextlib
 import logging
 import os
@@ -13,9 +14,9 @@ from acp import (
     PromptRequest,
     RequestError,
     SessionNotification,
+    text_block,
     PROTOCOL_VERSION,
 )
-from acp.schema import TextContentBlock
 
 
 class ExampleClient(Client):
@@ -90,7 +91,7 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
             await conn.prompt(
                 PromptRequest(
                     sessionId=session_id,
-                    prompt=[TextContentBlock(type="text", text=line)],
+                    prompt=[text_block(line)],
                 )
             )
         except Exception as exc:  # noqa: BLE001
@@ -118,8 +119,8 @@ async def main(argv: list[str]) -> int:
     proc = await asyncio.create_subprocess_exec(
         spawn_program,
         *spawn_args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
+        stdin=aio_subprocess.PIPE,
+        stdout=aio_subprocess.PIPE,
     )
 
     if proc.stdin is None or proc.stdout is None:

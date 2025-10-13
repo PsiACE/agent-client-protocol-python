@@ -9,6 +9,14 @@ from typing import Annotated, Any, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, RootModel
 
 
+PermissionOptionKind = Literal["allow_once", "allow_always", "reject_once", "reject_always"]
+PlanEntryPriority = Literal["high", "medium", "low"]
+PlanEntryStatus = Literal["pending", "in_progress", "completed"]
+StopReason = Literal["end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"]
+ToolCallStatus = Literal["pending", "in_progress", "completed", "failed"]
+ToolKind = Literal["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"]
+
+
 class AuthenticateRequest(BaseModel):
     field_meta: Annotated[
         Optional[Any],
@@ -394,11 +402,11 @@ class AgentCapabilities(BaseModel):
     mcpCapabilities: Annotated[
         Optional[McpCapabilities],
         Field(description="MCP capabilities supported by the agent."),
-    ] = {"http": False, "sse": False}
+    ] = McpCapabilities(http=False, sse=False)
     promptCapabilities: Annotated[
         Optional[PromptCapabilities],
         Field(description="Prompt capabilities supported by the agent."),
-    ] = {"audio": False, "embeddedContext": False, "image": False}
+    ] = PromptCapabilities(audio=False, embeddedContext=False, image=False)
 
 
 class Annotations(BaseModel):
@@ -468,7 +476,7 @@ class ClientCapabilities(BaseModel):
         Field(
             description="File system capabilities supported by the client.\nDetermines which file operations the agent can request."
         ),
-    ] = {"readTextFile": False, "writeTextFile": False}
+    ] = FileSystemCapability(readTextFile=False, writeTextFile=False)
     terminal: Annotated[
         Optional[bool],
         Field(description="Whether the Client support all `terminal/*` methods."),
@@ -567,7 +575,7 @@ class InitializeRequest(BaseModel):
     clientCapabilities: Annotated[
         Optional[ClientCapabilities],
         Field(description="Capabilities supported by the client."),
-    ] = {"fs": {"readTextFile": False, "writeTextFile": False}, "terminal": False}
+    ] = ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)
     protocolVersion: Annotated[
         int,
         Field(
@@ -586,15 +594,11 @@ class InitializeResponse(BaseModel):
     agentCapabilities: Annotated[
         Optional[AgentCapabilities],
         Field(description="Capabilities supported by the agent."),
-    ] = {
-        "loadSession": False,
-        "mcpCapabilities": {"http": False, "sse": False},
-        "promptCapabilities": {
-            "audio": False,
-            "embeddedContext": False,
-            "image": False,
-        },
-    }
+    ] = AgentCapabilities(
+        loadSession=False,
+        mcpCapabilities=McpCapabilities(http=False, sse=False),
+        promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
+    )
     authMethods: Annotated[
         Optional[List[AuthMethod]],
         Field(description="Authentication methods supported by the agent."),
@@ -636,7 +640,7 @@ class PermissionOption(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    kind: Annotated[str, Field(description="Hint about the nature of this permission option.")]
+    kind: Annotated[PermissionOptionKind, Field(description="Hint about the nature of this permission option.")]
     name: Annotated[str, Field(description="Human-readable label to display to the user.")]
     optionId: Annotated[str, Field(description="Unique identifier for this permission option.")]
 
@@ -651,12 +655,12 @@ class PlanEntry(BaseModel):
         Field(description="Human-readable description of what this task aims to accomplish."),
     ]
     priority: Annotated[
-        str,
+        PlanEntryPriority,
         Field(
             description="The relative importance of this task.\nUsed to indicate which tasks are most critical to the overall goal."
         ),
     ]
-    status: Annotated[str, Field(description="Current execution status of this task.")]
+    status: Annotated[PlanEntryStatus, Field(description="Current execution status of this task.")]
 
 
 class PromptResponse(BaseModel):
@@ -664,7 +668,7 @@ class PromptResponse(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    stopReason: Annotated[str, Field(description="Indicates why the agent stopped processing the turn.")]
+    stopReason: Annotated[StopReason, Field(description="Indicates why the agent stopped processing the turn.")]
 
 
 class ReadTextFileRequest(BaseModel):
@@ -913,14 +917,14 @@ class ToolCallUpdate(BaseModel):
         Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
         Field(description="Replace the content collection."),
     ] = None
-    kind: Annotated[Optional[str], Field(description="Update the tool kind.")] = None
+    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
     locations: Annotated[
         Optional[List[ToolCallLocation]],
         Field(description="Replace the locations collection."),
     ] = None
     rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
-    status: Annotated[Optional[str], Field(description="Update the execution status.")] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
 
@@ -951,7 +955,7 @@ class ToolCallStart(BaseModel):
         Field(description="Content produced by the tool call."),
     ] = None
     kind: Annotated[
-        Optional[str],
+        Optional[ToolKind],
         Field(
             description="The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment."
         ),
@@ -963,7 +967,7 @@ class ToolCallStart(BaseModel):
     rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
     sessionUpdate: Literal["tool_call"]
-    status: Annotated[Optional[str], Field(description="Current execution status of the tool call.")] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     title: Annotated[
         str,
         Field(description="Human-readable title describing what the tool is doing."),
@@ -983,7 +987,7 @@ class ToolCallProgress(BaseModel):
         Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
         Field(description="Replace the content collection."),
     ] = None
-    kind: Annotated[Optional[str], Field(description="Update the tool kind.")] = None
+    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
     locations: Annotated[
         Optional[List[ToolCallLocation]],
         Field(description="Replace the locations collection."),
@@ -991,7 +995,7 @@ class ToolCallProgress(BaseModel):
     rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
     sessionUpdate: Literal["tool_call_update"]
-    status: Annotated[Optional[str], Field(description="Update the execution status.")] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
 
@@ -1006,7 +1010,7 @@ class ToolCall(BaseModel):
         Field(description="Content produced by the tool call."),
     ] = None
     kind: Annotated[
-        Optional[str],
+        Optional[ToolKind],
         Field(
             description="The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment."
         ),
@@ -1017,7 +1021,7 @@ class ToolCall(BaseModel):
     ] = None
     rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
     rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
-    status: Annotated[Optional[str], Field(description="Current execution status of the tool call.")] = None
+    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     title: Annotated[
         str,
         Field(description="Human-readable title describing what the tool is doing."),

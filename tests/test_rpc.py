@@ -1,6 +1,8 @@
 import asyncio
 import contextlib
 import json
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -32,12 +34,22 @@ from acp import (
     SetSessionModeResponse,
     WriteTextFileRequest,
     WriteTextFileResponse,
+    session_notification,
+    spawn_agent_process,
+    start_tool_call,
+    update_agent_message_text,
+    update_tool_call,
 )
 from acp.schema import (
     AgentMessageChunk,
     AllowedOutcome,
     DeniedOutcome,
+    PermissionOption,
     TextContentBlock,
+    ToolCallLocation,
+    ToolCallProgress,
+    ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
 )
 
@@ -411,3 +423,188 @@ async def test_ignore_invalid_messages():
         # Should not receive any response lines
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(s.client_reader.readline(), timeout=0.1)
+
+
+class _ExampleAgent(Agent):
+    __test__ = False
+
+    def __init__(self) -> None:
+        self._conn: AgentSideConnection | None = None
+        self.permission_response: RequestPermissionResponse | None = None
+        self.prompt_requests: list[PromptRequest] = []
+
+    def bind(self, conn: AgentSideConnection) -> "_ExampleAgent":
+        self._conn = conn
+        return self
+
+    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
+        return InitializeResponse(protocolVersion=params.protocolVersion)
+
+    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
+        return NewSessionResponse(sessionId="sess_demo")
+
+    async def prompt(self, params: PromptRequest) -> PromptResponse:
+        assert self._conn is not None
+        self.prompt_requests.append(params)
+
+        await self._conn.sessionUpdate(
+            session_notification(
+                params.sessionId,
+                update_agent_message_text("I'll help you with that."),
+            )
+        )
+
+        await self._conn.sessionUpdate(
+            session_notification(
+                params.sessionId,
+                start_tool_call(
+                    "call_1",
+                    "Modifying configuration",
+                    kind="edit",
+                    status="pending",
+                    locations=[ToolCallLocation(path="/project/config.json")],
+                    raw_input={"path": "/project/config.json"},
+                ),
+            )
+        )
+
+        permission_request = RequestPermissionRequest(
+            sessionId=params.sessionId,
+            toolCall=ToolCallUpdate(
+                toolCallId="call_1",
+                title="Modifying configuration",
+                kind="edit",
+                status="pending",
+                locations=[ToolCallLocation(path="/project/config.json")],
+                rawInput={"path": "/project/config.json"},
+            ),
+            options=[
+                PermissionOption(kind="allow_once", name="Allow", optionId="allow"),
+                PermissionOption(kind="reject_once", name="Reject", optionId="reject"),
+            ],
+        )
+        response = await self._conn.requestPermission(permission_request)
+        self.permission_response = response
+
+        if isinstance(response.outcome, AllowedOutcome) and response.outcome.optionId == "allow":
+            await self._conn.sessionUpdate(
+                session_notification(
+                    params.sessionId,
+                    update_tool_call(
+                        "call_1",
+                        status="completed",
+                        raw_output={"success": True},
+                    ),
+                )
+            )
+            await self._conn.sessionUpdate(
+                session_notification(
+                    params.sessionId,
+                    update_agent_message_text("Done."),
+                )
+            )
+
+        return PromptResponse(stopReason="end_turn")
+
+
+class _ExampleClient(TestClient):
+    __test__ = False
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.permission_requests: list[RequestPermissionRequest] = []
+
+    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+        self.permission_requests.append(params)
+        if not params.options:
+            return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
+        option = params.options[0]
+        return RequestPermissionResponse(outcome=AllowedOutcome(optionId=option.optionId, outcome="selected"))
+
+
+@pytest.mark.asyncio
+async def test_example_agent_permission_flow():
+    async with _Server() as s:
+        agent = _ExampleAgent()
+        client = _ExampleClient()
+
+        agent_conn = ClientSideConnection(lambda _conn: client, s.client_writer, s.client_reader)
+        AgentSideConnection(lambda conn: agent.bind(conn), s.server_writer, s.server_reader)
+
+        init = await agent_conn.initialize(InitializeRequest(protocolVersion=1))
+        assert init.protocolVersion == 1
+
+        session = await agent_conn.newSession(NewSessionRequest(mcpServers=[], cwd="/workspace"))
+        assert session.sessionId == "sess_demo"
+
+        prompt = PromptRequest(
+            sessionId=session.sessionId,
+            prompt=[TextContentBlock(type="text", text="Please edit config")],
+        )
+        resp = await agent_conn.prompt(prompt)
+        assert resp.stopReason == "end_turn"
+
+        for _ in range(50):
+            if len(client.notifications) >= 4:
+                break
+            await asyncio.sleep(0.02)
+
+        assert len(client.notifications) >= 4
+        session_updates = [getattr(note.update, "sessionUpdate", None) for note in client.notifications]
+        assert session_updates[:4] == ["agent_message_chunk", "tool_call", "tool_call_update", "agent_message_chunk"]
+
+        first_message = client.notifications[0].update
+        assert isinstance(first_message, AgentMessageChunk)
+        assert isinstance(first_message.content, TextContentBlock)
+        assert first_message.content.text == "I'll help you with that."
+
+        tool_call = client.notifications[1].update
+        assert isinstance(tool_call, ToolCallStart)
+        assert tool_call.title == "Modifying configuration"
+        assert tool_call.status == "pending"
+
+        tool_update = client.notifications[2].update
+        assert isinstance(tool_update, ToolCallProgress)
+        assert tool_update.status == "completed"
+        assert tool_update.rawOutput == {"success": True}
+
+        final_message = client.notifications[3].update
+        assert isinstance(final_message, AgentMessageChunk)
+        assert isinstance(final_message.content, TextContentBlock)
+        assert final_message.content.text == "Done."
+
+        assert len(client.permission_requests) == 1
+        options = client.permission_requests[0].options
+        assert [opt.optionId for opt in options] == ["allow", "reject"]
+
+        assert agent.permission_response is not None
+        assert isinstance(agent.permission_response.outcome, AllowedOutcome)
+        assert agent.permission_response.outcome.optionId == "allow"
+
+
+@pytest.mark.asyncio
+async def test_spawn_agent_process_roundtrip(tmp_path):
+    script = Path(__file__).parents[1] / "examples" / "echo_agent.py"
+    assert script.exists()
+
+    test_client = TestClient()
+
+    async with spawn_agent_process(lambda _agent: test_client, sys.executable, str(script)) as (client_conn, process):
+        init = await client_conn.initialize(InitializeRequest(protocolVersion=1))
+        assert isinstance(init, InitializeResponse)
+        session = await client_conn.newSession(NewSessionRequest(cwd=str(tmp_path), mcpServers=[]))
+        prompt = PromptRequest(
+            sessionId=session.sessionId,
+            prompt=[TextContentBlock(type="text", text="hi spawn")],
+        )
+        await client_conn.prompt(prompt)
+
+        # Wait for echo agent notification to arrive
+        for _ in range(50):
+            if test_client.notifications:
+                break
+            await asyncio.sleep(0.02)
+
+        assert test_client.notifications
+
+    assert process.returncode is not None

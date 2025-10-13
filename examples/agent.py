@@ -18,17 +18,13 @@ from acp import (
     PromptResponse,
     SetSessionModeRequest,
     SetSessionModeResponse,
+    session_notification,
     stdio_streams,
+    text_block,
+    update_agent_message,
     PROTOCOL_VERSION,
 )
-from acp.schema import (
-    AgentCapabilities,
-    AgentMessageChunk,
-    McpCapabilities,
-    PromptCapabilities,
-    SessionNotification,
-    TextContentBlock,
-)
+from acp.schema import AgentCapabilities, McpCapabilities, PromptCapabilities
 
 
 class ExampleAgent(Agent):
@@ -38,24 +34,24 @@ class ExampleAgent(Agent):
 
     async def _send_chunk(self, session_id: str, content: Any) -> None:
         await self._conn.sessionUpdate(
-            SessionNotification(
-                sessionId=session_id,
-                update=AgentMessageChunk(
-                    sessionUpdate="agent_message_chunk",
-                    content=content,
-                ),
+            session_notification(
+                session_id,
+                update_agent_message(content),
             )
         )
 
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:  # noqa: ARG002
         logging.info("Received initialize request")
+        mcp_caps: McpCapabilities = McpCapabilities(http=False, sse=False)
+        prompt_caps: PromptCapabilities = PromptCapabilities(audio=False, embeddedContext=False, image=False)
+        agent_caps: AgentCapabilities = AgentCapabilities(
+            loadSession=False,
+            mcpCapabilities=mcp_caps,
+            promptCapabilities=prompt_caps,
+        )
         return InitializeResponse(
             protocolVersion=PROTOCOL_VERSION,
-            agentCapabilities=AgentCapabilities(
-                loadSession=False,
-                mcpCapabilities=McpCapabilities(http=False, sse=False),
-                promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
-            ),
+            agentCapabilities=agent_caps,
         )
 
     async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:  # noqa: ARG002
@@ -82,7 +78,7 @@ class ExampleAgent(Agent):
         # Notify the client what it just sent and then echo each content block back.
         await self._send_chunk(
             params.sessionId,
-            TextContentBlock(type="text", text="Client sent:"),
+            text_block("Client sent:"),
         )
         for block in params.prompt:
             await self._send_chunk(params.sessionId, block)

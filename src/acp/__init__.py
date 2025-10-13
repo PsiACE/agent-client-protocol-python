@@ -6,6 +6,31 @@ from .core import (
     RequestError,
     TerminalHandle,
 )
+from .helpers import (
+    audio_block,
+    embedded_blob_resource,
+    embedded_text_resource,
+    image_block,
+    plan_entry,
+    resource_block,
+    resource_link_block,
+    session_notification,
+    start_edit_tool_call,
+    start_read_tool_call,
+    start_tool_call,
+    text_block,
+    tool_content,
+    tool_diff_content,
+    tool_terminal_ref,
+    update_agent_message,
+    update_agent_message_text,
+    update_agent_thought,
+    update_agent_thought_text,
+    update_plan,
+    update_tool_call,
+    update_user_message,
+    update_user_message_text,
+)
 from .meta import (
     AGENT_METHODS,
     CLIENT_METHODS,
@@ -45,7 +70,8 @@ from .schema import (
     WriteTextFileRequest,
     WriteTextFileResponse,
 )
-from .stdio import stdio_streams
+from .stdio import spawn_agent_process, spawn_client_process, spawn_stdio_connection, stdio_streams
+from .transports import default_environment, spawn_stdio_transport
 
 __all__ = [  # noqa: RUF022
     # constants
@@ -95,4 +121,33 @@ __all__ = [  # noqa: RUF022
     "TerminalHandle",
     # stdio helper
     "stdio_streams",
+    "spawn_stdio_connection",
+    "spawn_agent_process",
+    "spawn_client_process",
+    "default_environment",
+    "spawn_stdio_transport",
+    # helpers
+    "text_block",
+    "image_block",
+    "audio_block",
+    "resource_link_block",
+    "embedded_text_resource",
+    "embedded_blob_resource",
+    "resource_block",
+    "tool_content",
+    "tool_diff_content",
+    "tool_terminal_ref",
+    "plan_entry",
+    "update_plan",
+    "update_user_message",
+    "update_user_message_text",
+    "update_agent_message",
+    "update_agent_message_text",
+    "update_agent_thought",
+    "update_agent_thought_text",
+    "session_notification",
+    "start_tool_call",
+    "start_read_tool_call",
+    "start_edit_tool_call",
+    "update_tool_call",
 ]

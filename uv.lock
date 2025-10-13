@@ -20,7 +20,6 @@ logfire = [
 dev = [
     { name = "datamodel-code-generator" },
     { name = "deptry" },
-    { name = "mini-swe-agent" },
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
@@ -45,7 +44,6 @@ provides-extras = ["logfire"]
 dev = [
     { name = "datamodel-code-generator", specifier = ">=0.25" },
     { name = "deptry", specifier = ">=0.23.0" },
-    { name = "mini-swe-agent", specifier = ">=1.10.0" },
     { name = "mkdocs", specifier = ">=1.4.2" },
     { name = "mkdocs-material", specifier = ">=8.5.10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.26.1" },
@@ -1087,29 +1085,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3a/41/580bb4006e3ed0361b8151a01d324fb03f420815446c7def45d02f74c270/mergedeep-1.3.4.tar.gz", hash = "sha256:0096d52e9dad9939c3d975a774666af186eda617e6ca84df4c94dec30004f2a8", size = 4661, upload-time = "2021-02-05T18:55:30.623Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/19/04f9b178c2d8a15b076c8b5140708fa6ffc5601fb6f1e975537072df5b2a/mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307", size = 6354, upload-time = "2021-02-05T18:55:29.583Z" },
-]
-
-[[package]]
-name = "mini-swe-agent"
-version = "1.10.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jinja2" },
-    { name = "litellm" },
-    { name = "openai" },
-    { name = "platformdirs" },
-    { name = "prompt-toolkit" },
-    { name = "python-dotenv" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "tenacity" },
-    { name = "textual" },
-    { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/72/3ee88176f2a7dd99da3bf57f70c0a0aa5d3728e3b6711ed659a0cdd67eb9/mini_swe_agent-1.10.0.tar.gz", hash = "sha256:c0fe700fe58bb24aa706f5aec7a812ead63cbf522a67dcb96dba26d3fc21136f", size = 45158, upload-time = "2025-08-29T01:40:26.475Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7b/06/fd298c6781261084a8233218231ffebdc315593b728f4535ef2c80517b9f/mini_swe_agent-1.10.0-py3-none-any.whl", hash = "sha256:47be76446f7b1975d844270a5d8349cc09811adc8ea3c70cac47f2b29cc7a63b", size = 68367, upload-time = "2025-08-29T01:40:25.528Z" },
 ]
 
 [[package]]

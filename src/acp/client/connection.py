@@ -44,13 +44,14 @@ class ClientSideConnection:
         to_client: Callable[[Agent], Client],
         input_stream: Any,
         output_stream: Any,
+        **connection_kwargs: Any,
     ) -> None:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
 
         client = to_client(self)  # type: ignore[arg-type]
         handler = self._create_handler(client)
-        self._conn = Connection(handler, input_stream, output_stream)
+        self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
 
     def _create_handler(self, client: Client) -> MethodHandler:
         router = build_client_router(client)
@@ -127,3 +128,12 @@ class ClientSideConnection:
 
     async def extNotification(self, method: str, params: dict[str, Any]) -> None:
         await self._conn.send_notification(f"_{method}", params)
+
+    async def close(self) -> None:
+        await self._conn.close()
+
+    async def __aenter__(self) -> ClientSideConnection:
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()

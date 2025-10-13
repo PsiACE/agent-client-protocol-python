@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import copy
+import inspect
 import json
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -31,13 +35,27 @@ JsonValue = Any
 MethodHandler = Callable[[str, JsonValue | None, bool], Awaitable[JsonValue | None]]
 
 
-__all__ = ["Connection", "JsonValue", "MethodHandler"]
+__all__ = ["Connection", "JsonValue", "MethodHandler", "StreamDirection", "StreamEvent"]
 
 
 DispatcherFactory = Callable[
     [MessageQueue, TaskSupervisor, MessageStateStore, RequestRunner, NotificationRunner],
     MessageDispatcher,
 ]
+
+
+class StreamDirection(str, Enum):
+    INCOMING = "incoming"
+    OUTGOING = "outgoing"
+
+
+@dataclass(frozen=True, slots=True)
+class StreamEvent:
+    direction: StreamDirection
+    message: dict[str, Any]
+
+
+StreamObserver = Callable[[StreamEvent], Awaitable[None] | None]
 
 
 class Connection:
@@ -53,6 +71,7 @@ class Connection:
         state_store: MessageStateStore | None = None,
         dispatcher_factory: DispatcherFactory | None = None,
         sender_factory: SenderFactory | None = None,
+        observers: list[StreamObserver] | None = None,
     ) -> None:
         self._handler = handler
         self._writer = writer
@@ -78,6 +97,7 @@ class Connection:
             self._run_notification,
         )
         self._dispatcher.start()
+        self._observers: list[StreamObserver] = list(observers or [])
 
     async def close(self) -> None:
         """Stop the receive loop and cancel any in-flight handler tasks."""
@@ -95,17 +115,23 @@ class Connection:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.close()
 
+    def add_observer(self, observer: StreamObserver) -> None:
+        """Register a callback that receives every raw JSON-RPC message."""
+        self._observers.append(observer)
+
     async def send_request(self, method: str, params: JsonValue | None = None) -> Any:
         request_id = self._next_request_id
         self._next_request_id += 1
         future = self._state.register_outgoing(request_id, method)
         payload = {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}
         await self._sender.send(payload)
+        self._notify_observers(StreamDirection.OUTGOING, payload)
         return await future
 
     async def send_notification(self, method: str, params: JsonValue | None = None) -> None:
         payload = {"jsonrpc": "2.0", "method": method, "params": params}
         await self._sender.send(payload)
+        self._notify_observers(StreamDirection.OUTGOING, payload)
 
     async def _receive_loop(self) -> None:
         try:
@@ -118,6 +144,7 @@ class Connection:
                 except Exception:
                     logging.exception("Error parsing JSON-RPC message")
                     continue
+                self._notify_observers(StreamDirection.INCOMING, message)
                 await self._process_message(message)
         except asyncio.CancelledError:
             return
@@ -134,6 +161,27 @@ class Connection:
         if has_id:
             await self._handle_response(message)
 
+    def _notify_observers(self, direction: StreamDirection, message: dict[str, Any]) -> None:
+        if not self._observers:
+            return
+        snapshot = copy.deepcopy(message)
+        event = StreamEvent(direction, snapshot)
+        for observer in list(self._observers):
+            try:
+                result = observer(event)
+            except Exception:
+                logging.exception("Stream observer failed", exc_info=True)
+                continue
+            if inspect.isawaitable(result):
+                self._tasks.create(
+                    result,
+                    name=f"acp.Connection.observer.{direction.value}",
+                    on_error=self._on_observer_error,
+                )
+
+    def _on_observer_error(self, task: asyncio.Task[Any], exc: BaseException) -> None:
+        logging.exception("Stream observer coroutine failed", exc_info=exc)
+
     async def _run_request(self, message: dict[str, Any]) -> Any:
         payload: dict[str, Any] = {"jsonrpc": "2.0", "id": message["id"]}
         method = message["method"]
@@ -147,15 +195,18 @@ class Connection:
                     result = result.model_dump()
                 payload["result"] = result if result is not None else None
                 await self._sender.send(payload)
+                self._notify_observers(StreamDirection.OUTGOING, payload)
                 return payload.get("result")
             except RequestError as exc:
                 payload["error"] = exc.to_error_obj()
                 await self._sender.send(payload)
+                self._notify_observers(StreamDirection.OUTGOING, payload)
                 raise
             except ValidationError as exc:
                 err = RequestError.invalid_params({"errors": exc.errors()})
                 payload["error"] = err.to_error_obj()
                 await self._sender.send(payload)
+                self._notify_observers(StreamDirection.OUTGOING, payload)
                 raise err from None
             except Exception as exc:
                 try:
@@ -165,6 +216,7 @@ class Connection:
                 err = RequestError.internal_error(data)
                 payload["error"] = err.to_error_obj()
                 await self._sender.send(payload)
+                self._notify_observers(StreamDirection.OUTGOING, payload)
                 raise err from None
 
     async def _run_notification(self, message: dict[str, Any]) -> None:

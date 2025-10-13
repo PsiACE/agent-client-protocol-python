@@ -22,8 +22,8 @@ class PermissionRequestAgent(TestAgent):
             RequestPermissionRequest(
                 sessionId=params.sessionId,
                 options=[
-                    PermissionOption(optionId="allow", name="Allow", kind="allow"),
-                    PermissionOption(optionId="deny", name="Deny", kind="deny"),
+                    PermissionOption(optionId="allow", name="Allow", kind="allow_once"),
+                    PermissionOption(optionId="deny", name="Deny", kind="reject_once"),
                 ],
                 toolCall=ToolCallUpdate(toolCallId="call-1", title="Write File"),
             )
