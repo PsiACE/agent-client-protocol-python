@@ -121,6 +121,8 @@ finish_update = update_tool_call(
 )
 ```
 
+Each helper wraps the generated Pydantic models in `acp.schema`, so the right discriminator fields (`type`, `sessionUpdate`, and friends) are always populated. That keeps examples readable while maintaining the same validation guarantees as constructing the models directly. Golden fixtures in `tests/test_golden.py` ensure the helpers stay in sync with future schema revisions.
+
 ## 5. Optional: Talk to the Gemini CLI
 
 If you have the Gemini CLI installed and authenticated:

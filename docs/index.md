@@ -11,7 +11,7 @@ Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships
 - Pydantic models generated from the upstream ACP schema (`acp.schema`)
 - Async agent/client wrappers with JSON-RPC task supervision built in
 - Process helpers (`spawn_agent_process`, `spawn_client_process`) for embedding ACP nodes inside Python applications
-- Helper APIs in `acp.helpers` that mirror the Go/TS SDK builders for content blocks, tool calls, and session updates
+- Helper APIs in `acp.helpers` that mirror the Go/TS SDK builders for content blocks, tool calls, and session updates. They instantiate the generated Pydantic types for you, so call sites stay concise without sacrificing validation.
 - Examples that showcase streaming updates, file operations, permission flows, and even a Gemini CLI bridge (`examples/gemini.py`)
 
 ## Getting started

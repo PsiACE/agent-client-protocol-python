@@ -5,52 +5,53 @@ This project tracks the ACP schema tags published by
 Every release should line up with one of those tags so that the generated `acp.schema` module, examples, and package
 version remain consistent.
 
-## 准备阶段
+## Preparation
 
-1. 选择目标 schema 版本（例如 `v0.4.5`），并重新生成协议文件：
+1. Pick the target schema tag (for example `v0.4.5`) and regenerate the protocol bindings:
 
    ```bash
    ACP_SCHEMA_VERSION=v0.4.5 make gen-all
    ```
 
-   该命令会下载对应的 schema 包并重写 `schema/` 与 `src/acp/schema.py`。
+   This downloads the upstream schema package and rewrites `schema/` plus the generated `src/acp/schema.py`.
 
-2. 同步更新 `pyproject.toml` 中的版本号，并根据需要调整 `uv.lock`。
+2. Bump the project version in `pyproject.toml`, updating `uv.lock` if dependencies changed.
 
-3. 运行基础校验：
+3. Run the standard checks:
 
    ```bash
    make check
    make test
    ```
 
-   `make check` 会执行 Ruff 格式化/静态检查、类型分析以及依赖完整性校验；`make test` 则运行 pytest（含 doctest）。
+   `make check` covers Ruff formatting/linting, static analysis, and dependency hygiene.
+   `make test` executes pytest (including doctests).
 
-4. 更新文档与示例（例如 Gemini 集成）以反映变化。
+4. Refresh documentation and examples (for instance the Gemini walkthrough) so they match the new schema behaviour.
 
-## 提交与合并
+## Commit & Merge
 
-1. 确认 diff 仅包含预期变动：schema 源文件、生成的 Pydantic 模型、版本号以及相应文档。
-2. 使用 Conventional Commits（如 `release: v0.4.5`）提交，并在 PR 中记录：
-   - 引用的 ACP schema 标签
-   - `make check` / `make test` 的结果
-   - 重要的行为或 API 变更
-3. 获得评审通过后合并 PR。
+1. Make sure the diff only includes the expected artifacts: regenerated schema sources, `src/acp/schema.py`, version bumps, and doc updates.
+2. Commit with a Conventional Commit message (for example `release: v0.4.5`) and note in the PR:
+   - The ACP schema tag you targeted
+   - Results from `make check` / `make test`
+   - Any behavioural or API changes worth highlighting
+3. Merge once the review is approved.
 
-## 通过 GitHub Release 触发发布
+## Publish via GitHub Release
 
-仓库采用 GitHub Workflow (`on-release-main.yml`) 自动完成发布。主干合并完成后：
+Publishing is automated through `on-release-main.yml`. After the release PR merges to `main`:
 
-1. 在 GitHub Releases 页面创建新的 Release，选择目标标签（形如 `v0.4.5`）。如标签不存在，Release 创建过程会自动打上该标签。
-2. Release 发布后，工作流会：
-   - 将标签写回 `pyproject.toml`（以保证包版本与标签一致）
-   - 构建并通过 `uv publish` 发布到 PyPI（使用 `PYPI_TOKEN` 机密）
-   - 使用 `mkdocs gh-deploy` 更新 GitHub Pages 文档
+1. Draft a GitHub Release for the new tag (e.g. `v0.4.5`). If the tag is missing, the release UI will create it.
+2. Once published, the workflow will:
+   - Write the tag back into `pyproject.toml` to keep the package version aligned
+   - Build and publish to PyPI via `uv publish` (using the `PYPI_TOKEN` secret)
+   - Deploy updated documentation with `mkdocs gh-deploy`
 
-无需在本地执行 `uv build` 或 `uv publish`；只需确保 Release 草稿信息完整（新增特性、兼容性注意事项等）。
+No local `uv build`/`uv publish` runs are required—focus on providing a complete release summary (highlights, compatibility notes, etc.).
 
-## 其他注意事项
+## Additional Notes
 
-- Schema 有破坏性修改时，请同步更新 `tests/test_json_golden.py`、端到端用例（如 `tests/test_rpc.py`）以及相关示例。
-- 如果需要清理生成文件，可运行 `make clean`，之后重新执行 `make gen-all`。
-- 发布前务必确认 `ACP_ENABLE_GEMINI_TESTS` 等可选测试在必要环境下运行通过，以避免 Release 后出现回归。
+- Breaking schema updates often require refreshing golden fixtures (`tests/test_golden.py`), end-to-end cases such as `tests/test_rpc.py`, and any affected examples.
+- Use `make clean` to remove generated artifacts if you need a fresh baseline before re-running `make gen-all`.
+- Run optional checks like the Gemini smoke test (`ACP_ENABLE_GEMINI_TESTS=1`) whenever the environment is available to catch regressions before publishing.
