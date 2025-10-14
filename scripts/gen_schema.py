@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import shutil
 import subprocess
@@ -16,6 +17,13 @@ VERSION_FILE = SCHEMA_DIR / "VERSION"
 SCHEMA_OUT = ROOT / "src" / "acp" / "schema.py"
 
 BACKCOMPAT_MARKER = "# Backwards compatibility aliases"
+
+# Pattern caches used when post-processing generated schema.
+FIELD_DECLARATION_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\s*:")
+DESCRIPTION_PATTERN = re.compile(
+    r"description\s*=\s*(?P<prefix>[rRbBuU]*)?(?P<quote>'''|\"\"\"|'|\")(?P<value>.*?)(?P=quote)",
+    re.DOTALL,
+)
 
 # Map of numbered classes produced by datamodel-code-generator to descriptive names.
 # Keep this in sync with the Rust/TypeScript SDK nomenclature.
@@ -184,6 +192,7 @@ def rename_types(output_path: Path) -> list[str]:
     header_block = "\n".join(header_lines) + "\n\n"
     content = _apply_field_overrides(content)
     content = _apply_default_overrides(content)
+    content = _add_description_comments(content)
 
     alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
     alias_block = BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
@@ -274,6 +283,77 @@ def _apply_default_overrides(content: str) -> str:
                 file=sys.stderr,
             )
     return content
+
+
+def _add_description_comments(content: str) -> str:
+    lines = content.splitlines()
+    new_lines: list[str] = []
+    index = 0
+
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+
+        if indent == 4 and FIELD_DECLARATION_PATTERN.match(stripped or ""):
+            block_lines, next_index = _collect_field_block(lines, index, indent)
+            block_text = "\n".join(block_lines)
+            description = _extract_description(block_text)
+
+            if description:
+                indent_str = " " * indent
+                comment_lines = [
+                    f"{indent_str}# {comment_line}" if comment_line else f"{indent_str}#"
+                    for comment_line in description.splitlines()
+                ]
+                if comment_lines:
+                    new_lines.extend(comment_lines)
+
+            new_lines.extend(block_lines)
+            index = next_index
+            continue
+
+        new_lines.append(line)
+        index += 1
+
+    return "\n".join(new_lines)
+
+
+def _collect_field_block(lines: list[str], start: int, indent: int) -> tuple[list[str], int]:
+    block: list[str] = []
+    index = start
+
+    while index < len(lines):
+        current_line = lines[index]
+        current_indent = len(current_line) - len(current_line.lstrip())
+        if index != start and current_line.strip() and current_indent <= indent:
+            break
+
+        block.append(current_line)
+        index += 1
+
+    return block, index
+
+
+def _extract_description(block_text: str) -> str | None:
+    match = DESCRIPTION_PATTERN.search(block_text)
+    if not match:
+        return None
+
+    prefix = match.group("prefix") or ""
+    quote = match.group("quote")
+    value = match.group("value")
+    literal = f"{prefix}{quote}{value}{quote}"
+
+    # datamodel-code-generator emits standard string literals, but fall back to raw text on parse errors.
+    try:
+        parsed = ast.literal_eval(literal)
+    except (SyntaxError, ValueError):
+        return value.replace("\\n", "\n")
+
+    if isinstance(parsed, str):
+        return parsed
+    return str(parsed)
 
 
 def _inject_enum_aliases(content: str) -> str:
