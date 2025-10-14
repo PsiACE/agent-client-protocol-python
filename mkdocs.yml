@@ -10,6 +10,7 @@ copyright: Maintained by <a href="https://github.com/psiace">psiace</a>.
 nav:
   - Home: index.md
   - Quick Start: quickstart.md
+  - Releasing: releasing.md
 plugins:
   - search
   - mkdocstrings:

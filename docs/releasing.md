@@ -7,27 +7,27 @@ version remain consistent.
 
 ## Preparation
 
-1. Pick the target schema tag (for example `v0.4.5`) and regenerate the protocol bindings:
+Pick the target schema tag (for example `v0.4.5`) and regenerate the protocol bindings:
 
-   ```bash
-   ACP_SCHEMA_VERSION=v0.4.5 make gen-all
-   ```
+```bash
+ACP_SCHEMA_VERSION=v0.4.5 make gen-all
+```
 
-   This downloads the upstream schema package and rewrites `schema/` plus the generated `src/acp/schema.py`.
+This downloads the upstream schema package and rewrites `schema/` plus the generated `src/acp/schema.py`.
 
-2. Bump the project version in `pyproject.toml`, updating `uv.lock` if dependencies changed.
+Bump the project version in `pyproject.toml`, updating `uv.lock` if dependencies changed.
 
-3. Run the standard checks:
+Run the standard checks:
 
-   ```bash
-   make check
-   make test
-   ```
+```bash
+make check
+make test
+```
 
-   `make check` covers Ruff formatting/linting, static analysis, and dependency hygiene.
-   `make test` executes pytest (including doctests).
+- `make check` covers Ruff formatting/linting, static analysis, and dependency hygiene.
+- `make test` executes pytest (including doctests).
 
-4. Refresh documentation and examples (for instance the Gemini walkthrough) so they match the new schema behaviour.
+Refresh documentation and examples (for instance the Gemini walkthrough) so they match the new schema behaviour.
 
 ## Commit & Merge
 
