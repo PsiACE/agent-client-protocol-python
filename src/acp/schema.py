@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.4.9
+# Schema ref: refs/tags/v0.5.0
 
 from __future__ import annotations
 
@@ -15,6 +15,10 @@ PlanEntryStatus = Literal["pending", "in_progress", "completed"]
 StopReason = Literal["end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"]
 ToolCallStatus = Literal["pending", "in_progress", "completed", "failed"]
 ToolKind = Literal["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"]
+
+
+class Jsonrpc(Enum):
+    field_2_0 = "2.0"
 
 
 class AuthenticateRequest(BaseModel):
@@ -88,6 +92,33 @@ class EnvVariable(BaseModel):
     name: Annotated[str, Field(description="The name of the environment variable.")]
     # The value to set for the environment variable.
     value: Annotated[str, Field(description="The value to set for the environment variable.")]
+
+
+class Error(BaseModel):
+    # A number indicating the error type that occurred.
+    # This must be an integer as defined in the JSON-RPC specification.
+    code: Annotated[
+        int,
+        Field(
+            description="A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification."
+        ),
+    ]
+    # Optional primitive or structured value that contains additional information about the error.
+    # This may include debugging information or context-specific details.
+    data: Annotated[
+        Optional[Any],
+        Field(
+            description="Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details."
+        ),
+    ] = None
+    # A string providing a short description of the error.
+    # The message should be limited to a concise single sentence.
+    message: Annotated[
+        str,
+        Field(
+            description="A string providing a short description of the error.\nThe message should be limited to a concise single sentence."
+        ),
+    ]
 
 
 class FileSystemCapability(BaseModel):
@@ -295,8 +326,13 @@ class SessionModelState(BaseModel):
 
 
 class CurrentModeUpdate(BaseModel):
-    # Unique identifier for a Session Mode.
-    currentModeId: Annotated[str, Field(description="Unique identifier for a Session Mode.")]
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The ID of the current mode
+    currentModeId: Annotated[str, Field(description="The ID of the current mode")]
     sessionUpdate: Literal["current_mode_update"]
 
 
@@ -504,6 +540,26 @@ class AgentCapabilities(BaseModel):
     ] = PromptCapabilities(audio=False, embeddedContext=False, image=False)
 
 
+class AgentErrorMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    error: Error
+
+
 class Annotations(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -513,17 +569,6 @@ class Annotations(BaseModel):
     audience: Optional[List[Role]] = None
     lastModified: Optional[str] = None
     priority: Optional[float] = None
-
-
-class AudioContent(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mimeType: str
 
 
 class AuthMethod(BaseModel):
@@ -592,6 +637,32 @@ class ClientCapabilities(BaseModel):
         Optional[bool],
         Field(description="Whether the Client support all `terminal/*` methods."),
     ] = False
+
+
+class ClientErrorMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    error: Error
+
+
+class ClientNotificationMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    method: str
+    params: Optional[Union[CancelNotification, Any]] = None
 
 
 class TextContentBlock(BaseModel):
@@ -683,18 +754,6 @@ class CreateTerminalRequest(BaseModel):
     ] = None
     # The session ID for this request.
     sessionId: Annotated[str, Field(description="The session ID for this request.")]
-
-
-class ImageContent(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mimeType: str
-    uri: Optional[str] = None
 
 
 class InitializeRequest(BaseModel):
@@ -860,21 +919,6 @@ class ReleaseTerminalRequest(BaseModel):
     terminalId: Annotated[str, Field(description="The ID of the terminal to release.")]
 
 
-class ResourceLink(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    description: Optional[str] = None
-    mimeType: Optional[str] = None
-    name: str
-    size: Optional[int] = None
-    title: Optional[str] = None
-    uri: str
-
-
 class SessionMode(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -922,18 +966,55 @@ class AgentPlanUpdate(BaseModel):
 
 
 class AvailableCommandsUpdate(BaseModel):
-    availableCommands: List[AvailableCommand]
-    sessionUpdate: Literal["available_commands_update"]
-
-
-class TextContent(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    annotations: Optional[Annotations] = None
-    text: str
+    # Commands the agent can execute
+    availableCommands: Annotated[List[AvailableCommand], Field(description="Commands the agent can execute")]
+    sessionUpdate: Literal["available_commands_update"]
+
+
+class ClientResponseMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    # All possible responses that a client can send to an agent.
+    #
+    # This enum is used internally for routing RPC responses. You typically won't need
+    # to use this directly - the responses are handled automatically by the connection.
+    #
+    # These are responses to the corresponding `AgentRequest` variants.
+    result: Annotated[
+        Union[
+            WriteTextFileResponse,
+            ReadTextFileResponse,
+            RequestPermissionResponse,
+            CreateTerminalResponse,
+            TerminalOutputResponse,
+            ReleaseTerminalResponse,
+            WaitForTerminalExitResponse,
+            KillTerminalCommandResponse,
+            Any,
+        ],
+        Field(
+            description="All possible responses that a client can send to an agent.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `AgentRequest` variants."
+        ),
+    ]
 
 
 class EmbeddedResourceContentBlock(BaseModel):
@@ -949,20 +1030,6 @@ class EmbeddedResourceContentBlock(BaseModel):
         Field(description="Resource content that can be embedded in a message."),
     ]
     type: Literal["resource"]
-
-
-class EmbeddedResource(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    # Resource content that can be embedded in a message.
-    resource: Annotated[
-        Union[TextResourceContents, BlobResourceContents],
-        Field(description="Resource content that can be embedded in a message."),
-    ]
 
 
 class LoadSessionResponse(BaseModel):
@@ -1030,24 +1097,6 @@ class NewSessionResponse(BaseModel):
     ]
 
 
-class Plan(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The list of tasks to be accomplished.
-    #
-    # When updating a plan, the agent must send a complete list of all entries
-    # with their current status. The client replaces the entire plan with each update.
-    entries: Annotated[
-        List[PlanEntry],
-        Field(
-            description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
-        ),
-    ]
-
-
 class PromptRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1086,79 +1135,49 @@ class PromptRequest(BaseModel):
 
 
 class UserMessageChunk(BaseModel):
-    # Content blocks represent displayable information in the Agent Client Protocol.
-    #
-    # They provide a structured way to handle various types of user-facing content—whether
-    # it's text from language models, images for analysis, or embedded resources for context.
-    #
-    # Content blocks appear in:
-    # - User prompts sent via `session/prompt`
-    # - Language model output streamed through `session/update` notifications
-    # - Progress updates and results from tool calls
-    #
-    # This structure is compatible with the Model Context Protocol (MCP), enabling
-    # agents to seamlessly forward content from MCP tool outputs without transformation.
-    #
-    # See protocol docs: [Content](https://agentclientprotocol.com/protocol/content)
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A single item of content
     content: Annotated[
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(
-            description="Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)"
-        ),
+        Field(description="A single item of content"),
     ]
     sessionUpdate: Literal["user_message_chunk"]
 
 
 class AgentMessageChunk(BaseModel):
-    # Content blocks represent displayable information in the Agent Client Protocol.
-    #
-    # They provide a structured way to handle various types of user-facing content—whether
-    # it's text from language models, images for analysis, or embedded resources for context.
-    #
-    # Content blocks appear in:
-    # - User prompts sent via `session/prompt`
-    # - Language model output streamed through `session/update` notifications
-    # - Progress updates and results from tool calls
-    #
-    # This structure is compatible with the Model Context Protocol (MCP), enabling
-    # agents to seamlessly forward content from MCP tool outputs without transformation.
-    #
-    # See protocol docs: [Content](https://agentclientprotocol.com/protocol/content)
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A single item of content
     content: Annotated[
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(
-            description="Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)"
-        ),
+        Field(description="A single item of content"),
     ]
     sessionUpdate: Literal["agent_message_chunk"]
 
 
 class AgentThoughtChunk(BaseModel):
-    # Content blocks represent displayable information in the Agent Client Protocol.
-    #
-    # They provide a structured way to handle various types of user-facing content—whether
-    # it's text from language models, images for analysis, or embedded resources for context.
-    #
-    # Content blocks appear in:
-    # - User prompts sent via `session/prompt`
-    # - Language model output streamed through `session/update` notifications
-    # - Progress updates and results from tool calls
-    #
-    # This structure is compatible with the Model Context Protocol (MCP), enabling
-    # agents to seamlessly forward content from MCP tool outputs without transformation.
-    #
-    # See protocol docs: [Content](https://agentclientprotocol.com/protocol/content)
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A single item of content
     content: Annotated[
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(
-            description="Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)"
-        ),
+        Field(description="A single item of content"),
     ]
     sessionUpdate: Literal["agent_thought_chunk"]
 
@@ -1174,7 +1193,7 @@ class ContentToolCallContent(BaseModel):
     type: Literal["content"]
 
 
-class ToolCallUpdate(BaseModel):
+class ToolCall(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1218,10 +1237,7 @@ class RequestPermissionRequest(BaseModel):
     # The session ID for this request.
     sessionId: Annotated[str, Field(description="The session ID for this request.")]
     # Details about the tool call requiring permission.
-    toolCall: Annotated[
-        ToolCallUpdate,
-        Field(description="Details about the tool call requiring permission."),
-    ]
+    toolCall: Annotated[ToolCall, Field(description="Details about the tool call requiring permission.")]
 
 
 class ToolCallStart(BaseModel):
@@ -1299,47 +1315,76 @@ class ToolCallProgress(BaseModel):
     toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
 
 
-class ToolCall(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Content produced by the tool call.
-    content: Annotated[
-        Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
-        Field(description="Content produced by the tool call."),
-    ] = None
-    # The category of tool being invoked.
-    # Helps clients choose appropriate icons and UI treatment.
-    kind: Annotated[
-        Optional[ToolKind],
+class AgentResponseMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
         Field(
-            description="The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment."
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
         ),
     ] = None
-    # File locations affected by this tool call.
-    # Enables "follow-along" features in clients.
-    locations: Annotated[
-        Optional[List[ToolCallLocation]],
-        Field(description='File locations affected by this tool call.\nEnables "follow-along" features in clients.'),
+    # All possible responses that an agent can send to a client.
+    #
+    # This enum is used internally for routing RPC responses. You typically won't need
+    # to use this directly - the responses are handled automatically by the connection.
+    #
+    # These are responses to the corresponding `ClientRequest` variants.
+    result: Annotated[
+        Union[
+            InitializeResponse,
+            AuthenticateResponse,
+            NewSessionResponse,
+            LoadSessionResponse,
+            SetSessionModeResponse,
+            PromptResponse,
+            SetSessionModelResponse,
+            Any,
+        ],
+        Field(
+            description="All possible responses that an agent can send to a client.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `ClientRequest` variants."
+        ),
+    ]
+
+
+class ClientRequestMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
     ] = None
-    # Raw input parameters sent to the tool.
-    rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
-    # Raw output returned by the tool.
-    rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
-    # Current execution status of the tool call.
-    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
-    # Human-readable title describing what the tool is doing.
-    title: Annotated[
-        str,
-        Field(description="Human-readable title describing what the tool is doing."),
-    ]
-    # Unique identifier for this tool call within the session.
-    toolCallId: Annotated[
-        str,
-        Field(description="Unique identifier for this tool call within the session."),
-    ]
+    method: str
+    params: Optional[
+        Union[
+            InitializeRequest,
+            AuthenticateRequest,
+            NewSessionRequest,
+            LoadSessionRequest,
+            SetSessionModeRequest,
+            PromptRequest,
+            SetSessionModelRequest,
+            Any,
+        ]
+    ] = None
 
 
 class SessionNotification(BaseModel):
@@ -1366,57 +1411,25 @@ class SessionNotification(BaseModel):
     ]
 
 
-class Model(
-    RootModel[
-        Union[
-            Union[
-                WriteTextFileRequest,
-                ReadTextFileRequest,
-                RequestPermissionRequest,
-                CreateTerminalRequest,
-                TerminalOutputRequest,
-                ReleaseTerminalRequest,
-                WaitForTerminalExitRequest,
-                KillTerminalCommandRequest,
-                Any,
-            ],
-            Union[
-                WriteTextFileResponse,
-                ReadTextFileResponse,
-                RequestPermissionResponse,
-                CreateTerminalResponse,
-                TerminalOutputResponse,
-                ReleaseTerminalResponse,
-                WaitForTerminalExitResponse,
-                KillTerminalCommandResponse,
-                Any,
-            ],
-            Union[CancelNotification, Any],
-            Union[
-                InitializeRequest,
-                AuthenticateRequest,
-                NewSessionRequest,
-                LoadSessionRequest,
-                SetSessionModeRequest,
-                PromptRequest,
-                SetSessionModelRequest,
-                Any,
-            ],
-            Union[
-                InitializeResponse,
-                AuthenticateResponse,
-                NewSessionResponse,
-                LoadSessionResponse,
-                SetSessionModeResponse,
-                PromptResponse,
-                SetSessionModelResponse,
-                Any,
-            ],
-            Union[SessionNotification, Any],
-        ]
-    ]
-):
-    root: Union[
+class AgentRequestMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    method: str
+    params: Optional[
         Union[
             WriteTextFileRequest,
             ReadTextFileRequest,
@@ -1427,45 +1440,56 @@ class Model(
             WaitForTerminalExitRequest,
             KillTerminalCommandRequest,
             Any,
+        ]
+    ] = None
+
+
+class AgentNotificationMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    method: str
+    params: Optional[Union[SessionNotification, Any]] = None
+
+
+class Model(
+    RootModel[
+        Union[
+            Union[
+                AgentRequestMessage,
+                Union[AgentResponseMessage, AgentErrorMessage],
+                AgentNotificationMessage,
+            ],
+            Union[
+                ClientRequestMessage,
+                Union[ClientResponseMessage, ClientErrorMessage],
+                ClientNotificationMessage,
+            ],
+        ]
+    ]
+):
+    root: Union[
+        Union[
+            AgentRequestMessage,
+            Union[AgentResponseMessage, AgentErrorMessage],
+            AgentNotificationMessage,
         ],
         Union[
-            WriteTextFileResponse,
-            ReadTextFileResponse,
-            RequestPermissionResponse,
-            CreateTerminalResponse,
-            TerminalOutputResponse,
-            ReleaseTerminalResponse,
-            WaitForTerminalExitResponse,
-            KillTerminalCommandResponse,
-            Any,
+            ClientRequestMessage,
+            Union[ClientResponseMessage, ClientErrorMessage],
+            ClientNotificationMessage,
         ],
-        Union[CancelNotification, Any],
-        Union[
-            InitializeRequest,
-            AuthenticateRequest,
-            NewSessionRequest,
-            LoadSessionRequest,
-            SetSessionModeRequest,
-            PromptRequest,
-            SetSessionModelRequest,
-            Any,
-        ],
-        Union[
-            InitializeResponse,
-            AuthenticateResponse,
-            NewSessionResponse,
-            LoadSessionResponse,
-            SetSessionModeResponse,
-            PromptResponse,
-            SetSessionModelResponse,
-            Any,
-        ],
-        Union[SessionNotification, Any],
     ]
 
 
 # Backwards compatibility aliases
+AgentOutgoingMessage1 = AgentRequestMessage
+AgentOutgoingMessage2 = AgentResponseMessage
+AgentOutgoingMessage3 = AgentErrorMessage
+AgentOutgoingMessage4 = AgentNotificationMessage
 AvailableCommandInput1 = CommandInputHint
+ClientOutgoingMessage1 = ClientRequestMessage
+ClientOutgoingMessage2 = ClientResponseMessage
+ClientOutgoingMessage3 = ClientErrorMessage
+ClientOutgoingMessage4 = ClientNotificationMessage
 ContentBlock1 = TextContentBlock
 ContentBlock2 = ImageContentBlock
 ContentBlock3 = AudioContentBlock

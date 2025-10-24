@@ -10,7 +10,6 @@ from .schema import (
     AudioContentBlock,
     BlobResourceContents,
     ContentToolCallContent,
-    EmbeddedResource,
     EmbeddedResourceContentBlock,
     FileEditToolCallContent,
     ImageContentBlock,
@@ -99,19 +98,18 @@ def resource_link_block(
     )
 
 
-def embedded_text_resource(uri: str, text: str, *, mime_type: str | None = None) -> EmbeddedResource:
-    return EmbeddedResource(resource=TextResourceContents(uri=uri, text=text, mimeType=mime_type))
+def embedded_text_resource(uri: str, text: str, *, mime_type: str | None = None) -> TextResourceContents:
+    return TextResourceContents(uri=uri, text=text, mimeType=mime_type)
 
 
-def embedded_blob_resource(uri: str, blob: str, *, mime_type: str | None = None) -> EmbeddedResource:
-    return EmbeddedResource(resource=BlobResourceContents(uri=uri, blob=blob, mimeType=mime_type))
+def embedded_blob_resource(uri: str, blob: str, *, mime_type: str | None = None) -> BlobResourceContents:
+    return BlobResourceContents(uri=uri, blob=blob, mimeType=mime_type)
 
 
 def resource_block(
-    resource: EmbeddedResource | TextResourceContents | BlobResourceContents,
+    resource: TextResourceContents | BlobResourceContents,
 ) -> EmbeddedResourceContentBlock:
-    resource_obj = resource.resource if isinstance(resource, EmbeddedResource) else resource
-    return EmbeddedResourceContentBlock(type="resource", resource=resource_obj)
+    return EmbeddedResourceContentBlock(type="resource", resource=resource)
 
 
 def tool_content(block: ContentBlock) -> ContentToolCallContent:

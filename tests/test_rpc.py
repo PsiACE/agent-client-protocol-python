@@ -46,10 +46,10 @@ from acp.schema import (
     DeniedOutcome,
     PermissionOption,
     TextContentBlock,
+    ToolCall,
     ToolCallLocation,
     ToolCallProgress,
     ToolCallStart,
-    ToolCallUpdate,
     UserMessageChunk,
 )
 
@@ -470,7 +470,7 @@ class _ExampleAgent(Agent):
 
         permission_request = RequestPermissionRequest(
             sessionId=params.sessionId,
-            toolCall=ToolCallUpdate(
+            toolCall=ToolCall(
                 toolCallId="call_1",
                 title="Modifying configuration",
                 kind="edit",
