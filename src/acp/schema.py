@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.5.0
+# Schema ref: refs/tags/v0.6.2
 
 from __future__ import annotations
 
@@ -149,6 +149,35 @@ class HttpHeader(BaseModel):
     name: Annotated[str, Field(description="The name of the HTTP header.")]
     # The value to set for the HTTP header.
     value: Annotated[str, Field(description="The value to set for the HTTP header.")]
+
+
+class Implementation(BaseModel):
+    # Intended for programmatic or logical use, but can be used as a display
+    # name fallback if title isn’t present.
+    name: Annotated[
+        str,
+        Field(
+            description="Intended for programmatic or logical use, but can be used as a display\nname fallback if title isn’t present."
+        ),
+    ]
+    # Intended for UI and end-user contexts — optimized to be human-readable
+    # and easily understood.
+    #
+    # If not provided, the name should be used for display.
+    title: Annotated[
+        Optional[str],
+        Field(
+            description="Intended for UI and end-user contexts — optimized to be human-readable\nand easily understood.\n\nIf not provided, the name should be used for display."
+        ),
+    ] = None
+    # Version of the implementation. Can be displayed to the user or used
+    # for debugging or metrics purposes.
+    version: Annotated[
+        str,
+        Field(
+            description="Version of the implementation. Can be displayed to the user or used\nfor debugging or metrics purposes."
+        ),
+    ]
 
 
 class KillTerminalCommandResponse(BaseModel):
@@ -349,7 +378,7 @@ class SetSessionModeRequest(BaseModel):
 
 
 class SetSessionModeResponse(BaseModel):
-    meta: Optional[Any] = None
+    field_meta: Annotated[Optional[Any], Field(alias="_meta")] = None
 
 
 class SetSessionModelRequest(BaseModel):
@@ -767,6 +796,15 @@ class InitializeRequest(BaseModel):
         Optional[ClientCapabilities],
         Field(description="Capabilities supported by the client."),
     ] = ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)
+    # Information about the Client name and version sent to the Agent.
+    #
+    # Note: in future versions of the protocol, this will be required.
+    clientInfo: Annotated[
+        Optional[Implementation],
+        Field(
+            description="Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required."
+        ),
+    ] = None
     # The latest protocol version supported by the client.
     protocolVersion: Annotated[
         int,
@@ -793,6 +831,15 @@ class InitializeResponse(BaseModel):
         mcpCapabilities=McpCapabilities(http=False, sse=False),
         promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
     )
+    # Information about the Agent name and version sent to the Client.
+    #
+    # Note: in future versions of the protocol, this will be required.
+    agentInfo: Annotated[
+        Optional[Implementation],
+        Field(
+            description="Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required."
+        ),
+    ] = None
     # Authentication methods supported by the agent.
     authMethods: Annotated[
         Optional[List[AuthMethod]],

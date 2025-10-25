@@ -17,6 +17,16 @@ from acp import (
     text_block,
     PROTOCOL_VERSION,
 )
+from acp.schema import (
+    AgentMessageChunk,
+    AudioContentBlock,
+    ClientCapabilities,
+    EmbeddedResourceContentBlock,
+    ImageContentBlock,
+    Implementation,
+    ResourceContentBlock,
+    TextContentBlock,
+)
 
 
 class ExampleClient(Client):
@@ -46,20 +56,24 @@ class ExampleClient(Client):
 
     async def sessionUpdate(self, params: SessionNotification) -> None:
         update = params.update
-        if isinstance(update, dict):
-            kind = update.get("sessionUpdate")
-            content = update.get("content")
-        else:
-            kind = getattr(update, "sessionUpdate", None)
-            content = getattr(update, "content", None)
-
-        if kind != "agent_message_chunk" or content is None:
+        if not isinstance(update, AgentMessageChunk):
             return
 
-        if isinstance(content, dict):
-            text = content.get("text", "<content>")
+        content = update.content
+        text: str
+        if isinstance(content, TextContentBlock):
+            text = content.text
+        elif isinstance(content, ImageContentBlock):
+            text = "<image>"
+        elif isinstance(content, AudioContentBlock):
+            text = "<audio>"
+        elif isinstance(content, ResourceContentBlock):
+            text = content.uri or "<resource>"
+        elif isinstance(content, EmbeddedResourceContentBlock):
+            text = "<resource>"
         else:
-            text = getattr(content, "text", "<content>")
+            text = "<content>"
+
         print(f"| Agent: {text}")
 
     async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
@@ -130,7 +144,13 @@ async def main(argv: list[str]) -> int:
     client_impl = ExampleClient()
     conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
 
-    await conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION, clientCapabilities=None))
+    await conn.initialize(
+        InitializeRequest(
+            protocolVersion=PROTOCOL_VERSION,
+            clientCapabilities=ClientCapabilities(),
+            clientInfo=Implementation(name="example-client", title="Example Client", version="0.1.0"),
+        )
+    )
     session = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
 
     await interactive_loop(conn, session.sessionId)
