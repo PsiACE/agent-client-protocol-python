@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from acp import AgentSideConnection, ClientSideConnection, PromptRequest, PromptResponse, RequestPermissionRequest
-from acp.schema import PermissionOption, TextContentBlock, ToolCallUpdate
+from acp.schema import PermissionOption, TextContentBlock, ToolCall
 from tests.test_rpc import TestAgent, TestClient, _Server
 
 # Regression from real-world runs where agents paused prompts to obtain user permission.
@@ -25,7 +25,7 @@ class PermissionRequestAgent(TestAgent):
                     PermissionOption(optionId="allow", name="Allow", kind="allow_once"),
                     PermissionOption(optionId="deny", name="Deny", kind="reject_once"),
                 ],
-                toolCall=ToolCallUpdate(toolCallId="call-1", title="Write File"),
+                toolCall=ToolCall(toolCallId="call-1", title="Write File"),
             )
         )
         self.permission_responses.append(permission)

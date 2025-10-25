@@ -8,9 +8,11 @@ from .schema import (
     AgentPlanUpdate,
     AgentThoughtChunk,
     AudioContentBlock,
+    AvailableCommand,
+    AvailableCommandsUpdate,
     BlobResourceContents,
     ContentToolCallContent,
-    EmbeddedResource,
+    CurrentModeUpdate,
     EmbeddedResourceContentBlock,
     FileEditToolCallContent,
     ImageContentBlock,
@@ -35,7 +37,14 @@ ContentBlock = (
 )
 
 SessionUpdate = (
-    AgentMessageChunk | AgentPlanUpdate | AgentThoughtChunk | UserMessageChunk | ToolCallStart | ToolCallProgress
+    AgentMessageChunk
+    | AgentPlanUpdate
+    | AgentThoughtChunk
+    | AvailableCommandsUpdate
+    | CurrentModeUpdate
+    | UserMessageChunk
+    | ToolCallStart
+    | ToolCallProgress
 )
 
 ToolCallContentVariant = ContentToolCallContent | FileEditToolCallContent | TerminalToolCallContent
@@ -60,6 +69,8 @@ __all__ = [
     "update_agent_message_text",
     "update_agent_thought",
     "update_agent_thought_text",
+    "update_available_commands",
+    "update_current_mode",
     "update_plan",
     "update_tool_call",
     "update_user_message",
@@ -99,19 +110,18 @@ def resource_link_block(
     )
 
 
-def embedded_text_resource(uri: str, text: str, *, mime_type: str | None = None) -> EmbeddedResource:
-    return EmbeddedResource(resource=TextResourceContents(uri=uri, text=text, mimeType=mime_type))
+def embedded_text_resource(uri: str, text: str, *, mime_type: str | None = None) -> TextResourceContents:
+    return TextResourceContents(uri=uri, text=text, mimeType=mime_type)
 
 
-def embedded_blob_resource(uri: str, blob: str, *, mime_type: str | None = None) -> EmbeddedResource:
-    return EmbeddedResource(resource=BlobResourceContents(uri=uri, blob=blob, mimeType=mime_type))
+def embedded_blob_resource(uri: str, blob: str, *, mime_type: str | None = None) -> BlobResourceContents:
+    return BlobResourceContents(uri=uri, blob=blob, mimeType=mime_type)
 
 
 def resource_block(
-    resource: EmbeddedResource | TextResourceContents | BlobResourceContents,
+    resource: TextResourceContents | BlobResourceContents,
 ) -> EmbeddedResourceContentBlock:
-    resource_obj = resource.resource if isinstance(resource, EmbeddedResource) else resource
-    return EmbeddedResourceContentBlock(type="resource", resource=resource_obj)
+    return EmbeddedResourceContentBlock(type="resource", resource=resource)
 
 
 def tool_content(block: ContentBlock) -> ContentToolCallContent:
@@ -161,6 +171,17 @@ def update_agent_thought(content: ContentBlock) -> AgentThoughtChunk:
 
 def update_agent_thought_text(text: str) -> AgentThoughtChunk:
     return update_agent_thought(text_block(text))
+
+
+def update_available_commands(commands: Iterable[AvailableCommand]) -> AvailableCommandsUpdate:
+    return AvailableCommandsUpdate(
+        sessionUpdate="available_commands_update",
+        availableCommands=list(commands),
+    )
+
+
+def update_current_mode(current_mode_id: str) -> CurrentModeUpdate:
+    return CurrentModeUpdate(sessionUpdate="current_mode_update", currentModeId=current_mode_id)
 
 
 def session_notification(session_id: str, update: SessionUpdate) -> SessionNotification:

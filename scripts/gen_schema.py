@@ -28,7 +28,15 @@ DESCRIPTION_PATTERN = re.compile(
 # Map of numbered classes produced by datamodel-code-generator to descriptive names.
 # Keep this in sync with the Rust/TypeScript SDK nomenclature.
 RENAME_MAP: dict[str, str] = {
+    "AgentOutgoingMessage1": "AgentRequestMessage",
+    "AgentOutgoingMessage2": "AgentResponseMessage",
+    "AgentOutgoingMessage3": "AgentErrorMessage",
+    "AgentOutgoingMessage4": "AgentNotificationMessage",
     "AvailableCommandInput1": "CommandInputHint",
+    "ClientOutgoingMessage1": "ClientRequestMessage",
+    "ClientOutgoingMessage2": "ClientResponseMessage",
+    "ClientOutgoingMessage3": "ClientErrorMessage",
+    "ClientOutgoingMessage4": "ClientNotificationMessage",
     "ContentBlock1": "TextContentBlock",
     "ContentBlock2": "ImageContentBlock",
     "ContentBlock3": "AudioContentBlock",
@@ -71,8 +79,6 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
     ("PlanEntry", "priority", "PlanEntryPriority", False),
     ("PlanEntry", "status", "PlanEntryStatus", False),
     ("PromptResponse", "stopReason", "StopReason", False),
-    ("ToolCallUpdate", "kind", "ToolKind", True),
-    ("ToolCallUpdate", "status", "ToolCallStatus", True),
     ("ToolCallProgress", "kind", "ToolKind", True),
     ("ToolCallProgress", "status", "ToolCallStatus", True),
     ("ToolCallStart", "kind", "ToolKind", True),
