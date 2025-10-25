@@ -15,6 +15,7 @@ Python SDK for the Agent Client Protocol (ACP). Build agents that speak ACP over
 - Process helpers such as `spawn_agent_process` for embedding agents and clients directly in Python
 - Batteries-included examples that exercise streaming updates, file I/O, and permission flows
 - Optional Gemini CLI bridge (`examples/gemini.py`) for the `gemini --experimental-acp` integration
+- Experimental contrib modules (`acp.contrib`) that streamline session state, tool call tracking, and permission prompts
 
 ## Install
 
@@ -134,23 +135,37 @@ Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py
 Use `acp.helpers` to build protocol payloads without manually shaping dictionaries:
 
 ```python
-from acp import start_tool_call, text_block, tool_content, update_tool_call
-
-start = start_tool_call("call-1", "Inspect config", kind="read", status="pending")
-update = update_tool_call(
-    "call-1",
-    status="completed",
-    content=[tool_content(text_block("Inspection finished."))],
+from acp import (
+    start_read_tool_call,
+    text_block,
+    tool_content,
+    update_available_commands,
+    update_tool_call,
 )
+
+start = start_read_tool_call("call-1", "Inspect config", path="config.toml")
+commands = update_available_commands([])
+update = update_tool_call("call-1", status="completed", content=[tool_content(text_block("Done."))])
 ```
 
-Helpers cover content blocks (`text_block`, `resource_link_block`), embedded resources, tool calls (`start_edit_tool_call`, `update_tool_call`), and session updates (`update_agent_message_text`, `session_notification`).
+Helpers cover content blocks (`text_block`, `resource_link_block`), embedded resources, tool calls (`start_edit_tool_call`, `update_tool_call`), and session updates (`update_agent_message_text`, `update_available_commands`, `update_current_mode`, `session_notification`).
+
+## Contrib helpers
+
+The experimental `acp.contrib` package captures patterns from reference integrations:
+
+- `SessionAccumulator` (`acp.contrib.session_state`) merges `SessionNotification` streams into immutable snapshots for UI rendering.
+- `ToolCallTracker` (`acp.contrib.tool_calls`) generates consistent tool call starts/updates and buffers streamed content.
+- `PermissionBroker` (`acp.contrib.permissions`) wraps permission requests with sensible default option sets.
+
+Read more in [docs/contrib.md](docs/contrib.md).
 
 ## Documentation
 
 - Project docs (MkDocs): https://psiace.github.io/agent-client-protocol-python/
 - Local sources: `docs/`
   - [Quickstart](docs/quickstart.md)
+  - [Contrib helpers](docs/contrib.md)
   - [Releasing](docs/releasing.md)
 
 ## Gemini CLI bridge
