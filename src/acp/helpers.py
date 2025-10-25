@@ -8,8 +8,11 @@ from .schema import (
     AgentPlanUpdate,
     AgentThoughtChunk,
     AudioContentBlock,
+    AvailableCommand,
+    AvailableCommandsUpdate,
     BlobResourceContents,
     ContentToolCallContent,
+    CurrentModeUpdate,
     EmbeddedResourceContentBlock,
     FileEditToolCallContent,
     ImageContentBlock,
@@ -34,7 +37,14 @@ ContentBlock = (
 )
 
 SessionUpdate = (
-    AgentMessageChunk | AgentPlanUpdate | AgentThoughtChunk | UserMessageChunk | ToolCallStart | ToolCallProgress
+    AgentMessageChunk
+    | AgentPlanUpdate
+    | AgentThoughtChunk
+    | AvailableCommandsUpdate
+    | CurrentModeUpdate
+    | UserMessageChunk
+    | ToolCallStart
+    | ToolCallProgress
 )
 
 ToolCallContentVariant = ContentToolCallContent | FileEditToolCallContent | TerminalToolCallContent
@@ -59,6 +69,8 @@ __all__ = [
     "update_agent_message_text",
     "update_agent_thought",
     "update_agent_thought_text",
+    "update_available_commands",
+    "update_current_mode",
     "update_plan",
     "update_tool_call",
     "update_user_message",
@@ -159,6 +171,17 @@ def update_agent_thought(content: ContentBlock) -> AgentThoughtChunk:
 
 def update_agent_thought_text(text: str) -> AgentThoughtChunk:
     return update_agent_thought(text_block(text))
+
+
+def update_available_commands(commands: Iterable[AvailableCommand]) -> AvailableCommandsUpdate:
+    return AvailableCommandsUpdate(
+        sessionUpdate="available_commands_update",
+        availableCommands=list(commands),
+    )
+
+
+def update_current_mode(current_mode_id: str) -> CurrentModeUpdate:
+    return CurrentModeUpdate(sessionUpdate="current_mode_update", currentModeId=current_mode_id)
 
 
 def session_notification(session_id: str, update: SessionUpdate) -> SessionNotification:

@@ -21,7 +21,7 @@ SCHEMA_JSON = SCHEMA_DIR / "schema.json"
 META_JSON = SCHEMA_DIR / "meta.json"
 VERSION_FILE = SCHEMA_DIR / "VERSION"
 
-DEFAULT_REPO = "zed-industries/agent-client-protocol"
+DEFAULT_REPO = "agentclientprotocol/agent-client-protocol"
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
         "--version",
         "-v",
         help=(
-            "Git ref (tag/branch) of zed-industries/agent-client-protocol to fetch the schema from. "
+            "Git ref (tag/branch) of agentclientprotocol/agent-client-protocol to fetch the schema from. "
             "If omitted, uses the cached schema files or falls back to 'main' when missing."
         ),
     )
