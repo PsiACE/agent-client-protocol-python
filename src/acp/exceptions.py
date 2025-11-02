@@ -14,11 +14,11 @@ class RequestError(Exception):
         self.data = data
 
     @staticmethod
-    def parse_error(data: dict | None = None) -> RequestError:
+    def parse_error(data: dict[str, Any] | None = None) -> RequestError:
         return RequestError(-32700, "Parse error", data)
 
     @staticmethod
-    def invalid_request(data: dict | None = None) -> RequestError:
+    def invalid_request(data: dict[str, Any] | None = None) -> RequestError:
         return RequestError(-32600, "Invalid request", data)
 
     @staticmethod
@@ -26,15 +26,15 @@ class RequestError(Exception):
         return RequestError(-32601, "Method not found", {"method": method})
 
     @staticmethod
-    def invalid_params(data: dict | None = None) -> RequestError:
+    def invalid_params(data: dict[str, Any] | None = None) -> RequestError:
         return RequestError(-32602, "Invalid params", data)
 
     @staticmethod
-    def internal_error(data: dict | None = None) -> RequestError:
+    def internal_error(data: dict[str, Any] | None = None) -> RequestError:
         return RequestError(-32603, "Internal error", data)
 
     @staticmethod
-    def auth_required(data: dict | None = None) -> RequestError:
+    def auth_required(data: dict[str, Any] | None = None) -> RequestError:
         return RequestError(-32000, "Authentication required", data)
 
     @staticmethod
