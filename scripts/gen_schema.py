@@ -199,6 +199,7 @@ def rename_types(output_path: Path) -> list[str]:
     content = _apply_field_overrides(content)
     content = _apply_default_overrides(content)
     content = _add_description_comments(content)
+    content = _ensure_custom_base_model(content)
 
     alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
     alias_block = BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
@@ -218,6 +219,37 @@ def rename_types(output_path: Path) -> list[str]:
         )
 
     return warnings
+
+
+def _ensure_custom_base_model(content: str) -> str:
+    if "class BaseModel(_BaseModel):" in content:
+        return content
+    lines = content.splitlines()
+    for idx, line in enumerate(lines):
+        if not line.startswith("from pydantic import "):
+            continue
+        imports = [part.strip() for part in line[len("from pydantic import ") :].split(",")]
+        has_alias = any(part == "BaseModel as _BaseModel" for part in imports)
+        has_config = any(part == "ConfigDict" for part in imports)
+        new_imports = []
+        for part in imports:
+            if part == "BaseModel":
+                new_imports.append("BaseModel as _BaseModel")
+                has_alias = True
+            else:
+                new_imports.append(part)
+        if not has_alias:
+            new_imports.append("BaseModel as _BaseModel")
+        if not has_config:
+            new_imports.append("ConfigDict")
+        lines[idx] = "from pydantic import " + ", ".join(new_imports)
+        insert_idx = idx + 1
+        lines.insert(insert_idx, "")
+        lines.insert(insert_idx + 1, "class BaseModel(_BaseModel):")
+        lines.insert(insert_idx + 2, "    model_config = ConfigDict(populate_by_name=True)")
+        lines.insert(insert_idx + 3, "")
+        break
+    return "\n".join(lines) + "\n"
 
 
 def _apply_field_overrides(content: str) -> str:

@@ -6,8 +6,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, RootModel
-
+from pydantic import BaseModel as _BaseModel, Field, RootModel, ConfigDict
 
 PermissionOptionKind = Literal["allow_once", "allow_always", "reject_once", "reject_always"]
 PlanEntryPriority = Literal["high", "medium", "low"]
@@ -15,6 +14,10 @@ PlanEntryStatus = Literal["pending", "in_progress", "completed"]
 StopReason = Literal["end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"]
 ToolCallStatus = Literal["pending", "in_progress", "completed", "failed"]
 ToolKind = Literal["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"]
+
+
+class BaseModel(_BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Jsonrpc(Enum):

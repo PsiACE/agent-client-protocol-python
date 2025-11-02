@@ -192,7 +192,12 @@ class Connection:
             try:
                 result = await self._handler(method, message.get("params"), False)
                 if isinstance(result, BaseModel):
-                    result = result.model_dump()
+                    result = result.model_dump(
+                        mode="json",
+                        by_alias=True,
+                        exclude_none=True,
+                        exclude_unset=True,
+                    )
                 payload["result"] = result if result is not None else None
                 await self._sender.send(payload)
                 self._notify_observers(StreamDirection.OUTGOING, payload)

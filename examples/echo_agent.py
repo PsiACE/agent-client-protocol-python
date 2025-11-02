@@ -29,13 +29,15 @@ class EchoAgent(Agent):
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         for block in params.prompt:
-            text = getattr(block, "text", "")
-            await self._conn.sessionUpdate(
-                session_notification(
-                    params.sessionId,
-                    update_agent_message(text_block(text)),
-                )
-            )
+            text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
+            chunk = update_agent_message(text_block(text))
+            chunk.field_meta = {"echo": True}
+            chunk.content.field_meta = {"echo": True}
+
+            notification = session_notification(params.sessionId, chunk)
+            notification.field_meta = {"source": "echo_agent"}
+
+            await self._conn.sessionUpdate(notification)
         return PromptResponse(stopReason="end_turn")
 
 
