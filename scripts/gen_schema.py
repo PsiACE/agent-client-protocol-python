@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import re
 import shutil
 import subprocess
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -116,6 +118,14 @@ DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
 )
 
 
+@dataclass(frozen=True)
+class _ProcessingStep:
+    """A named transformation applied to the generated schema content."""
+
+    name: str
+    apply: Callable[[str], str]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate src/acp/schema.py from the ACP JSON schema.")
     parser.add_argument(
@@ -166,7 +176,7 @@ def generate_schema(*, format_output: bool = True) -> None:
     ]
 
     subprocess.check_call(cmd)  # noqa: S603
-    warnings = rename_types(SCHEMA_OUT)
+    warnings = postprocess_generated_schema(SCHEMA_OUT)
     for warning in warnings:
         print(f"Warning: {warning}", file=sys.stderr)
 
@@ -174,49 +184,36 @@ def generate_schema(*, format_output: bool = True) -> None:
         format_with_ruff(SCHEMA_OUT)
 
 
-def rename_types(output_path: Path) -> list[str]:
+def postprocess_generated_schema(output_path: Path) -> list[str]:
     if not output_path.exists():
         raise RuntimeError(f"Generated schema not found at {output_path}")  # noqa: TRY003
 
-    content = output_path.read_text(encoding="utf-8")
+    raw_content = output_path.read_text(encoding="utf-8")
+    header_block = _build_header_block()
 
-    header_lines = ["# Generated from schema/schema.json. Do not edit by hand."]
-    if VERSION_FILE.exists():
-        ref = VERSION_FILE.read_text(encoding="utf-8").strip()
-        if ref:
-            header_lines.append(f"# Schema ref: {ref}")
+    content = _strip_existing_header(raw_content)
+    content = _remove_backcompat_block(content)
+    content, leftover_classes = _rename_numbered_models(content)
 
-    existing_header = re.match(r"(#.*\n)+", content)
-    if existing_header:
-        content = content[existing_header.end() :]
-    content = content.lstrip("\n")
+    processing_steps: tuple[_ProcessingStep, ...] = (
+        _ProcessingStep("apply field overrides", _apply_field_overrides),
+        _ProcessingStep("apply default overrides", _apply_default_overrides),
+        _ProcessingStep("normalize stdio literal", _normalize_stdio_model),
+        _ProcessingStep("attach description comments", _add_description_comments),
+        _ProcessingStep("ensure custom BaseModel", _ensure_custom_base_model),
+    )
 
-    marker_index = content.find(BACKCOMPAT_MARKER)
-    if marker_index != -1:
-        content = content[:marker_index].rstrip()
+    for step in processing_steps:
+        content = step.apply(content)
 
-    for old, new in sorted(RENAME_MAP.items(), key=lambda item: len(item[0]), reverse=True):
-        pattern = re.compile(rf"\b{re.escape(old)}\b")
-        content = pattern.sub(new, content)
-
-    leftover_class_pattern = re.compile(r"^class (\w+\d+)\(", re.MULTILINE)
-    leftover_classes = sorted(set(leftover_class_pattern.findall(content)))
-
-    header_block = "\n".join(header_lines) + "\n\n"
-    content = _apply_field_overrides(content)
-    content = _apply_default_overrides(content)
-    content = _normalize_stdio_model(content)
-    content = _add_description_comments(content)
-    content = _ensure_custom_base_model(content)
-
-    alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
-    alias_block = BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
+    missing_targets = _find_missing_targets(content)
 
     content = _inject_enum_aliases(content)
-    content = header_block + content.rstrip() + "\n\n" + alias_block
-    if not content.endswith("\n"):
-        content += "\n"
-    output_path.write_text(content, encoding="utf-8")
+    alias_block = _build_alias_block()
+    final_content = header_block + content.rstrip() + "\n\n" + alias_block
+    if not final_content.endswith("\n"):
+        final_content += "\n"
+    output_path.write_text(final_content, encoding="utf-8")
 
     warnings: list[str] = []
     if leftover_classes:
@@ -225,8 +222,110 @@ def rename_types(output_path: Path) -> list[str]:
             + ", ".join(leftover_classes)
             + ". Update RENAME_MAP in scripts/gen_schema.py."
         )
+    if missing_targets:
+        warnings.append(
+            "Renamed schema targets not found after generation: "
+            + ", ".join(sorted(missing_targets))
+            + ". Check RENAME_MAP or upstream schema changes."
+        )
+    warnings.extend(_validate_schema_alignment())
 
     return warnings
+
+
+def _build_header_block() -> str:
+    header_lines = ["# Generated from schema/schema.json. Do not edit by hand."]
+    if VERSION_FILE.exists():
+        ref = VERSION_FILE.read_text(encoding="utf-8").strip()
+        if ref:
+            header_lines.append(f"# Schema ref: {ref}")
+    return "\n".join(header_lines) + "\n\n"
+
+
+def _build_alias_block() -> str:
+    alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
+    return BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
+
+
+def _strip_existing_header(content: str) -> str:
+    existing_header = re.match(r"(#.*\n)+", content)
+    if existing_header:
+        return content[existing_header.end() :].lstrip("\n")
+    return content.lstrip("\n")
+
+
+def _remove_backcompat_block(content: str) -> str:
+    marker_index = content.find(BACKCOMPAT_MARKER)
+    if marker_index != -1:
+        return content[:marker_index].rstrip()
+    return content
+
+
+def _rename_numbered_models(content: str) -> tuple[str, list[str]]:
+    renamed = content
+    for old, new in sorted(RENAME_MAP.items(), key=lambda item: len(item[0]), reverse=True):
+        pattern = re.compile(rf"\b{re.escape(old)}\b")
+        renamed = pattern.sub(new, renamed)
+
+    leftover_class_pattern = re.compile(r"^class (\w+\d+)\(", re.MULTILINE)
+    leftover_classes = sorted(set(leftover_class_pattern.findall(renamed)))
+    return renamed, leftover_classes
+
+
+def _find_missing_targets(content: str) -> list[str]:
+    missing: list[str] = []
+    for new_name in RENAME_MAP.values():
+        pattern = re.compile(rf"^class {re.escape(new_name)}\(", re.MULTILINE)
+        if not pattern.search(content):
+            missing.append(new_name)
+    return missing
+
+
+def _validate_schema_alignment() -> list[str]:
+    warnings: list[str] = []
+    if not SCHEMA_JSON.exists():
+        warnings.append("schema/schema.json missing; unable to validate enum aliases.")
+        return warnings
+
+    try:
+        schema_enums = _load_schema_enum_literals()
+    except json.JSONDecodeError as exc:
+        warnings.append(f"Failed to parse schema/schema.json: {exc}")
+        return warnings
+
+    for enum_name, expected_values in ENUM_LITERAL_MAP.items():
+        schema_values = schema_enums.get(enum_name)
+        if schema_values is None:
+            warnings.append(
+                f"Enum '{enum_name}' not found in schema.json; update ENUM_LITERAL_MAP or investigate schema changes."
+            )
+            continue
+        if tuple(schema_values) != expected_values:
+            warnings.append(
+                f"Enum mismatch for '{enum_name}': schema.json -> {schema_values}, generated aliases -> {expected_values}"
+            )
+    return warnings
+
+
+def _load_schema_enum_literals() -> dict[str, tuple[str, ...]]:
+    schema_data = json.loads(SCHEMA_JSON.read_text(encoding="utf-8"))
+    defs = schema_data.get("$defs", {})
+    enum_literals: dict[str, tuple[str, ...]] = {}
+
+    for name, definition in defs.items():
+        values: list[str] = []
+        if "enum" in definition:
+            values = [str(item) for item in definition["enum"]]
+        elif "oneOf" in definition:
+            values = [
+                str(option["const"])
+                for option in definition.get("oneOf", [])
+                if isinstance(option, dict) and "const" in option
+            ]
+        if values:
+            enum_literals[name] = tuple(values)
+
+    return enum_literals
 
 
 def _ensure_custom_base_model(content: str) -> str:
