@@ -244,7 +244,7 @@ class StdioMcpServer(BaseModel):
     ]
     # Human-readable name identifying this MCP server.
     name: Annotated[str, Field(description="Human-readable name identifying this MCP server.")]
-    type: Literal["2#-datamodel-code-generator-#-object-#-special-#"]
+    type: Literal["stdio"] = "stdio"
 
 
 class ModelInfo(BaseModel):

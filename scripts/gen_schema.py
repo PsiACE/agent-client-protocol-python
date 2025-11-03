@@ -25,6 +25,13 @@ DESCRIPTION_PATTERN = re.compile(
     re.DOTALL,
 )
 
+STDIO_TYPE_LITERAL = 'Literal["2#-datamodel-code-generator-#-object-#-special-#"]'
+STDIO_TYPE_PATTERN = re.compile(
+    r"^    type:\s*Literal\[['\"]2#-datamodel-code-generator-#-object-#-special-#['\"]\]"
+    r"(?:\s*=\s*['\"][^'\"]+['\"])?\s*$",
+    re.MULTILINE,
+)
+
 # Map of numbered classes produced by datamodel-code-generator to descriptive names.
 # Keep this in sync with the Rust/TypeScript SDK nomenclature.
 RENAME_MAP: dict[str, str] = {
@@ -198,6 +205,7 @@ def rename_types(output_path: Path) -> list[str]:
     header_block = "\n".join(header_lines) + "\n\n"
     content = _apply_field_overrides(content)
     content = _apply_default_overrides(content)
+    content = _normalize_stdio_model(content)
     content = _add_description_comments(content)
     content = _ensure_custom_base_model(content)
 
@@ -321,6 +329,19 @@ def _apply_default_overrides(content: str) -> str:
                 file=sys.stderr,
             )
     return content
+
+
+def _normalize_stdio_model(content: str) -> str:
+    replacement_line = '    type: Literal["stdio"] = "stdio"'
+    new_content, count = STDIO_TYPE_PATTERN.subn(replacement_line, content)
+    if count == 0:
+        return content
+    if count > 1:
+        print(
+            "Warning: multiple stdio type placeholders detected; manual review required.",
+            file=sys.stderr,
+        )
+    return new_content
 
 
 def _add_description_comments(content: str) -> str:
