@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.6.2
+# Schema ref: refs/tags/v0.6.3
 
 from __future__ import annotations
 
@@ -244,6 +244,7 @@ class StdioMcpServer(BaseModel):
     ]
     # Human-readable name identifying this MCP server.
     name: Annotated[str, Field(description="Human-readable name identifying this MCP server.")]
+    type: Literal["2#-datamodel-code-generator-#-object-#-special-#"]
 
 
 class ModelInfo(BaseModel):
@@ -336,7 +337,10 @@ class RequestPermissionResponse(BaseModel):
     # The user's decision on the permission request.
     outcome: Annotated[
         Union[DeniedOutcome, AllowedOutcome],
-        Field(description="The user's decision on the permission request."),
+        Field(
+            description="The user's decision on the permission request.",
+            discriminator="outcome",
+        ),
     ]
 
 
@@ -1195,7 +1199,7 @@ class UserMessageChunk(BaseModel):
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(description="A single item of content"),
+        Field(description="A single item of content", discriminator="type"),
     ]
     sessionUpdate: Literal["user_message_chunk"]
 
@@ -1211,7 +1215,7 @@ class AgentMessageChunk(BaseModel):
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(description="A single item of content"),
+        Field(description="A single item of content", discriminator="type"),
     ]
     sessionUpdate: Literal["agent_message_chunk"]
 
@@ -1227,7 +1231,7 @@ class AgentThoughtChunk(BaseModel):
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(description="A single item of content"),
+        Field(description="A single item of content", discriminator="type"),
     ]
     sessionUpdate: Literal["agent_thought_chunk"]
 
@@ -1238,7 +1242,7 @@ class ContentToolCallContent(BaseModel):
         Union[
             TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
         ],
-        Field(description="The actual content block."),
+        Field(description="The actual content block.", discriminator="type"),
     ]
     type: Literal["content"]
 
@@ -1457,7 +1461,7 @@ class SessionNotification(BaseModel):
             AvailableCommandsUpdate,
             CurrentModeUpdate,
         ],
-        Field(description="The actual update content."),
+        Field(description="The actual update content.", discriminator="sessionUpdate"),
     ]
 
 
