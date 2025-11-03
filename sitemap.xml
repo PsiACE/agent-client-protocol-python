@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://psiace.github.io/agent-client-protocol-python/</loc>
+         <lastmod>2025-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://psiace.github.io/agent-client-protocol-python/contrib/</loc>
+         <lastmod>2025-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://psiace.github.io/agent-client-protocol-python/quickstart/</loc>
+         <lastmod>2025-11-03</lastmod>
+    </url>
+    <url>
+         <loc>https://psiace.github.io/agent-client-protocol-python/releasing/</loc>
+         <lastmod>2025-11-03</lastmod>
+    </url>
+</urlset>
