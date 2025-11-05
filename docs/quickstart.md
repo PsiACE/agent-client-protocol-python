@@ -4,7 +4,7 @@ This guide gets you from a clean environment to streaming ACP messages from a Py
 
 ## Prerequisites
 
-- Python 3.10+ and either `pip` or `uv`
+- Python 3.10-3.14 and either `pip` or `uv`
 - An ACP-capable client such as Zed (optional but recommended for testing)
 
 ## 1. Install the SDK
