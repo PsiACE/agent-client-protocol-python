@@ -37,7 +37,7 @@ Add an Agent Server entry in `settings.json` (Zed → Settings → Agents panel)
     "Echo Agent (Python)": {
       "command": "/abs/path/to/python",
       "args": [
-        "/abs/path/to/agent-client-protocol-python/examples/echo_agent.py"
+        "/abs/path/to/agentclientprotocol/python-sdk/examples/echo_agent.py"
       ]
     }
   }
@@ -103,10 +103,10 @@ class MyAgent(Agent):
 
 Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to:
 
-- [`examples/echo_agent.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/echo_agent.py) for the smallest streaming agent
-- [`examples/agent.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/agent.py) for an implementation that negotiates capabilities and streams richer updates
-- [`examples/duet.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/duet.py) to see `spawn_agent_process` in action alongside the interactive client
-- [`examples/gemini.py`](https://github.com/psiace/agent-client-protocol-python/blob/main/examples/gemini.py) to drive the Gemini CLI (`--experimental-acp`) directly from Python
+- [`examples/echo_agent.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/echo_agent.py) for the smallest streaming agent
+- [`examples/agent.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/agent.py) for an implementation that negotiates capabilities and streams richer updates
+- [`examples/duet.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/duet.py) to see `spawn_agent_process` in action alongside the interactive client
+- [`examples/gemini.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/gemini.py) to drive the Gemini CLI (`--experimental-acp`) directly from Python
 
 Need builders for common payloads? `acp.helpers` mirrors the Go/TS helper APIs:
 
