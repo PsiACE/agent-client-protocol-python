@@ -1,10 +1,10 @@
 site_name: Agent Client Protocol - Python SDK
-repo_url: https://github.com/psiace/agent-client-protocol-python
-site_url: https://psiace.github.io/agent-client-protocol-python
+repo_url: https://github.com/agentclientprotocol/python-sdk
+site_url: https://agentclientprotocol.github.io/python-sdk
 site_description: A Python implement of Agent Client Protocol (ACP, by Zed Industries)
 site_author: Chojan Shang
 edit_uri: edit/main/docs/
-repo_name: psiace/agent-client-protocol-python
+repo_name: agentclientprotocol/python-sdk
 copyright: Maintained by <a href="https://github.com/psiace">psiace</a>.
 
 nav:
@@ -43,9 +43,9 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/psiace/agent-client-protocol-python
+      link: https://github.com/agentclientprotocol/python-sdk
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/agent-client-protocol-python
+      link: https://pypi.org/project/agent-client-protocol
 
 markdown_extensions:
   - toc:

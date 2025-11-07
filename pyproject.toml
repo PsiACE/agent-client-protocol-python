@@ -23,9 +23,9 @@ dependencies = [
 
 
 [project.urls]
-Homepage = "https://psiace.github.io/agent-client-protocol-python/"
-Repository = "https://github.com/psiace/agent-client-protocol-python"
-Documentation = "https://psiace.github.io/agent-client-protocol-python/"
+Homepage = "https://agentclientprotocol.github.io/python-sdk/"
+Repository = "https://github.com/agentclientprotocol/python-sdk"
+Documentation = "https://agentclientprotocol.github.io/python-sdk/"
 
 [dependency-groups]
 dev = [

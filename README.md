@@ -34,7 +34,7 @@ uv add agent-client-protocol
    ```
 2. Wire it into your client (e.g. Zed → Agents panel) so stdio is connected; the SDK handles JSON-RPC framing and lifecycle messages.
 
-Prefer a step-by-step walkthrough? Read the [Quickstart guide](docs/quickstart.md) or the hosted docs: https://psiace.github.io/agent-client-protocol-python/.
+Prefer a step-by-step walkthrough? Read the [Quickstart guide](docs/quickstart.md) or the hosted docs: https://agentclientprotocol.github.io/python-sdk/.
 
 ### Launching from Python
 
@@ -162,7 +162,7 @@ Read more in [docs/contrib.md](docs/contrib.md).
 
 ## Documentation
 
-- Project docs (MkDocs): https://psiace.github.io/agent-client-protocol-python/
+- Project docs (MkDocs): https://agentclientprotocol.github.io/python-sdk/
 - Local sources: `docs/`
   - [Quickstart](docs/quickstart.md)
   - [Contrib helpers](docs/contrib.md)
