@@ -1,13 +1,14 @@
 # Quickstart
 
-This guide gets you from a clean environment to streaming ACP messages from a Python agent.
+This walkthrough takes you from a clean environment to a streaming ACP conversation driven by Python. Peek at the [Use Cases](use-cases.md) list whenever you want to see how teams like kimi-cli or Zed apply the SDK in production.
 
-## Prerequisites
+## Before you begin
 
-- Python 3.10-3.14 and either `pip` or `uv`
-- An ACP-capable client such as Zed (optional but recommended for testing)
+- Python 3.10–3.14 with `pip` or `uv`
+- An ACP-capable client such as Zed (recommended for validation)
+- Optional: the Gemini CLI (`gemini --experimental-acp`) for the bridge example
 
-## 1. Install the SDK
+## Step 1 — Install the SDK
 
 ```bash
 pip install agent-client-protocol
@@ -15,17 +16,15 @@ pip install agent-client-protocol
 uv add agent-client-protocol
 ```
 
-## 2. Launch the Echo agent (terminal)
+## Step 2 — Launch the Echo agent
 
-Start the ready-made echo example — it streams text blocks back to any ACP client:
+Start the ready-made echo example; it streams text blocks back to any ACP client. Leave it running in a terminal:
 
 ```bash
 python examples/echo_agent.py
 ```
 
-Leave this process running while you connect from an editor or another program.
-
-## 3. Connect from an editor
+## Step 3 — Connect from an ACP-aware client
 
 ### Zed
 
@@ -87,7 +86,7 @@ asyncio.run(main())
 
 `spawn_agent_process` manages the child process, wires its stdio into ACP framing, and closes everything when the block exits. The mirror helper `spawn_client_process` lets you drive an ACP client from Python as well.
 
-## 4. Extend the agent
+## Step 4 — Extend the agent
 
 Create your own agent by subclassing `acp.Agent`. The pattern mirrors the echo example:
 
@@ -123,7 +122,7 @@ finish_update = update_tool_call(
 
 Each helper wraps the generated Pydantic models in `acp.schema`, so the right discriminator fields (`type`, `sessionUpdate`, and friends) are always populated. That keeps examples readable while maintaining the same validation guarantees as constructing the models directly. Golden fixtures in `tests/test_golden.py` ensure the helpers stay in sync with future schema revisions.
 
-## 5. Optional: Talk to the Gemini CLI
+## Optional — Talk to the Gemini CLI
 
 If you have the Gemini CLI installed and authenticated:
 
@@ -139,3 +138,10 @@ Environment helpers:
 - `ACP_ENABLE_GEMINI_TESTS=1` — opt-in toggle for `tests/test_gemini_example.py`
 
 Authentication hiccups (e.g. missing `GOOGLE_CLOUD_PROJECT`) are surfaced but treated as skips during testing so the suite stays green on machines without credentials.
+
+## Next steps
+
+- Compare what you built with the real integrations listed on the [Use Cases](use-cases.md) page.
+- Explore `docs/contrib.md` for higher-level utilities like session accumulators and permission brokers.
+- Run `make check` / `make test` before committing changes, and regenerate schema artifacts with `make gen-all` when ACP versions advance.
+- Need help? Start a thread in [GitHub Discussions](https://github.com/agentclientprotocol/python-sdk/discussions) or chat with other ACP developers at [agentclientprotocol.zulipchat.com](https://agentclientprotocol.zulipchat.com/).

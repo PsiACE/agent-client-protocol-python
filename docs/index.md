@@ -1,52 +1,50 @@
-<a href="https://agentclientprotocol.com/" >
+<a href="https://agentclientprotocol.com/">
   <img alt="Agent Client Protocol" src="https://zed.dev/img/acp/banner-dark.webp">
 </a>
 
 # Agent Client Protocol SDK (Python)
 
-Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships ready-to-use transports, typed protocol models, and examples that stream messages to ACP-aware clients such as Zed.
+The Python SDK packages generated schema bindings, asyncio transports, helper builders, and runnable demos so you can build ACP-compatible agents and clients without re-implementing JSON-RPC plumbing.
 
-## What you get
+## ACP in practice
 
-- Pydantic models generated from the upstream ACP schema (`acp.schema`)
-- Async agent/client wrappers with JSON-RPC task supervision built in
-- Process helpers (`spawn_agent_process`, `spawn_client_process`) for embedding ACP nodes inside Python applications
-- Helper APIs in `acp.helpers` that mirror the Go/TS SDK builders for content blocks, tool calls, and session updates. They instantiate the generated Pydantic types for you, so call sites stay concise without sacrificing validation.
-- Examples that showcase streaming updates, file operations, permission flows, and even a Gemini CLI bridge (`examples/gemini.py`)
+- ACP is the wire protocol that lets editors, CLIs, and other "clients" orchestrate AI agents via stdio.
+- Each agent session exchanges structured messages (`session/update`, permission prompts, tool calls) defined in the ACP schema.
+- This SDK mirrors the official schema version so Python integrations stay interoperable with the wider ACP ecosystem (Zed, Gemini CLI, etc.).
 
-## Getting started
+## SDK building blocks
 
-1. Install the package:
-   ```bash
-   pip install agent-client-protocol
-   ```
-2. Launch the provided echo agent to verify your setup:
-   ```bash
-   python examples/echo_agent.py
-   ```
-3. Point your ACP-capable client at the running process (for Zed, configure an Agent Server entry). The SDK takes care of JSON-RPC framing and lifecycle transitions.
+- `acp.schema`: generated Pydantic models that validate every payload against the canonical ACP definition.
+- `acp.agent` / `acp.client`: async base classes, JSON-RPC supervision, and lifecycle orchestration.
+- `acp.helpers`: builders for content blocks, tool calls, permissions, and notifications that keep discriminator fields consistent.
+- `acp.contrib`: experimental utilities (session accumulators, permission brokers, tool call trackers) derived from production deployments.
+- `examples/`: ready-to-run agents, clients, duo processes, and the Gemini CLI bridge to test real workflows.
 
-Prefer a guided tour? Head to the [Quickstart](quickstart.md) for terminal, editor, and programmatic launch walkthroughs.
+## Start building
 
-## Gemini CLI bridge
+1. Follow the [Quickstart](quickstart.md) to install the package, launch the echo agent, and connect from an editor or program.
+2. Use the example scripts as scaffolding for your own integrations—swap in your business logic while keeping the ACP plumbing.
+3. Extend transports, helpers, or contrib modules as needed; the test suite and golden fixtures keep schema compliance intact.
 
-If you have access to the Gemini CLI (`gemini --experimental-acp`), run:
+## Choose a path
 
-```bash
-python examples/gemini.py --yolo
-```
+- Curious who already runs this SDK? The [Use Cases](use-cases.md) page lists real integrations such as kimi-cli.
+- Shipping an integration with advanced UX (streaming, permissions, resources)? Combine the helper builders with the contrib utilities for faster iteration.
+- Embedding ACP parties inside an existing Python service? Reach for `spawn_agent_process` / `spawn_client_process` examples.
 
-Flags mirror the Go SDK example:
+## Reference material
 
-- `--gemini /path/to/cli` or `ACP_GEMINI_BIN` to override discovery
-- `--model`, `--sandbox`, `--debug` forwarded verbatim
-- `--yolo` auto-approves permission prompts with sensible defaults
+- [Quickstart](quickstart.md) — installation, editor wiring, and programmatic launch walkthroughs
+- [Use Cases](use-cases.md) — real adopters with links to the resources they relied on
+- [Experimental Contrib](contrib.md) — deep dives on the `acp.contrib` utilities
+- [Releasing](releasing.md) — schema upgrade process, versioning policy, and publishing checklist
 
-An opt-in smoke test lives at `tests/test_gemini_example.py`. Enable it with `ACP_ENABLE_GEMINI_TESTS=1` (and optionally `ACP_GEMINI_TEST_ARGS`) when the CLI is authenticated; otherwise the test stays skipped.
+Need API-level details? Browse the source in `src/acp/`.
 
-## Documentation map
+## Feedback & support
 
-- [Quickstart](quickstart.md): install, run, and embed the echo agent, plus next steps for extending it
-- [Releasing](releasing.md): schema upgrade workflow, version bumps, and publishing checklist
-
-Source code lives under `src/acp/`, while tests and additional examples are available in `tests/` and `examples/`. If you plan to contribute, see the repository README for the development workflow.
+- Open issues or discussions on GitHub for bugs, feature requests, or integration help.
+- Join the GitHub Discussions board at [github.com/agentclientprotocol/python-sdk/discussions](https://github.com/agentclientprotocol/python-sdk/discussions) to swap ideas.
+- Share examples, tutorials, or transports by adding them to the `docs/` or `examples/` directories via pull request.
+- Join the community chat at [agentclientprotocol.zulipchat.com](https://agentclientprotocol.zulipchat.com/) for real-time discussion.
+- ACP roadmap updates live at [agentclientprotocol.com](https://agentclientprotocol.com/); follow along to keep this SDK in lockstep.
