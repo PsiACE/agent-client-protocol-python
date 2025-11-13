@@ -1,126 +1,47 @@
-# Contributing to `agentclientprotocol/python-sdk`
+# Contributing
 
-Contributions are welcome, and they are greatly appreciated!
-Every little bit helps, and credit will always be given.
+Thanks for helping improve the Agent Client Protocol Python SDK! This guide mirrors the concise tone of the README/index so you can skim it quickly and get back to building.
 
-You can contribute in many ways:
+## Ways to help
 
-# Types of Contributions
+- **Report bugs** — file an issue with repro steps, OS + Python versions, and any environment toggles.
+- **Improve docs/examples** — clarify workflows, add integration notes, or document a new transport.
+- **Fix issues** — search for `bug` / `help wanted` labels or tackle anything that affects your integration.
+- **Propose features** — describe the use case, API shape, and constraints so we can scope the work together.
 
-## Report Bugs
+## Filing great issues
 
-Report bugs at https://github.com/agentclientprotocol/python-sdk/issues
+When reporting a bug or requesting a feature, include:
 
-If you are reporting a bug, please include:
+- The ACP schema / SDK version you’re using.
+- How to reproduce the behaviour (commands, inputs, expected vs. actual).
+- Logs or payload snippets when available (scrub secrets).
 
-- Your operating system name and version.
-- Any details about your local setup that might be helpful in troubleshooting.
-- Detailed steps to reproduce the bug.
+## Local workflow
 
-## Fix Bugs
+1. **Fork & clone** your GitHub fork: `git clone git@github.com:<you>/python-sdk.git`.
+2. **Bootstrap tooling** inside the repo root: `make install`. This provisions `uv`, syncs deps, and installs pre-commit hooks.
+3. **Create a topic branch:** `git checkout -b feat-my-improvement`.
+4. **Develop + document:**
+   - Keep code typed (Python 3.10+), prefer generated models/helpers over dicts.
+   - Update docs/examples when user-facing behaviour shifts.
+5. **Run the test gauntlet:**
+   ```bash
+   make check   # formatting, lint, type analysis, deps
+   make test    # pytest + doctests
+   ```
+   Optional: `ACP_ENABLE_GEMINI_TESTS=1 make test` when you have the Gemini CLI available.
+6. **(Optional) Cross-Python smoke:** `tox` if you want the same matrix CI runs.
+7. **Commit + push:** `git commit -m "feat: add better tool call helper"` followed by `git push origin <branch>`.
 
-Look through the GitHub issues for bugs.
-Anything tagged with "bug" and "help wanted" is open to whoever wants to implement a fix for it.
+## Pull request checklist
 
-## Implement Features
+- [ ] PR title follows Conventional Commits.
+- [ ] Tests cover the new behaviour (or the reason they’re not needed is documented).
+- [ ] `make check` / `make test` output is attached or referenced.
+- [ ] Docs and examples reflect user-visible changes.
+- [ ] Any schema regeneration (`make gen-all`) is called out explicitly.
 
-Look through the GitHub issues for features.
-Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
+## Need help?
 
-## Write Documentation
-
-This project could always use more documentation, whether as part of the official docs, in docstrings, or even on the web in blog posts, articles, and such.
-
-## Submit Feedback
-
-The best way to send feedback is to file an issue at https://github.com/agentclientprotocol/python-sdk/issues.
-
-If you are proposing a new feature:
-
-- Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to implement.
-- Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
-
-# Get Started!
-
-Ready to contribute? Here's how to set up the project for local development.
-Please note this documentation assumes you already have `uv` and `Git` installed and ready to go.
-
-1. Fork the `agentclientprotocol/python-sdk` repo on GitHub.
-
-2. Clone your fork locally:
-
-```bash
-cd <directory_in_which_repo_should_be_created>
-git clone git@github.com:YOUR_NAME/python-sdk.git
-```
-
-3. Now we need to install the environment. Navigate into the directory
-
-```bash
-cd python-sdk
-```
-
-Then, install and activate the environment with:
-
-```bash
-uv sync
-```
-
-4. Install pre-commit to run linters/formatters at commit time:
-
-```bash
-uv run pre-commit install
-```
-
-5. Create a branch for local development:
-
-```bash
-git checkout -b name-of-your-bugfix-or-feature
-```
-
-Now you can make your changes locally.
-
-6. Don't forget to add test cases for your added functionality to the `tests` directory.
-
-7. When you're done making changes, check that your changes pass the formatting tests.
-
-```bash
-make check
-```
-
-Now, validate that all unit tests are passing:
-
-```bash
-make test
-```
-
-9. Before raising a pull request you should also run tox.
-   This will run the tests across different versions of Python:
-
-```bash
-tox
-```
-
-This requires you to have multiple versions of python installed.
-This step is also triggered in the CI/CD pipeline, so you could also choose to skip this step locally.
-
-10. Commit your changes and push your branch to GitHub:
-
-```bash
-git add .
-git commit -m "Your detailed description of your changes."
-git push origin name-of-your-bugfix-or-feature
-```
-
-11. Submit a pull request through the GitHub website.
-
-# Pull Request Guidelines
-
-Before you submit a pull request, check that it meets these guidelines:
-
-1. The pull request should include tests.
-
-2. If the pull request adds functionality, the docs should be updated.
-   Put your new functionality into a function with a docstring, and add the feature to the list in `README.md`.
+Open a discussion or ping us in the ACP Zulip if you’re stuck on design decisions, transport quirks, or schema questions. We’d rather collaborate early than rework later.

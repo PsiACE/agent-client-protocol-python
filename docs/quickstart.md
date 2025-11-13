@@ -1,13 +1,26 @@
 # Quickstart
 
-This guide gets you from a clean environment to streaming ACP messages from a Python agent.
+Spin up a working ACP agent/client loop in minutes. Keep this page beside the terminal and check off each section as you go. Want inspiration? Hop to the [Use Cases](use-cases.md) list to see how teams like kimi-cli or Zed apply the SDK in production.
 
-## Prerequisites
+## Quick checklist
 
-- Python 3.10-3.14 and either `pip` or `uv`
-- An ACP-capable client such as Zed (optional but recommended for testing)
+| Goal | Command / Link |
+| --- | --- |
+| Install the SDK | `pip install agent-client-protocol` or `uv add agent-client-protocol` |
+| Run the echo agent | `python examples/echo_agent.py` |
+| Point Zed (or another client) at it | Update `settings.json` as shown below |
+| Programmatically drive an agent | Copy the `spawn_agent_process` example |
+| Run tests before hacking further | `make check && make test` |
 
-## 1. Install the SDK
+## Before you begin
+
+- Python 3.10–3.14 with `pip` or `uv`
+- An ACP-capable client such as Zed (recommended for validation)
+- Optional: the Gemini CLI (`gemini --experimental-acp`) for the bridge example
+
+## Step 1 — Install the SDK
+
+_Install the library from PyPI or add it to your uv workspace._
 
 ```bash
 pip install agent-client-protocol
@@ -15,17 +28,19 @@ pip install agent-client-protocol
 uv add agent-client-protocol
 ```
 
-## 2. Launch the Echo agent (terminal)
+## Step 2 — Launch the Echo agent
 
-Start the ready-made echo example — it streams text blocks back to any ACP client:
+_Run the provided streaming agent so clients have something to talk to._
+
+Start the ready-made echo example; it streams text blocks back to any ACP client. Leave it running in a terminal:
 
 ```bash
 python examples/echo_agent.py
 ```
 
-Leave this process running while you connect from an editor or another program.
+## Step 3 — Connect from an ACP-aware client
 
-## 3. Connect from an editor
+_Point a client at the script and confirm you can exchange streamed updates._
 
 ### Zed
 
@@ -51,6 +66,8 @@ Open the Agents panel and start the session. Each message you send should be ech
 Any ACP client that communicates over stdio can spawn the same script; no additional transport configuration is required.
 
 ### Programmatic launch
+
+Prefer to drive agents directly from Python? The `spawn_agent_process` helper wires stdio and lifecycle management for you:
 
 ```python
 import asyncio
@@ -87,7 +104,9 @@ asyncio.run(main())
 
 `spawn_agent_process` manages the child process, wires its stdio into ACP framing, and closes everything when the block exits. The mirror helper `spawn_client_process` lets you drive an ACP client from Python as well.
 
-## 4. Extend the agent
+## Step 4 — Extend the agent
+
+_Swap the echo demo for your own `Agent` subclass._
 
 Create your own agent by subclassing `acp.Agent`. The pattern mirrors the echo example:
 
@@ -123,7 +142,9 @@ finish_update = update_tool_call(
 
 Each helper wraps the generated Pydantic models in `acp.schema`, so the right discriminator fields (`type`, `sessionUpdate`, and friends) are always populated. That keeps examples readable while maintaining the same validation guarantees as constructing the models directly. Golden fixtures in `tests/test_golden.py` ensure the helpers stay in sync with future schema revisions.
 
-## 5. Optional: Talk to the Gemini CLI
+## Optional — Talk to the Gemini CLI
+
+_Have the Gemini CLI installed? Run the bridge to exercise permission flows._
 
 If you have the Gemini CLI installed and authenticated:
 
@@ -139,3 +160,10 @@ Environment helpers:
 - `ACP_ENABLE_GEMINI_TESTS=1` — opt-in toggle for `tests/test_gemini_example.py`
 
 Authentication hiccups (e.g. missing `GOOGLE_CLOUD_PROJECT`) are surfaced but treated as skips during testing so the suite stays green on machines without credentials.
+
+## Next steps
+
+- Compare what you built with the real integrations listed on the [Use Cases](use-cases.md) page.
+- Explore `docs/contrib.md` for higher-level utilities like session accumulators and permission brokers.
+- Run `make check` / `make test` before committing changes, and regenerate schema artifacts with `make gen-all` when ACP versions advance.
+- Need help? Start a thread in [GitHub Discussions](https://github.com/agentclientprotocol/python-sdk/discussions) or chat with other ACP developers at [agentclientprotocol.zulipchat.com](https://agentclientprotocol.zulipchat.com/).

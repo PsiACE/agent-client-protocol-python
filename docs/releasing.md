@@ -1,57 +1,45 @@
 # Releasing
 
-This project tracks the ACP schema tags published by
-[`agentclientprotocol/agent-client-protocol`](https://github.com/agentclientprotocol/agent-client-protocol).
-Every release should line up with one of those tags so that the generated `acp.schema` module, examples, and package
-version remain consistent.
+Every package release tracks an upstream ACP schema tag from [`agentclientprotocol/agent-client-protocol`](https://github.com/agentclientprotocol/agent-client-protocol). Follow this checklist to stay in lockstep.
 
-## Preparation
+## Prep checklist
 
-Pick the target schema tag (for example `v0.4.5`) and regenerate the protocol bindings:
+1. **Choose the schema tag** (e.g. `v0.4.5`) and regenerate artifacts:
+   ```bash
+   ACP_SCHEMA_VERSION=v0.4.5 make gen-all
+   ```
+   This refreshes `schema/` and the generated `src/acp/schema.py`.
+2. **Bump the SDK version** in `pyproject.toml` (and regenerate `uv.lock` if deps moved).
+3. **Run the standard gates:**
+   ```bash
+   make check   # Ruff format/lint, type analysis, dep hygiene
+   make test    # pytest + doctests
+   ```
+4. **Refresh docs + examples** so user-facing flows (e.g. Gemini bridge) reflect behaviour in the new schema.
 
-```bash
-ACP_SCHEMA_VERSION=v0.4.5 make gen-all
-```
+## Commit & review
 
-This downloads the upstream schema package and rewrites `schema/` plus the generated `src/acp/schema.py`.
-
-Bump the project version in `pyproject.toml`, updating `uv.lock` if dependencies changed.
-
-Run the standard checks:
-
-```bash
-make check
-make test
-```
-
-- `make check` covers Ruff formatting/linting, static analysis, and dependency hygiene.
-- `make test` executes pytest (including doctests).
-
-Refresh documentation and examples (for instance the Gemini walkthrough) so they match the new schema behaviour.
-
-## Commit & Merge
-
-1. Make sure the diff only includes the expected artifacts: regenerated schema sources, `src/acp/schema.py`, version bumps, and doc updates.
-2. Commit with a Conventional Commit message (for example `release: v0.4.5`) and note in the PR:
-   - The ACP schema tag you targeted
-   - Results from `make check` / `make test`
-   - Any behavioural or API changes worth highlighting
-3. Merge once the review is approved.
+- Keep the diff tight: regenerated schema files, version bumps, doc updates, and any required fixture refresh (goldens, RPC tests, etc.).
+- Use a Conventional Commit such as `release: v0.4.5`.
+- In the PR description, capture:
+  - The ACP schema tag you targeted.
+  - Output from `make check` / `make test` (and optional Gemini tests if you ran them).
+  - Behavioural or API highlights that reviewers should focus on.
 
 ## Publish via GitHub Release
 
-Publishing is automated through `on-release-main.yml`. After the release PR merges to `main`:
+Releases are automated by `on-release-main.yml` once the PR lands on `main`.
 
-1. Draft a GitHub Release for the new tag (e.g. `v0.4.5`). If the tag is missing, the release UI will create it.
-2. Once published, the workflow will:
-   - Write the tag back into `pyproject.toml` to keep the package version aligned
-   - Build and publish to PyPI via `uv publish` (using the `PYPI_TOKEN` secret)
-   - Deploy updated documentation with `mkdocs gh-deploy`
+1. Draft a GitHub Release for the new tag (the UI creates the tag if missing).
+2. Publishing the release triggers the workflow, which:
+   - Syncs the tag back into `pyproject.toml`.
+   - Builds and uploads to PyPI via `uv publish` using `PYPI_TOKEN`.
+   - Deploys updated docs with `mkdocs gh-deploy`.
 
-No local `uv build`/`uv publish` runs are required—focus on providing a complete release summary (highlights, compatibility notes, etc.).
+No local build/publish steps are needed—just provide a clear release summary (highlights, compatibility notes, migration tips).
 
-## Additional Notes
+## Extra tips
 
-- Breaking schema updates often require refreshing golden fixtures (`tests/test_golden.py`), end-to-end cases such as `tests/test_rpc.py`, and any affected examples.
-- Use `make clean` to remove generated artifacts if you need a fresh baseline before re-running `make gen-all`.
-- Run optional checks like the Gemini smoke test (`ACP_ENABLE_GEMINI_TESTS=1`) whenever the environment is available to catch regressions before publishing.
+- Breaking schema bumps often mean updating `tests/test_golden.py`, `tests/test_rpc.py`, and any examples touched by new fields.
+- Use `make clean` if you need a fresh slate before re-running `make gen-all`.
+- When available, run the Gemini smoke test (`ACP_ENABLE_GEMINI_TESTS=1`, set `ACP_GEMINI_BIN`) to catch regressions early.
