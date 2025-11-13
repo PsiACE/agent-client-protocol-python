@@ -1,6 +1,16 @@
 # Quickstart
 
-This walkthrough takes you from a clean environment to a streaming ACP conversation driven by Python. Peek at the [Use Cases](use-cases.md) list whenever you want to see how teams like kimi-cli or Zed apply the SDK in production.
+Spin up a working ACP agent/client loop in minutes. Keep this page beside the terminal and check off each section as you go. Want inspiration? Hop to the [Use Cases](use-cases.md) list to see how teams like kimi-cli or Zed apply the SDK in production.
+
+## Quick checklist
+
+| Goal | Command / Link |
+| --- | --- |
+| Install the SDK | `pip install agent-client-protocol` or `uv add agent-client-protocol` |
+| Run the echo agent | `python examples/echo_agent.py` |
+| Point Zed (or another client) at it | Update `settings.json` as shown below |
+| Programmatically drive an agent | Copy the `spawn_agent_process` example |
+| Run tests before hacking further | `make check && make test` |
 
 ## Before you begin
 
@@ -10,6 +20,8 @@ This walkthrough takes you from a clean environment to a streaming ACP conversat
 
 ## Step 1 — Install the SDK
 
+_Install the library from PyPI or add it to your uv workspace._
+
 ```bash
 pip install agent-client-protocol
 # or
@@ -18,6 +30,8 @@ uv add agent-client-protocol
 
 ## Step 2 — Launch the Echo agent
 
+_Run the provided streaming agent so clients have something to talk to._
+
 Start the ready-made echo example; it streams text blocks back to any ACP client. Leave it running in a terminal:
 
 ```bash
@@ -25,6 +39,8 @@ python examples/echo_agent.py
 ```
 
 ## Step 3 — Connect from an ACP-aware client
+
+_Point a client at the script and confirm you can exchange streamed updates._
 
 ### Zed
 
@@ -50,6 +66,8 @@ Open the Agents panel and start the session. Each message you send should be ech
 Any ACP client that communicates over stdio can spawn the same script; no additional transport configuration is required.
 
 ### Programmatic launch
+
+Prefer to drive agents directly from Python? The `spawn_agent_process` helper wires stdio and lifecycle management for you:
 
 ```python
 import asyncio
@@ -88,6 +106,8 @@ asyncio.run(main())
 
 ## Step 4 — Extend the agent
 
+_Swap the echo demo for your own `Agent` subclass._
+
 Create your own agent by subclassing `acp.Agent`. The pattern mirrors the echo example:
 
 ```python
@@ -123,6 +143,8 @@ finish_update = update_tool_call(
 Each helper wraps the generated Pydantic models in `acp.schema`, so the right discriminator fields (`type`, `sessionUpdate`, and friends) are always populated. That keeps examples readable while maintaining the same validation guarantees as constructing the models directly. Golden fixtures in `tests/test_golden.py` ensure the helpers stay in sync with future schema revisions.
 
 ## Optional — Talk to the Gemini CLI
+
+_Have the Gemini CLI installed? Run the bridge to exercise permission flows._
 
 If you have the Gemini CLI installed and authenticated:
 

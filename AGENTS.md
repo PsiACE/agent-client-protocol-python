@@ -1,35 +1,47 @@
-# Repository Guidelines
+# Repository Handbook
 
-## Project Structure & Module Organization
-- `src/acp/`: runtime package exposing agent/client abstractions, transports, and the generated `schema.py`.
-- `schema/`: upstream JSON schema sources; regenerate Python bindings with `make gen-all`.
-- `examples/`: runnable scripts (`echo_agent.py`, `client.py`, `gemini.py`, etc.) demonstrating stdio orchestration patterns.
-- `tests/`: pytest suite, including opt-in Gemini smoke checks under `tests/test_gemini_example.py`.
-- `docs/`: MkDocs content powering the hosted documentation.
+Use this page as the quick orientation for the Python SDK repo. It mirrors the tone of the main README/index and surfaces what you need without hunting through multiple docs.
 
-## Build, Test, and Development Commands
-- `make install` — provision the `uv` virtualenv and install pre-commit hooks.
-- `make check` — run Ruff linting/formatting, type analysis, dependency hygiene, and lock verification.
-- `make test` — execute `pytest` (with doctests) inside the managed environment.
-- `make gen-all` — refresh protocol artifacts when the ACP schema version advances (`ACP_SCHEMA_VERSION=<ref>` to pin an upstream tag).
+## Repo Map
 
-## Coding Style & Naming Conventions
-- Target Python 3.10+ with four-space indentation and type hints on public APIs.
-- Ruff enforces formatting and lint rules (`uv run ruff check`, `uv run ruff format`); keep both clean before publishing.
-- Prefer dataclasses or generated Pydantic models from `acp.schema` over ad-hoc dicts. Place shared utilities in `_`-prefixed internal modules.
-- Prefer the builders in `acp.helpers` (for example `text_block`, `start_tool_call`) when constructing ACP payloads. The helpers instantiate the generated Pydantic models for you, keep literal discriminator fields out of call sites, and stay in lockstep with the schema thanks to the golden tests (`tests/test_golden.py`).
+| Path | Why it exists |
+| --- | --- |
+| `src/acp/` | Runtime package: agent/client bases, transports, helpers, schema bindings, contrib utilities |
+| `schema/` | Upstream JSON schema sources (regenerate with `make gen-all`) |
+| `examples/` | Runnable scripts such as `echo_agent.py`, `client.py`, `gemini.py`, `duet.py` |
+| `tests/` | Pytest suite, including optional Gemini smoke tests in `tests/test_gemini_example.py` |
+| `docs/` | MkDocs content published at `agentclientprotocol.github.io/python-sdk/` |
 
-## Testing Guidelines
-- Tests live in `tests/` and must be named `test_*.py`. Use `pytest.mark.asyncio` for coroutine coverage.
-- Run `make test` (or `uv run python -m pytest`) prior to commits; include reproducing steps for any added fixtures.
-- Gemini CLI coverage is disabled by default. Set `ACP_ENABLE_GEMINI_TESTS=1` (and `ACP_GEMINI_BIN=/path/to/gemini`) to exercise `tests/test_gemini_example.py`.
+## Daily Commands
 
-## Commit & Pull Request Guidelines
-- Follow Conventional Commits (`feat:`, `fix:`, `docs:`, etc.) with succinct scopes, noting schema regenerations when applicable.
-- PRs should describe exercised agent behaviours, link relevant issues, and include output from `make check` or focused pytest runs.
-- Update documentation and examples whenever public APIs or transport behaviours change, and call out environment prerequisites for new integrations.
+| Need | Command |
+| --- | --- |
+| Bootstrap env + pre-commit | `make install` |
+| Format, lint, types, deps | `make check` |
+| Test suite (pytest + doctest) | `make test` |
+| Regenerate schema + bindings | `ACP_SCHEMA_VERSION=<tag> make gen-all` |
+
+## Style Guardrails
+
+- Target Python 3.10+ and keep public APIs typed.
+- Ruff handles formatting + linting (`uv run ruff format` / `check`)—keep both clean before pushing.
+- Reach for the generated Pydantic models and helpers (e.g. `text_block`, `start_tool_call`) instead of hand-crafting dicts; helpers stay aligned with the schema via `tests/test_golden.py`.
+- Place reusable internals in `_`-prefixed modules.
+
+## Testing Expectations
+
+- Tests live under `tests/` and follow the `test_*.py` naming. Mark async tests with `pytest.mark.asyncio`.
+- Run `make test` (or `uv run python -m pytest`) before committing and include reproduction steps for new fixtures.
+- Gemini CLI checks are opt-in: set `ACP_ENABLE_GEMINI_TESTS=1` and optionally `ACP_GEMINI_BIN=/path/to/gemini` to exercise `tests/test_gemini_example.py`.
+
+## PR Checklist
+
+- Use Conventional Commit prefixes (`feat:`, `fix:`, `docs:`, etc.) and call out schema regenerations explicitly.
+- Summarise exercised behaviours, link related issues, and attach `make check` / targeted pytest output in PR descriptions.
+- Update docs/examples when user-visible APIs or transports change, and document any new environment requirements.
 
 ## Agent Integration Tips
-- Bootstrap agents from `examples/echo_agent.py` or `examples/agent.py`; pair with `examples/client.py` for round-trip validation.
-- Use `spawn_agent_process` / `spawn_client_process` to embed ACP parties directly in Python applications.
-- Validate new transports against `tests/test_rpc.py` and, when applicable, the Gemini example to ensure streaming updates and permission flows stay compliant.
+
+- Start new agents from `examples/echo_agent.py` or `examples/agent.py`; pair them with `examples/client.py` for loopback validation.
+- `spawn_agent_process` / `spawn_client_process` embed ACP parties inside Python apps without hand-wiring stdio.
+- Validate new transports against `tests/test_rpc.py` and (when relevant) the Gemini example to ensure streaming + permission flows stay compliant.

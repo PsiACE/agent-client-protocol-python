@@ -16,13 +16,13 @@ pip install agent-client-protocol
 uv add agent-client-protocol
 ```
 
-## Why teams adopt this SDK
+## At a glance
 
-- **Schema parity:** Generated Pydantic models in `acp.schema` stay pinned to the official ACP specification so payloads stay valid as the protocol evolves.
-- **Runtime ergonomics:** Async base classes, stdio JSON-RPC plumbing, and lifecycle helpers keep custom agents focused on behaviour, not wiring.
-- **Batteries included:** `examples/` cover streaming, permission flows, file access, Gemini CLI bridging, and embedded agent/client launches.
-- **Helper builders:** `acp.helpers` mirrors the Go/TS SDK convenience APIs for content blocks, tool calls, and session updates.
-- **Contrib patterns:** `acp.contrib` packages in-progress utilities (session accumulators, permission brokers, tool call trackers) harvested from reference integrations.
+- **Spec parity:** Generated Pydantic models in `acp.schema` track every ACP release so payloads stay valid.
+- **Runtime ergonomics:** Async base classes, stdio JSON-RPC plumbing, and lifecycle helpers keep custom agents tiny.
+- **Examples ready:** Streaming, permissions, Gemini bridge, and duet demos live under `examples/`.
+- **Helper builders:** `acp.helpers` mirrors the Go/TS SDK APIs for content blocks, tool calls, and session updates.
+- **Contrib utilities:** Session accumulators, tool call trackers, and permission brokers share patterns from real deployments.
 
 ## Who benefits
 
@@ -37,18 +37,20 @@ See real adopters like kimi-cli in the [Use Cases list](https://agentclientproto
 - Browse the [example gallery](https://github.com/agentclientprotocol/python-sdk/tree/main/examples) to see progressively richer integrations you can copy or extend.
 - Skim the [docs hub](https://agentclientprotocol.github.io/python-sdk/) for focused references on contrib helpers, releasing, and transport details.
 
-## Resource map
+## Quick links
 
-- Docs hub: https://agentclientprotocol.github.io/python-sdk/
-- PyPI package: https://pypi.org/project/agent-client-protocol/
-- Quickstart: https://agentclientprotocol.github.io/python-sdk/quickstart/
-- Use Cases: https://agentclientprotocol.github.io/python-sdk/use-cases/
-- Contrib overview: https://agentclientprotocol.github.io/python-sdk/experimental-contrib/
-- Releasing workflow: https://agentclientprotocol.github.io/python-sdk/releasing/
-- Examples: https://github.com/agentclientprotocol/python-sdk/tree/main/examples (echo agent, richer agent, duet, client, Gemini bridge)
-- Tests: https://github.com/agentclientprotocol/python-sdk/tree/main/tests with pytest coverage and opt-in Gemini smoke checks (`ACP_ENABLE_GEMINI_TESTS=1`)
+| Need | Link |
+| --- | --- |
+| Docs hub | https://agentclientprotocol.github.io/python-sdk/ |
+| Quickstart | https://agentclientprotocol.github.io/python-sdk/quickstart/ |
+| Use cases | https://agentclientprotocol.github.io/python-sdk/use-cases/ |
+| Contrib helpers | https://agentclientprotocol.github.io/python-sdk/experimental-contrib/ |
+| Releasing workflow | https://agentclientprotocol.github.io/python-sdk/releasing/ |
+| Examples | https://github.com/agentclientprotocol/python-sdk/tree/main/examples |
+| Tests | https://github.com/agentclientprotocol/python-sdk/tree/main/tests |
+| PyPI | https://pypi.org/project/agent-client-protocol/ |
 
-## Repository tour
+## Project layout
 
 - `src/acp/`: runtime package (agents, clients, transports, helpers, schema bindings, contrib utilities)
 - `schema/`: upstream JSON schema sources (regenerate via `make gen-all`)
@@ -56,7 +58,7 @@ See real adopters like kimi-cli in the [Use Cases list](https://agentclientproto
 - `examples/`: runnable scripts covering stdio orchestration patterns
 - `tests/`: pytest suite with golden fixtures and optional Gemini coverage
 
-## Development workflow
+## Developer commands
 
 - `make install` provisions the `uv` virtualenv and installs pre-commit hooks.
 - `make check` runs Ruff formatting/linting, type analysis, dependency hygiene, and lock verification.

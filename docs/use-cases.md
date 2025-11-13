@@ -1,14 +1,26 @@
 # Use Cases
 
-Browse the official overviews for [agents](https://agentclientprotocol.com/overview/agents) and [clients](https://agentclientprotocol.com/overview/clients), then check out real projects built on this SDK:
+This page mirrors the quick-read style of the README/index: skim the tables, copy links, and see how others apply the SDK. For the protocol overview itself, visit the official [agent](https://agentclientprotocol.com/overview/agents) and [client](https://agentclientprotocol.com/overview/clients) guides.
 
 ## Agents
 
-- [MoonshotAI/kimi-cli](http://github.com/MoonshotAI/kimi-cli) — “Kimi CLI is a new CLI agent that can help you with your software development tasks and terminal operations” with ACP + MCP support.
+| Project | What it showcases |
+| --- | --- |
+| [MoonshotAI/kimi-cli](https://github.com/MoonshotAI/kimi-cli) | A CLI-first ACP+MCP agent that helps with software dev and terminal workflows. Highlights streaming updates, permission prompts, and tool call UX. |
 
 ## Clients
 
-- [jimwhite/agent-client-kernel](https://github.com/jimwhite/agent-client-kernel) — “A Jupyter Kernel for Zed's Agent Client Protocol (ACP)” that lets notebooks talk to external ACP agents.
-- [OhadRubin/simple-acp-client](https://github.com/OhadRubin/simple-acp-client) — “Simple ACP Client is a Python SDK for the Agent Client Protocol” offering a Claude Agent SDK–style interface for ACP executables.
+| Project | What it showcases |
+| --- | --- |
+| [jimwhite/agent-client-kernel](https://github.com/jimwhite/agent-client-kernel) | A Jupyter kernel that speaks ACP so notebooks can chat with external agents. Great reference if you’re embedding ACP in notebook tooling. |
+| [OhadRubin/simple-acp-client](https://github.com/OhadRubin/simple-acp-client) | A Claude Agent SDK–style Python client that wraps ACP executables with a friendly API. Use it as a starting point for bespoke clients. |
 
-Know another adopter? Open an issue, start a topic in [GitHub Discussions](https://github.com/agentclientprotocol/python-sdk/discussions), drop a note in [agentclientprotocol.zulipchat.com](https://agentclientprotocol.zulipchat.com/), or send a PR so we can add it here.
+## Add your integration
+
+Shipping something with this SDK? Tell us!
+
+- Open an issue or PR with a short blurb and link.
+- Start a thread in [GitHub Discussions](https://github.com/agentclientprotocol/python-sdk/discussions).
+- Drop a note in [agentclientprotocol.zulipchat.com](https://agentclientprotocol.zulipchat.com/).
+
+We’ll keep this list current so newcomers can see what’s possible.
