@@ -51,6 +51,7 @@ async def spawn_stdio_transport(
     env: Mapping[str, str] | None = None,
     cwd: str | Path | None = None,
     stderr: int | None = aio_subprocess.PIPE,
+    limit: int | None = None,
     shutdown_timeout: float = 2.0,
 ) -> AsyncIterator[tuple[asyncio.StreamReader, asyncio.StreamWriter, aio_subprocess.Process]]:
     """Launch a subprocess and expose its stdio streams as asyncio transports.
@@ -62,15 +63,27 @@ async def spawn_stdio_transport(
     if env:
         merged_env.update(env)
 
-    process = await asyncio.create_subprocess_exec(
-        command,
-        *args,
-        stdin=aio_subprocess.PIPE,
-        stdout=aio_subprocess.PIPE,
-        stderr=stderr,
-        env=merged_env,
-        cwd=str(cwd) if cwd is not None else None,
-    )
+    if limit is None:
+        process = await asyncio.create_subprocess_exec(
+            command,
+            *args,
+            stdin=aio_subprocess.PIPE,
+            stdout=aio_subprocess.PIPE,
+            stderr=stderr,
+            env=merged_env,
+            cwd=str(cwd) if cwd is not None else None,
+        )
+    else:
+        process = await asyncio.create_subprocess_exec(
+            command,
+            *args,
+            stdin=aio_subprocess.PIPE,
+            stdout=aio_subprocess.PIPE,
+            stderr=stderr,
+            env=merged_env,
+            cwd=str(cwd) if cwd is not None else None,
+            limit=limit,
+        )
 
     if process.stdout is None or process.stdin is None:
         process.kill()

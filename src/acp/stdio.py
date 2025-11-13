@@ -96,8 +96,11 @@ class _StdoutTransport(asyncio.BaseTransport):
         return default
 
 
-async def _windows_stdio_streams(loop: asyncio.AbstractEventLoop) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
-    reader = asyncio.StreamReader()
+async def _windows_stdio_streams(
+    loop: asyncio.AbstractEventLoop,
+    limit: int | None = None,
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    reader = asyncio.StreamReader(limit=limit) if limit is not None else asyncio.StreamReader()
     _ = asyncio.StreamReaderProtocol(reader)
 
     _start_stdin_feeder(loop, reader)
@@ -108,9 +111,12 @@ async def _windows_stdio_streams(loop: asyncio.AbstractEventLoop) -> tuple[async
     return reader, writer
 
 
-async def _posix_stdio_streams(loop: asyncio.AbstractEventLoop) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+async def _posix_stdio_streams(
+    loop: asyncio.AbstractEventLoop,
+    limit: int | None = None,
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     # Reader from stdin
-    reader = asyncio.StreamReader()
+    reader = asyncio.StreamReader(limit=limit) if limit is not None else asyncio.StreamReader()
     reader_protocol = asyncio.StreamReaderProtocol(reader)
     await loop.connect_read_pipe(lambda: reader_protocol, sys.stdin)
 
@@ -121,12 +127,16 @@ async def _posix_stdio_streams(loop: asyncio.AbstractEventLoop) -> tuple[asyncio
     return reader, writer
 
 
-async def stdio_streams() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
-    """Create stdio asyncio streams; on Windows use a thread feeder + custom stdout transport."""
+async def stdio_streams(limit: int | None = None) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    """Create stdio asyncio streams; on Windows use a thread feeder + custom stdout transport.
+
+    Args:
+        limit: Optional buffer limit for the stdin reader.
+    """
     loop = asyncio.get_running_loop()
     if platform.system() == "Windows":
-        return await _windows_stdio_streams(loop)
-    return await _posix_stdio_streams(loop)
+        return await _windows_stdio_streams(loop, limit=limit)
+    return await _posix_stdio_streams(loop, limit=limit)
 
 
 @asynccontextmanager

@@ -122,6 +122,8 @@ if __name__ == "__main__":
 
 Full example with streaming and lifecycle hooks lives in [examples/echo_agent.py](examples/echo_agent.py).
 
+Python's asyncio applies a 64KB default line buffer for stdio. If your agent streams larger JSON lines, pass `limit=10 * 1024 * 1024` (or similar) to `stdio_streams()` and `spawn_stdio_transport()` to raise the cap.
+
 ## Examples
 
 - `examples/echo_agent.py`: the canonical streaming agent with lifecycle hooks
