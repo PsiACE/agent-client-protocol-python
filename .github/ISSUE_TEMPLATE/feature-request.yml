@@ -1,0 +1,50 @@
+name: Feature Request
+description: Pitch an improvement for the ACP Python SDK docs, runtime, or tooling.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Feature requests work best when they focus on the problem first. Tell us
+        what you’re trying to achieve and why existing APIs aren’t enough.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: >
+        What use case is blocked? Include relevant transports, helpers, or user
+        journeys.
+      placeholder: "Need a helper to batch tool call updates when streaming…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: >
+        Sketch the API or behaviour you’d like to see. Code snippets welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >
+        Mention workarounds you’ve tried or other approaches we should weigh.
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Links, screenshots, related issues, etc.
+
+  - type: checkboxes
+    id: willing-to-help
+    attributes:
+      label: Can you help build it?
+      options:
+        - label: I can contribute code or docs for this request.

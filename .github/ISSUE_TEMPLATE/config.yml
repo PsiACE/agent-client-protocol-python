@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/agentclientprotocol/python-sdk/discussions/new?category=q-a
+    about: Usage questions, architecture ideas, and doc clarifications live best in Discussions.
+  - name: Read the docs
+    url: https://agentclientprotocol.github.io/python-sdk/
+    about: The published docs cover quickstart steps, contrib helpers, and release workflows.
