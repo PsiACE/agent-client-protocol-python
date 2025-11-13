@@ -1,0 +1,69 @@
+name: Bug Report
+description: Tell us about a regression or defect in the ACP Python SDK.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for filing a detailed bug. Fill out every section so we can
+        reproduce the issue quickly and keep the SDK solid.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong? Keep it short but specific.
+      placeholder: "Streaming updates stop after the second prompt…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: >
+        Commands, code, or payloads that trigger the bug. Include any relevant
+        input files or snippets (redact secrets).
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      placeholder: "Tool call should finish and emit a completed status…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      placeholder: "Agent hangs and no further session/update payloads arrive…"
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions / environment
+      description: >
+        Include SDK version, ACP schema tag (if pinned), Python version, and OS.
+      placeholder: "sdk 0.5.1 (schema v0.4.7), Python 3.12.2 on macOS 14.4"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs & screenshots
+      description: Paste relevant stack traces, JSON snippets, or console output.
+      render: shell
+
+  - type: checkboxes
+    id: willing-to-pr
+    attributes:
+      label: Open to submitting a fix?
+      options:
+        - label: I’m willing to open a PR for this bug.
