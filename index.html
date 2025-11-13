@@ -310,36 +310,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-you-get" class="md-nav__link">
+  <a href="#install-verify" class="md-nav__link">
     <span class="md-ellipsis">
-      What you get
+      Install &amp; verify
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+  <a href="#acp-at-a-glance" class="md-nav__link">
     <span class="md-ellipsis">
-      Getting started
+      ACP at a glance
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gemini-cli-bridge" class="md-nav__link">
+  <a href="#sdk-building-blocks" class="md-nav__link">
     <span class="md-ellipsis">
-      Gemini CLI bridge
+      SDK building blocks
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-map" class="md-nav__link">
+  <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
-      Documentation map
+      Quick links
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-a-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choose a path
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference material
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feedback-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feedback &amp; support
     </span>
   </a>
   
@@ -366,6 +393,28 @@
   
   <span class="md-ellipsis">
     Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="use-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use Cases
     
   </span>
   
@@ -446,36 +495,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-you-get" class="md-nav__link">
+  <a href="#install-verify" class="md-nav__link">
     <span class="md-ellipsis">
-      What you get
+      Install &amp; verify
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+  <a href="#acp-at-a-glance" class="md-nav__link">
     <span class="md-ellipsis">
-      Getting started
+      ACP at a glance
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gemini-cli-bridge" class="md-nav__link">
+  <a href="#sdk-building-blocks" class="md-nav__link">
     <span class="md-ellipsis">
-      Gemini CLI bridge
+      SDK building blocks
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-map" class="md-nav__link">
+  <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
-      Documentation map
+      Quick links
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-a-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choose a path
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reference material
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feedback-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feedback &amp; support
     </span>
   </a>
   
@@ -500,47 +576,83 @@
   
 
 
-<p><a href="https://agentclientprotocol.com/" >
+<p><a href="https://agentclientprotocol.com/">
   <img alt="Agent Client Protocol" src="https://zed.dev/img/acp/banner-dark.webp">
 </a></p>
 <h1 id="agent-client-protocol-sdk-python">Agent Client Protocol SDK (Python)<a class="headerlink" href="#agent-client-protocol-sdk-python" title="Permanent link">&para;</a></h1>
-<p>Welcome to the Python SDK for the Agent Client Protocol (ACP). The package ships ready-to-use transports, typed protocol models, and examples that stream messages to ACP-aware clients such as Zed.</p>
-<h2 id="what-you-get">What you get<a class="headerlink" href="#what-you-get" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Pydantic models generated from the upstream ACP schema (<code>acp.schema</code>)</li>
-<li>Async agent/client wrappers with JSON-RPC task supervision built in</li>
-<li>Process helpers (<code>spawn_agent_process</code>, <code>spawn_client_process</code>) for embedding ACP nodes inside Python applications</li>
-<li>Helper APIs in <code>acp.helpers</code> that mirror the Go/TS SDK builders for content blocks, tool calls, and session updates. They instantiate the generated Pydantic types for you, so call sites stay concise without sacrificing validation.</li>
-<li>Examples that showcase streaming updates, file operations, permission flows, and even a Gemini CLI bridge (<code>examples/gemini.py</code>)</li>
-</ul>
-<h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Install the package:
-   <code>bash
-   pip install agent-client-protocol</code></li>
-<li>Launch the provided echo agent to verify your setup:
-   <code>bash
-   python examples/echo_agent.py</code></li>
-<li>Point your ACP-capable client at the running process (for Zed, configure an Agent Server entry). The SDK takes care of JSON-RPC framing and lifecycle transitions.</li>
-</ol>
-<p>Prefer a guided tour? Head to the <a href="quickstart/">Quickstart</a> for terminal, editor, and programmatic launch walkthroughs.</p>
-<h2 id="gemini-cli-bridge">Gemini CLI bridge<a class="headerlink" href="#gemini-cli-bridge" title="Permanent link">&para;</a></h2>
-<p>If you have access to the Gemini CLI (<code>gemini --experimental-acp</code>), run:</p>
-<pre><code class="language-bash">python examples/gemini.py --yolo
+<p>Ship ACP-compatible agents and clients in Python without rebuilding JSON-RPC transports or schema models. This SDK mirrors each ACP release so your integrations stay interoperable with editors, CLIs, and hosted clients.</p>
+<h2 id="install-verify">Install &amp; verify<a class="headerlink" href="#install-verify" title="Permanent link">&para;</a></h2>
+<pre><code class="language-bash">pip install agent-client-protocol
+# or
+uv add agent-client-protocol
 </code></pre>
-<p>Flags mirror the Go SDK example:</p>
+<p>Next steps live in the <a href="quickstart/">Quickstart</a>: launch the echo agent, wire it to Zed (or another ACP client), and exercise the programmatic spawn helpers.</p>
+<h2 id="acp-at-a-glance">ACP at a glance<a class="headerlink" href="#acp-at-a-glance" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>--gemini /path/to/cli</code> or <code>ACP_GEMINI_BIN</code> to override discovery</li>
-<li><code>--model</code>, <code>--sandbox</code>, <code>--debug</code> forwarded verbatim</li>
-<li><code>--yolo</code> auto-approves permission prompts with sensible defaults</li>
+<li>ACP is the stdio protocol that lets “clients” (editors, shells, CLIs) orchestrate AI “agents.”</li>
+<li>Sessions exchange structured payloads (<code>session/update</code>, permission prompts, tool calls) defined in the upstream schema.</li>
+<li>Matching the schema version keeps your Python integrations compatible with tools such as Zed, Gemini CLI, or kimi-cli.</li>
 </ul>
-<p>An opt-in smoke test lives at <code>tests/test_gemini_example.py</code>. Enable it with <code>ACP_ENABLE_GEMINI_TESTS=1</code> (and optionally <code>ACP_GEMINI_TEST_ARGS</code>) when the CLI is authenticated; otherwise the test stays skipped.</p>
-<h2 id="documentation-map">Documentation map<a class="headerlink" href="#documentation-map" title="Permanent link">&para;</a></h2>
+<h2 id="sdk-building-blocks">SDK building blocks<a class="headerlink" href="#sdk-building-blocks" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="quickstart/">Quickstart</a>: install, run, and embed the echo agent, plus next steps for extending it</li>
-<li><a href="releasing/">Releasing</a>: schema upgrade workflow, version bumps, and publishing checklist</li>
+<li><code>acp.schema</code>: generated Pydantic models that validate every payload against the canonical specification.</li>
+<li><code>acp.agent</code> / <code>acp.client</code>: async base classes, JSON-RPC supervision, and lifecycle orchestration.</li>
+<li><code>acp.helpers</code>: builders for content blocks, tool calls, permissions, and notifications.</li>
+<li><code>acp.contrib</code>: experimental utilities (session accumulators, permission brokers, tool call trackers) harvested from production deployments.</li>
+<li><code>examples/</code>: runnable agents, clients, duet demos, and the Gemini CLI bridge.</li>
 </ul>
-<p>Source code lives under <code>src/acp/</code>, while tests and additional examples are available in <code>tests/</code> and <code>examples/</code>. If you plan to contribute, see the repository README for the development workflow.</p>
+<h2 id="quick-links">Quick links<a class="headerlink" href="#quick-links" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quickstart walkthrough</td>
+<td><a href="quickstart/">quickstart.md</a></td>
+</tr>
+<tr>
+<td>Real-world adopters</td>
+<td><a href="use-cases/">use-cases.md</a></td>
+</tr>
+<tr>
+<td>Contrib helpers</td>
+<td><a href="contrib/">contrib.md</a></td>
+</tr>
+<tr>
+<td>Releasing workflow</td>
+<td><a href="releasing/">releasing.md</a></td>
+</tr>
+<tr>
+<td>Example scripts</td>
+<td><a href="https://github.com/agentclientprotocol/python-sdk/tree/main/examples">github.com/agentclientprotocol/python-sdk/tree/main/examples</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="choose-a-path">Choose a path<a class="headerlink" href="#choose-a-path" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Just exploring?</strong> Skim <a href="use-cases/">use-cases.md</a> to see how kimi-cli, agent-client-kernel, and others use the SDK.</li>
+<li><strong>Building agents?</strong> Copy <code>examples/echo_agent.py</code> or <code>examples/agent.py</code>, then layer in <code>acp.helpers</code> for tool calls and permissions.</li>
+<li><strong>Embedding clients?</strong> Start with <code>examples/client.py</code> or the <code>spawn_agent_process</code> / <code>spawn_client_process</code> helpers in the <a href="quickstart/#programmatic-launch">Quickstart</a>.</li>
+</ul>
+<h2 id="reference-material">Reference material<a class="headerlink" href="#reference-material" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="quickstart/">Quickstart</a> — installation, editor wiring, and programmatic launch walkthroughs.</li>
+<li><a href="use-cases/">Use Cases</a> — real adopters with succinct descriptions of what they build.</li>
+<li><a href="contrib/">Experimental Contrib</a> — deep dives on the <code>acp.contrib</code> utilities.</li>
+<li><a href="releasing/">Releasing</a> — schema upgrade process, versioning policy, and publishing checklist.</li>
+</ul>
+<p>Need API-level details? Browse the source in <code>src/acp/</code> or generate docs with <code>mkdocstrings</code>.</p>
+<h2 id="feedback-support">Feedback &amp; support<a class="headerlink" href="#feedback-support" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Open issues or discussions on GitHub for bugs, feature requests, or integration help.</li>
+<li>Join <a href="https://github.com/agentclientprotocol/python-sdk/discussions">GitHub Discussions</a> to swap ideas.</li>
+<li>Chat with the community on <a href="https://agentclientprotocol.zulipchat.com/">agentclientprotocol.zulipchat.com</a>.</li>
+<li>Follow ACP roadmap updates at <a href="https://agentclientprotocol.com/">agentclientprotocol.com</a>.</li>
+</ul>
 
 
 

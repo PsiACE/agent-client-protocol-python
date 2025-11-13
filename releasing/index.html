@@ -304,6 +304,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../use-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use Cases
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../contrib/" class="md-nav__link">
         
   
@@ -376,18 +398,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#preparation" class="md-nav__link">
+  <a href="#prep-checklist" class="md-nav__link">
     <span class="md-ellipsis">
-      Preparation
+      Prep checklist
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#commit-merge" class="md-nav__link">
+  <a href="#commit-review" class="md-nav__link">
     <span class="md-ellipsis">
-      Commit &amp; Merge
+      Commit &amp; review
     </span>
   </a>
   
@@ -403,9 +425,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#additional-notes" class="md-nav__link">
+  <a href="#extra-tips" class="md-nav__link">
     <span class="md-ellipsis">
-      Additional Notes
+      Extra tips
     </span>
   </a>
   
@@ -446,18 +468,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#preparation" class="md-nav__link">
+  <a href="#prep-checklist" class="md-nav__link">
     <span class="md-ellipsis">
-      Preparation
+      Prep checklist
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#commit-merge" class="md-nav__link">
+  <a href="#commit-review" class="md-nav__link">
     <span class="md-ellipsis">
-      Commit &amp; Merge
+      Commit &amp; review
     </span>
   </a>
   
@@ -473,9 +495,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#additional-notes" class="md-nav__link">
+  <a href="#extra-tips" class="md-nav__link">
     <span class="md-ellipsis">
-      Additional Notes
+      Extra tips
     </span>
   </a>
   
@@ -501,49 +523,44 @@
 
 
 <h1 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h1>
-<p>This project tracks the ACP schema tags published by
-<a href="https://github.com/agentclientprotocol/agent-client-protocol"><code>agentclientprotocol/agent-client-protocol</code></a>.
-Every release should line up with one of those tags so that the generated <code>acp.schema</code> module, examples, and package
-version remain consistent.</p>
-<h2 id="preparation">Preparation<a class="headerlink" href="#preparation" title="Permanent link">&para;</a></h2>
-<p>Pick the target schema tag (for example <code>v0.4.5</code>) and regenerate the protocol bindings:</p>
-<pre><code class="language-bash">ACP_SCHEMA_VERSION=v0.4.5 make gen-all
-</code></pre>
-<p>This downloads the upstream schema package and rewrites <code>schema/</code> plus the generated <code>src/acp/schema.py</code>.</p>
-<p>Bump the project version in <code>pyproject.toml</code>, updating <code>uv.lock</code> if dependencies changed.</p>
-<p>Run the standard checks:</p>
-<pre><code class="language-bash">make check
-make test
-</code></pre>
+<p>Every package release tracks an upstream ACP schema tag from <a href="https://github.com/agentclientprotocol/agent-client-protocol"><code>agentclientprotocol/agent-client-protocol</code></a>. Follow this checklist to stay in lockstep.</p>
+<h2 id="prep-checklist">Prep checklist<a class="headerlink" href="#prep-checklist" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Choose the schema tag</strong> (e.g. <code>v0.4.5</code>) and regenerate artifacts:
+   <code>bash
+   ACP_SCHEMA_VERSION=v0.4.5 make gen-all</code>
+   This refreshes <code>schema/</code> and the generated <code>src/acp/schema.py</code>.</li>
+<li><strong>Bump the SDK version</strong> in <code>pyproject.toml</code> (and regenerate <code>uv.lock</code> if deps moved).</li>
+<li><strong>Run the standard gates:</strong>
+   <code>bash
+   make check   # Ruff format/lint, type analysis, dep hygiene
+   make test    # pytest + doctests</code></li>
+<li><strong>Refresh docs + examples</strong> so user-facing flows (e.g. Gemini bridge) reflect behaviour in the new schema.</li>
+</ol>
+<h2 id="commit-review">Commit &amp; review<a class="headerlink" href="#commit-review" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>make check</code> covers Ruff formatting/linting, static analysis, and dependency hygiene.</li>
-<li><code>make test</code> executes pytest (including doctests).</li>
+<li>Keep the diff tight: regenerated schema files, version bumps, doc updates, and any required fixture refresh (goldens, RPC tests, etc.).</li>
+<li>Use a Conventional Commit such as <code>release: v0.4.5</code>.</li>
+<li>In the PR description, capture:</li>
+<li>The ACP schema tag you targeted.</li>
+<li>Output from <code>make check</code> / <code>make test</code> (and optional Gemini tests if you ran them).</li>
+<li>Behavioural or API highlights that reviewers should focus on.</li>
 </ul>
-<p>Refresh documentation and examples (for instance the Gemini walkthrough) so they match the new schema behaviour.</p>
-<h2 id="commit-merge">Commit &amp; Merge<a class="headerlink" href="#commit-merge" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Make sure the diff only includes the expected artifacts: regenerated schema sources, <code>src/acp/schema.py</code>, version bumps, and doc updates.</li>
-<li>Commit with a Conventional Commit message (for example <code>release: v0.4.5</code>) and note in the PR:</li>
-<li>The ACP schema tag you targeted</li>
-<li>Results from <code>make check</code> / <code>make test</code></li>
-<li>Any behavioural or API changes worth highlighting</li>
-<li>Merge once the review is approved.</li>
-</ol>
 <h2 id="publish-via-github-release">Publish via GitHub Release<a class="headerlink" href="#publish-via-github-release" title="Permanent link">&para;</a></h2>
-<p>Publishing is automated through <code>on-release-main.yml</code>. After the release PR merges to <code>main</code>:</p>
+<p>Releases are automated by <code>on-release-main.yml</code> once the PR lands on <code>main</code>.</p>
 <ol>
-<li>Draft a GitHub Release for the new tag (e.g. <code>v0.4.5</code>). If the tag is missing, the release UI will create it.</li>
-<li>Once published, the workflow will:</li>
-<li>Write the tag back into <code>pyproject.toml</code> to keep the package version aligned</li>
-<li>Build and publish to PyPI via <code>uv publish</code> (using the <code>PYPI_TOKEN</code> secret)</li>
-<li>Deploy updated documentation with <code>mkdocs gh-deploy</code></li>
+<li>Draft a GitHub Release for the new tag (the UI creates the tag if missing).</li>
+<li>Publishing the release triggers the workflow, which:</li>
+<li>Syncs the tag back into <code>pyproject.toml</code>.</li>
+<li>Builds and uploads to PyPI via <code>uv publish</code> using <code>PYPI_TOKEN</code>.</li>
+<li>Deploys updated docs with <code>mkdocs gh-deploy</code>.</li>
 </ol>
-<p>No local <code>uv build</code>/<code>uv publish</code> runs are required—focus on providing a complete release summary (highlights, compatibility notes, etc.).</p>
-<h2 id="additional-notes">Additional Notes<a class="headerlink" href="#additional-notes" title="Permanent link">&para;</a></h2>
+<p>No local build/publish steps are needed—just provide a clear release summary (highlights, compatibility notes, migration tips).</p>
+<h2 id="extra-tips">Extra tips<a class="headerlink" href="#extra-tips" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Breaking schema updates often require refreshing golden fixtures (<code>tests/test_golden.py</code>), end-to-end cases such as <code>tests/test_rpc.py</code>, and any affected examples.</li>
-<li>Use <code>make clean</code> to remove generated artifacts if you need a fresh baseline before re-running <code>make gen-all</code>.</li>
-<li>Run optional checks like the Gemini smoke test (<code>ACP_ENABLE_GEMINI_TESTS=1</code>) whenever the environment is available to catch regressions before publishing.</li>
+<li>Breaking schema bumps often mean updating <code>tests/test_golden.py</code>, <code>tests/test_rpc.py</code>, and any examples touched by new fields.</li>
+<li>Use <code>make clean</code> if you need a fresh slate before re-running <code>make gen-all</code>.</li>
+<li>When available, run the Gemini smoke test (<code>ACP_ENABLE_GEMINI_TESTS=1</code>, set <code>ACP_GEMINI_BIN</code>) to catch regressions early.</li>
 </ul>
 
 

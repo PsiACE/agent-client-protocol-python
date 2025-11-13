@@ -12,13 +12,13 @@
         <meta name="author" content="Chojan Shang">
       
       
-        <link rel="canonical" href="https://agentclientprotocol.github.io/python-sdk/contrib/">
+        <link rel="canonical" href="https://agentclientprotocol.github.io/python-sdk/use-cases/">
       
       
-        <link rel="prev" href="../use-cases/">
+        <link rel="prev" href="../quickstart/">
       
       
-        <link rel="next" href="../releasing/">
+        <link rel="next" href="../contrib/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Experimental Contrib - Agent Client Protocol - Python SDK</title>
+        <title>Use Cases - Agent Client Protocol - Python SDK</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#experimental-contrib-modules" class="md-skip">
+        <a href="#use-cases" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Experimental Contrib
+              Use Cases
             
           </span>
         </div>
@@ -303,28 +303,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../use-cases/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Use Cases
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -342,7 +320,7 @@
   
   
   <span class="md-ellipsis">
-    Experimental Contrib
+    Use Cases
     
   </span>
   
@@ -355,7 +333,7 @@
   
   
   <span class="md-ellipsis">
-    Experimental Contrib
+    Use Cases
     
   </span>
   
@@ -378,27 +356,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sessionaccumulator-acpcontribsession_state" class="md-nav__link">
+  <a href="#agents" class="md-nav__link">
     <span class="md-ellipsis">
-      SessionAccumulator (acp.contrib.session_state)
+      Agents
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#toolcalltracker-permissionbroker-acpcontribtool_calls-acpcontribpermissions" class="md-nav__link">
+  <a href="#clients" class="md-nav__link">
     <span class="md-ellipsis">
-      ToolCallTracker &amp; PermissionBroker (acp.contrib.tool_calls, acp.contrib.permissions)
+      Clients
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#design-guardrails" class="md-nav__link">
+  <a href="#add-your-integration" class="md-nav__link">
     <span class="md-ellipsis">
-      Design Guardrails
+      Add your integration
     </span>
   </a>
   
@@ -408,6 +386,28 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contrib/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Experimental Contrib
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -461,27 +461,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sessionaccumulator-acpcontribsession_state" class="md-nav__link">
+  <a href="#agents" class="md-nav__link">
     <span class="md-ellipsis">
-      SessionAccumulator (acp.contrib.session_state)
+      Agents
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#toolcalltracker-permissionbroker-acpcontribtool_calls-acpcontribpermissions" class="md-nav__link">
+  <a href="#clients" class="md-nav__link">
     <span class="md-ellipsis">
-      ToolCallTracker &amp; PermissionBroker (acp.contrib.tool_calls, acp.contrib.permissions)
+      Clients
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#design-guardrails" class="md-nav__link">
+  <a href="#add-your-integration" class="md-nav__link">
     <span class="md-ellipsis">
-      Design Guardrails
+      Add your integration
     </span>
   </a>
   
@@ -506,42 +506,50 @@
   
 
 
-<h1 id="experimental-contrib-modules">Experimental Contrib Modules<a class="headerlink" href="#experimental-contrib-modules" title="Permanent link">&para;</a></h1>
-<p>The helpers under <code>acp.contrib</code> package recurring patterns we saw in integrations such as Toad, kimi-cli, and Gemini. Keep in mind they are experimental—APIs can still shift as we learn. Use this page as a menu:</p>
+<h1 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h1>
+<p>This page mirrors the quick-read style of the README/index: skim the tables, copy links, and see how others apply the SDK. For the protocol overview itself, visit the official <a href="https://agentclientprotocol.com/overview/agents">agent</a> and <a href="https://agentclientprotocol.com/overview/clients">client</a> guides.</p>
+<h2 id="agents">Agents<a class="headerlink" href="#agents" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>What it showcases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/MoonshotAI/kimi-cli">MoonshotAI/kimi-cli</a></td>
+<td>A CLI-first ACP+MCP agent that helps with software dev and terminal workflows. Highlights streaming updates, permission prompts, and tool call UX.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="clients">Clients<a class="headerlink" href="#clients" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>What it showcases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jimwhite/agent-client-kernel">jimwhite/agent-client-kernel</a></td>
+<td>A Jupyter kernel that speaks ACP so notebooks can chat with external agents. Great reference if you’re embedding ACP in notebook tooling.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OhadRubin/simple-acp-client">OhadRubin/simple-acp-client</a></td>
+<td>A Claude Agent SDK–style Python client that wraps ACP executables with a friendly API. Use it as a starting point for bespoke clients.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="add-your-integration">Add your integration<a class="headerlink" href="#add-your-integration" title="Permanent link">&para;</a></h2>
+<p>Shipping something with this SDK? Tell us!</p>
 <ul>
-<li><strong><code>session_state.SessionAccumulator</code></strong> — build a canonical, immutable snapshot of every session update so UIs can render tool calls and plans without re-implementing state machines.</li>
-<li><strong><code>tool_calls.ToolCallTracker</code> + <code>permissions.PermissionBroker</code></strong> — coordinate streamed tool call updates and permission prompts from one place.</li>
+<li>Open an issue or PR with a short blurb and link.</li>
+<li>Start a thread in <a href="https://github.com/agentclientprotocol/python-sdk/discussions">GitHub Discussions</a>.</li>
+<li>Drop a note in <a href="https://agentclientprotocol.zulipchat.com/">agentclientprotocol.zulipchat.com</a>.</li>
 </ul>
-<h2 id="sessionaccumulator-acpcontribsession_state">SessionAccumulator (<code>acp.contrib.session_state</code>)<a class="headerlink" href="#sessionaccumulator-acpcontribsession_state" title="Permanent link">&para;</a></h2>
-<p><strong>Use it when:</strong> you need a live, merged view of <code>SessionNotification</code> events (e.g. tool calls, plan entries, user/agent messages) to drive UI widgets.</p>
-<p><strong>Key capabilities</strong></p>
-<ul>
-<li><code>SessionAccumulator.apply(notification)</code> reconciles <code>tool_call</code> and <code>tool_call_update</code> payloads, even if the start event arrives late.</li>
-<li><code>snapshot()</code> returns an immutable <code>SessionSnapshot</code> Pydantic model containing the plan, current mode, commands, and ordered message history.</li>
-<li><code>subscribe(callback)</code> lets you push snapshots into stores or UI components whenever state changes.</li>
-<li>Automatic reset on session-change (toggle with <code>auto_reset_on_session_change</code>).</li>
-</ul>
-<blockquote>
-<p>Tip: Create one accumulator per UI controller. Feed every raw <code>SessionNotification</code> into it and render from <code>snapshot.tool_calls</code> / <code>snapshot.user_messages</code> instead of mutating state manually.</p>
-</blockquote>
-<h2 id="toolcalltracker-permissionbroker-acpcontribtool_calls-acpcontribpermissions">ToolCallTracker &amp; PermissionBroker (<code>acp.contrib.tool_calls</code>, <code>acp.contrib.permissions</code>)<a class="headerlink" href="#toolcalltracker-permissionbroker-acpcontribtool_calls-acpcontribpermissions" title="Permanent link">&para;</a></h2>
-<p><strong>Use them when:</strong> your agent runtime synthesises tool call IDs, streams arguments, and prompts the user for approval. The helpers centralise the bookkeeping so you don’t juggle raw Pydantic models.</p>
-<ul>
-<li><code>ToolCallTracker.start()/progress()/append_stream_text()</code> emits canonical <code>ToolCallStart</code> / <code>ToolCallProgress</code> updates and keeps an in-memory view via <code>view()</code> or <code>tool_call_model()</code>.</li>
-<li><code>PermissionBroker.request_for()</code> wraps <code>requestPermission</code> RPCs. It reuses tracker state (or a provided <code>ToolCall</code>), lets you append extra content, and defaults to Approve / Approve for session / Reject options.</li>
-<li><code>default_permission_options()</code> exposes that canonical option triple if you need to customise it.</li>
-</ul>
-<blockquote>
-<p>Tip: Keep one tracker near the agent event loop. Emit notifications through it and share the tracker with <code>PermissionBroker</code> so permission prompts always match the latest tool call state.</p>
-</blockquote>
-<h2 id="design-guardrails">Design Guardrails<a class="headerlink" href="#design-guardrails" title="Permanent link">&para;</a></h2>
-<p>To stay aligned with the ACP schema, the contrib layer follows a few rules:</p>
-<ul>
-<li>Schema data classes continue to live in <code>acp.schema</code>. Contrib helpers clone them with <code>.model_copy(deep=True)</code> before mutation.</li>
-<li>The core runtime never imports contrib modules implicitly—you opt in when they help.</li>
-<li>Helpers focus on painful bookkeeping (tool call aggregation, permission UX) and leave product-specific policy to your application.</li>
-</ul>
-<p>Try the contrib modules, then open an issue or PR with feedback so we know which APIs should graduate into the stable surface.</p>
+<p>We’ll keep this list current so newcomers can see what’s possible.</p>
 
 
 
