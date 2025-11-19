@@ -39,16 +39,16 @@ See real adopters like kimi-cli in the [Use Cases list](https://agentclientproto
 
 ## Quick links
 
-| Need | Link |
-| --- | --- |
-| Docs hub | https://agentclientprotocol.github.io/python-sdk/ |
-| Quickstart | https://agentclientprotocol.github.io/python-sdk/quickstart/ |
-| Use cases | https://agentclientprotocol.github.io/python-sdk/use-cases/ |
-| Contrib helpers | https://agentclientprotocol.github.io/python-sdk/experimental-contrib/ |
-| Releasing workflow | https://agentclientprotocol.github.io/python-sdk/releasing/ |
-| Examples | https://github.com/agentclientprotocol/python-sdk/tree/main/examples |
-| Tests | https://github.com/agentclientprotocol/python-sdk/tree/main/tests |
-| PyPI | https://pypi.org/project/agent-client-protocol/ |
+| Need               | Link                                                                   |
+|--------------------|------------------------------------------------------------------------|
+| Docs hub           | <https://agentclientprotocol.github.io/python-sdk/>                    |
+| Quickstart         | <https://agentclientprotocol.github.io/python-sdk/quickstart/>         |
+| Use cases          | <https://agentclientprotocol.github.io/python-sdk/use-cases/>          |
+| Contrib helpers    | <https://agentclientprotocol.github.io/python-sdk/contrib/>            |
+| Releasing workflow | <https://agentclientprotocol.github.io/python-sdk/releasing/>          |
+| Examples           | <https://github.com/agentclientprotocol/python-sdk/tree/main/examples> |
+| Tests              | <https://github.com/agentclientprotocol/python-sdk/tree/main/tests>    |
+| PyPI               | <https://pypi.org/project/agent-client-protocol/>                      |
 
 ## Project layout
 
@@ -69,7 +69,7 @@ Keep docs and examples current whenever you ship public API or transport changes
 
 ## Community & support
 
-- File issues or feature requests at https://github.com/agentclientprotocol/python-sdk.
-- Discuss ideas or get help via GitHub Discussions: https://github.com/agentclientprotocol/python-sdk/discussions.
-- Join the broader ACP conversations at https://agentclientprotocol.com/, the Zed community channels, or the community Zulip: https://agentclientprotocol.zulipchat.com/.
+- File issues or feature requests at <https://github.com/agentclientprotocol/python-sdk>.
+- Discuss ideas or get help via GitHub Discussions: <https://github.com/agentclientprotocol/python-sdk/discussions>.
+- Join the broader ACP conversations at <https://agentclientprotocol.com/>, the Zed community channels, or the community Zulip: <https://agentclientprotocol.zulipchat.com/>.
 - Shared learnings, integrations, or third-party transports are welcome additions to the documentation—open a PR!
