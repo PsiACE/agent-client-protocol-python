@@ -4,13 +4,13 @@ Spin up a working ACP agent/client loop in minutes. Keep this page beside the te
 
 ## Quick checklist
 
-| Goal | Command / Link |
-| --- | --- |
-| Install the SDK | `pip install agent-client-protocol` or `uv add agent-client-protocol` |
-| Run the echo agent | `python examples/echo_agent.py` |
-| Point Zed (or another client) at it | Update `settings.json` as shown below |
-| Programmatically drive an agent | Copy the `spawn_agent_process` example |
-| Run tests before hacking further | `make check && make test` |
+| Goal                                | Command / Link                                                        |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| Install the SDK                     | `pip install agent-client-protocol` or `uv add agent-client-protocol` |
+| Run the echo agent                  | `python examples/echo_agent.py`                                       |
+| Point Zed (or another client) at it | Update `settings.json` as shown below                                 |
+| Programmatically drive an agent     | Copy the `spawn_agent_process` example                                |
+| Run tests before hacking further    | `make check && make test`                                             |
 
 ## Before you begin
 
@@ -84,17 +84,17 @@ class SimpleClient(Client):
         return {"outcome": {"outcome": "cancelled"}}
 
     async def sessionUpdate(self, params: SessionNotification) -> None:
-        print("update:", params.sessionId, params.update)
+        print("update:", params.session_id, params.update)
 
 
 async def main() -> None:
     script = Path("examples/echo_agent.py")
     async with spawn_agent_process(lambda _agent: SimpleClient(), sys.executable, str(script)) as (conn, _proc):
-        await conn.initialize(InitializeRequest(protocolVersion=1))
-        session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcpServers=[]))
+        await conn.initialize(InitializeRequest(protocol_version=1))
+        session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcp_servers=[]))
         await conn.prompt(
             PromptRequest(
-                sessionId=session.sessionId,
+                session_id=session.session_id,
                 prompt=[text_block("Hello from spawn!")],
             )
         )
@@ -117,7 +117,7 @@ from acp import Agent, PromptRequest, PromptResponse
 class MyAgent(Agent):
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         # inspect params.prompt, stream updates, then finish the turn
-        return PromptResponse(stopReason="end_turn")
+        return PromptResponse(stop_reason="end_turn")
 ```
 
 Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to:

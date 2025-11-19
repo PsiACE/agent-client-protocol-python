@@ -19,21 +19,21 @@ from acp.schema import (
 
 
 def notification(session_id: str, update):
-    return SessionNotification(sessionId=session_id, update=update)
+    return SessionNotification(session_id=session_id, update=update)
 
 
 def test_session_accumulator_merges_tool_calls():
     acc = SessionAccumulator()
     start = ToolCallStart(
-        sessionUpdate="tool_call",
-        toolCallId="call-1",
+        session_update="tool_call",
+        tool_call_id="call-1",
         title="Read file",
         status="in_progress",
     )
     acc.apply(notification("s", start))
     progress = ToolCallProgress(
-        sessionUpdate="tool_call_update",
-        toolCallId="call-1",
+        session_update="tool_call_update",
+        tool_call_id="call-1",
         status="completed",
         content=[
             ContentToolCallContent(
@@ -55,7 +55,7 @@ def test_session_accumulator_records_plan_and_mode():
         notification(
             "s",
             AgentPlanUpdate(
-                sessionUpdate="plan",
+                session_update="plan",
                 entries=[
                     PlanEntry(content="Step 1", priority="medium", status="pending"),
                 ],
@@ -63,7 +63,7 @@ def test_session_accumulator_records_plan_and_mode():
         )
     )
     snapshot = acc.apply(
-        notification("s", CurrentModeUpdate(sessionUpdate="current_mode_update", currentModeId="coding"))
+        notification("s", CurrentModeUpdate(session_update="current_mode_update", current_mode_id="coding"))
     )
     assert snapshot.plan_entries[0].content == "Step 1"
     assert snapshot.current_mode_id == "coding"
@@ -75,8 +75,8 @@ def test_session_accumulator_tracks_messages_and_commands():
         notification(
             "s",
             AvailableCommandsUpdate(
-                sessionUpdate="available_commands_update",
-                availableCommands=[],
+                session_update="available_commands_update",
+                available_commands=[],
             ),
         )
     )
@@ -84,7 +84,7 @@ def test_session_accumulator_tracks_messages_and_commands():
         notification(
             "s",
             UserMessageChunk(
-                sessionUpdate="user_message_chunk",
+                session_update="user_message_chunk",
                 content=TextContentBlock(type="text", text="Hello"),
             ),
         )
@@ -93,7 +93,7 @@ def test_session_accumulator_tracks_messages_and_commands():
         notification(
             "s",
             AgentMessageChunk(
-                sessionUpdate="agent_message_chunk",
+                session_update="agent_message_chunk",
                 content=TextContentBlock(type="text", text="Hi!"),
             ),
         )
@@ -113,8 +113,8 @@ def test_session_accumulator_auto_resets_on_new_session():
         notification(
             "s1",
             ToolCallStart(
-                sessionUpdate="tool_call",
-                toolCallId="call-1",
+                session_update="tool_call",
+                tool_call_id="call-1",
                 title="First",
             ),
         )
@@ -123,8 +123,8 @@ def test_session_accumulator_auto_resets_on_new_session():
         notification(
             "s2",
             ToolCallStart(
-                sessionUpdate="tool_call",
-                toolCallId="call-2",
+                session_update="tool_call",
+                tool_call_id="call-2",
                 title="Second",
             ),
         )
@@ -142,8 +142,8 @@ def test_session_accumulator_rejects_cross_session_when_auto_reset_disabled():
         notification(
             "s1",
             ToolCallStart(
-                sessionUpdate="tool_call",
-                toolCallId="call-1",
+                session_update="tool_call",
+                tool_call_id="call-1",
                 title="First",
             ),
         )
@@ -153,8 +153,8 @@ def test_session_accumulator_rejects_cross_session_when_auto_reset_disabled():
             notification(
                 "s2",
                 ToolCallStart(
-                    sessionUpdate="tool_call",
-                    toolCallId="call-2",
+                    session_update="tool_call",
+                    tool_call_id="call-2",
                     title="Second",
                 ),
             )

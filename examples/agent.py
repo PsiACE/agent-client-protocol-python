@@ -40,13 +40,13 @@ class ExampleAgent(Agent):
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:  # noqa: ARG002
         logging.info("Received initialize request")
         return InitializeResponse(
-            protocolVersion=PROTOCOL_VERSION,
-            agentCapabilities=AgentCapabilities(),
-            agentInfo=Implementation(name="example-agent", title="Example Agent", version="0.1.0"),
+            protocol_version=PROTOCOL_VERSION,
+            agent_capabilities=AgentCapabilities(),
+            agent_info=Implementation(name="example-agent", title="Example Agent", version="0.1.0"),
         )
 
     async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None:  # noqa: ARG002
-        logging.info("Received authenticate request %s", params.methodId)
+        logging.info("Received authenticate request %s", params.method_id)
         return AuthenticateResponse()
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:  # noqa: ARG002
@@ -54,30 +54,29 @@ class ExampleAgent(Agent):
         session_id = str(self._next_session_id)
         self._next_session_id += 1
         self._sessions.add(session_id)
-        return NewSessionResponse(sessionId=session_id, modes=None)
+        return NewSessionResponse(session_id=session_id, modes=None)
 
     async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse | None:  # noqa: ARG002
-        logging.info("Received load session request %s", params.sessionId)
-        self._sessions.add(params.sessionId)
+        logging.info("Received load session request %s", params.session_id)
+        self._sessions.add(params.session_id)
         return LoadSessionResponse()
 
     async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None:  # noqa: ARG002
-        logging.info("Received set session mode request %s -> %s", params.sessionId, params.modeId)
+        logging.info("Received set session mode request %s -> %s", params.session_id, params.mode_id)
         return SetSessionModeResponse()
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
-        logging.info("Received prompt request for session %s", params.sessionId)
-        if params.sessionId not in self._sessions:
-            self._sessions.add(params.sessionId)
+        logging.info("Received prompt request for session %s", params.session_id)
+        if params.session_id not in self._sessions:
+            self._sessions.add(params.session_id)
 
-        await self._send_agent_message(params.sessionId, text_block("Client sent:"))
+        await self._send_agent_message(params.session_id, text_block("Client sent:"))
         for block in params.prompt:
-            await self._send_agent_message(params.sessionId, block)
-
-        return PromptResponse(stopReason="end_turn")
+            await self._send_agent_message(params.session_id, block)
+        return PromptResponse(stop_reason="end_turn")
 
     async def cancel(self, params: CancelNotification) -> None:  # noqa: ARG002
-        logging.info("Received cancel notification for session %s", params.sessionId)
+        logging.info("Received cancel notification for session %s", params.session_id)
 
     async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
         logging.info("Received extension method call: %s", method)
