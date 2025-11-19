@@ -16,8 +16,8 @@ jobs:
 
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          path: ~/.cache/prek
+          key: prek-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Set up the environment
         uses: ./.github/actions/setup-python-env
