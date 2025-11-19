@@ -93,29 +93,29 @@ class _TrackedToolCall:
 
     def to_tool_call_model(self) -> ToolCall:
         return ToolCall(
-            toolCallId=self.tool_call_id,
+            tool_call_id=self.tool_call_id,
             title=self.title,
             kind=self.kind,
             status=self.status,
             content=_copy_model_list(self.content),
             locations=_copy_model_list(self.locations),
-            rawInput=self.raw_input,
-            rawOutput=self.raw_output,
+            raw_input=self.raw_input,
+            raw_output=self.raw_output,
         )
 
     def to_start_model(self) -> ToolCallStart:
         if self.title is None:
             raise _MissingToolCallTitleError()
         return ToolCallStart(
-            sessionUpdate="tool_call",
-            toolCallId=self.tool_call_id,
+            session_update="tool_call",
+            tool_call_id=self.tool_call_id,
             title=self.title,
             kind=self.kind,
             status=self.status,
             content=_copy_model_list(self.content),
             locations=_copy_model_list(self.locations),
-            rawInput=self.raw_input,
-            rawOutput=self.raw_output,
+            raw_input=self.raw_input,
+            raw_output=self.raw_output,
         )
 
     def update(
@@ -155,8 +155,8 @@ class _TrackedToolCall:
             kwargs["rawInput"] = raw_input
         if raw_output is not UNSET:
             self.raw_output = raw_output
-            kwargs["rawOutput"] = raw_output
-        return ToolCallProgress(sessionUpdate="tool_call_update", toolCallId=self.tool_call_id, **kwargs)
+            kwargs["raw_output"] = raw_output
+        return ToolCallProgress(session_update="tool_call_update", tool_call_id=self.tool_call_id, **kwargs)
 
     def append_stream_text(
         self,

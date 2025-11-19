@@ -73,9 +73,9 @@ class GeminiClient(Client):
             option = _pick_preferred_option(params.options)
             if option is None:
                 return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
-            return RequestPermissionResponse(outcome=AllowedOutcome(optionId=option.optionId, outcome="selected"))
+            return RequestPermissionResponse(outcome=AllowedOutcome(option_id=option.option_id, outcome="selected"))
 
-        title = params.toolCall.title or "<permission>"
+        title = params.tool_call.title or "<permission>"
         if not params.options:
             print(f"\n🔐 Permission requested: {title} (no options, cancelling)")
             return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
@@ -92,7 +92,9 @@ class GeminiClient(Client):
                 idx = int(choice) - 1
                 if 0 <= idx < len(params.options):
                     opt = params.options[idx]
-                    return RequestPermissionResponse(outcome=AllowedOutcome(optionId=opt.optionId, outcome="selected"))
+                    return RequestPermissionResponse(
+                        outcome=AllowedOutcome(option_id=opt.option_id, outcome="selected")
+                    )
             print("Invalid selection, try again.")
 
     async def writeTextFile(
@@ -141,13 +143,13 @@ class GeminiClient(Client):
             print(f"\n🔧 {update.title} ({update.status or 'pending'})")
         elif isinstance(update, ToolCallProgress):
             status = update.status or "in_progress"
-            print(f"\n🔧 Tool call `{update.toolCallId}` → {status}")
+            print(f"\n🔧 Tool call `{update.tool_call_id}` → {status}")
             if update.content:
                 for item in update.content:
                     if isinstance(item, FileEditToolCallContent):
                         print(f"  diff: {item.path}")
                     elif isinstance(item, TerminalToolCallContent):
-                        print(f"  terminal: {item.terminalId}")
+                        print(f"  terminal: {item.terminal_id}")
                     elif isinstance(item, dict):
                         print(f"  content: {json.dumps(item, indent=2)}")
         else:
@@ -159,7 +161,7 @@ class GeminiClient(Client):
         params: CreateTerminalRequest,
     ) -> CreateTerminalResponse:  # type: ignore[override]
         print(f"[Client] createTerminal: {params}")
-        return CreateTerminalResponse(terminalId="term-1")
+        return CreateTerminalResponse(terminal_id="term-1")
 
     async def terminalOutput(
         self,
@@ -246,13 +248,13 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
         if line in {":exit", ":quit"}:
             break
         if line == ":cancel":
-            await conn.cancel(CancelNotification(sessionId=session_id))
+            await conn.cancel(CancelNotification(session_id=session_id))
             continue
 
         try:
             await conn.prompt(
                 PromptRequest(
-                    sessionId=session_id,
+                    session_id=session_id,
                     prompt=[text_block(line)],
                 )
             )
@@ -321,9 +323,9 @@ async def run(argv: list[str]) -> int:
     try:
         init_resp = await conn.initialize(
             InitializeRequest(
-                protocolVersion=PROTOCOL_VERSION,
-                clientCapabilities=ClientCapabilities(
-                    fs=FileSystemCapability(readTextFile=True, writeTextFile=True),
+                protocol_version=PROTOCOL_VERSION,
+                client_capabilities=ClientCapabilities(
+                    fs=FileSystemCapability(read_text_file=True, write_text_file=True),
                     terminal=True,
                 ),
             )
@@ -337,13 +339,13 @@ async def run(argv: list[str]) -> int:
         await _shutdown(proc, conn)
         return 1
 
-    print(f"✅ Connected to Gemini (protocol v{init_resp.protocolVersion})")
+    print(f"✅ Connected to Gemini (protocol v{init_resp.protocol_version})")
 
     try:
         session = await conn.newSession(
             NewSessionRequest(
                 cwd=os.getcwd(),
-                mcpServers=[],
+                mcp_servers=[],
             )
         )
     except RequestError as err:
@@ -355,10 +357,10 @@ async def run(argv: list[str]) -> int:
         await _shutdown(proc, conn)
         return 1
 
-    print(f"📝 Created session: {session.sessionId}")
+    print(f"📝 Created session: {session.session_id}")
 
     try:
-        await interactive_loop(conn, session.sessionId)
+        await interactive_loop(conn, session.session_id)
     finally:
         await _shutdown(proc, conn)
 

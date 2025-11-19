@@ -83,11 +83,11 @@ def text_block(text: str) -> TextContentBlock:
 
 
 def image_block(data: str, mime_type: str, *, uri: str | None = None) -> ImageContentBlock:
-    return ImageContentBlock(type="image", data=data, mimeType=mime_type, uri=uri)
+    return ImageContentBlock(type="image", data=data, mime_type=mime_type, uri=uri)
 
 
 def audio_block(data: str, mime_type: str) -> AudioContentBlock:
-    return AudioContentBlock(type="audio", data=data, mimeType=mime_type)
+    return AudioContentBlock(type="audio", data=data, mime_type=mime_type)
 
 
 def resource_link_block(
@@ -103,7 +103,7 @@ def resource_link_block(
         type="resource_link",
         name=name,
         uri=uri,
-        mimeType=mime_type,
+        mime_type=mime_type,
         size=size,
         description=description,
         title=title,
@@ -111,11 +111,11 @@ def resource_link_block(
 
 
 def embedded_text_resource(uri: str, text: str, *, mime_type: str | None = None) -> TextResourceContents:
-    return TextResourceContents(uri=uri, text=text, mimeType=mime_type)
+    return TextResourceContents(uri=uri, text=text, mime_type=mime_type)
 
 
 def embedded_blob_resource(uri: str, blob: str, *, mime_type: str | None = None) -> BlobResourceContents:
-    return BlobResourceContents(uri=uri, blob=blob, mimeType=mime_type)
+    return BlobResourceContents(uri=uri, blob=blob, mime_type=mime_type)
 
 
 def resource_block(
@@ -129,11 +129,11 @@ def tool_content(block: ContentBlock) -> ContentToolCallContent:
 
 
 def tool_diff_content(path: str, new_text: str, old_text: str | None = None) -> FileEditToolCallContent:
-    return FileEditToolCallContent(type="diff", path=path, newText=new_text, oldText=old_text)
+    return FileEditToolCallContent(type="diff", path=path, new_text=new_text, old_text=old_text)
 
 
 def tool_terminal_ref(terminal_id: str) -> TerminalToolCallContent:
-    return TerminalToolCallContent(type="terminal", terminalId=terminal_id)
+    return TerminalToolCallContent(type="terminal", terminal_id=terminal_id)
 
 
 def plan_entry(
@@ -146,11 +146,11 @@ def plan_entry(
 
 
 def update_plan(entries: Iterable[PlanEntry]) -> AgentPlanUpdate:
-    return AgentPlanUpdate(sessionUpdate="plan", entries=list(entries))
+    return AgentPlanUpdate(session_update="plan", entries=list(entries))
 
 
 def update_user_message(content: ContentBlock) -> UserMessageChunk:
-    return UserMessageChunk(sessionUpdate="user_message_chunk", content=content)
+    return UserMessageChunk(session_update="user_message_chunk", content=content)
 
 
 def update_user_message_text(text: str) -> UserMessageChunk:
@@ -158,7 +158,7 @@ def update_user_message_text(text: str) -> UserMessageChunk:
 
 
 def update_agent_message(content: ContentBlock) -> AgentMessageChunk:
-    return AgentMessageChunk(sessionUpdate="agent_message_chunk", content=content)
+    return AgentMessageChunk(session_update="agent_message_chunk", content=content)
 
 
 def update_agent_message_text(text: str) -> AgentMessageChunk:
@@ -166,7 +166,7 @@ def update_agent_message_text(text: str) -> AgentMessageChunk:
 
 
 def update_agent_thought(content: ContentBlock) -> AgentThoughtChunk:
-    return AgentThoughtChunk(sessionUpdate="agent_thought_chunk", content=content)
+    return AgentThoughtChunk(session_update="agent_thought_chunk", content=content)
 
 
 def update_agent_thought_text(text: str) -> AgentThoughtChunk:
@@ -175,17 +175,17 @@ def update_agent_thought_text(text: str) -> AgentThoughtChunk:
 
 def update_available_commands(commands: Iterable[AvailableCommand]) -> AvailableCommandsUpdate:
     return AvailableCommandsUpdate(
-        sessionUpdate="available_commands_update",
-        availableCommands=list(commands),
+        session_update="available_commands_update",
+        available_commands=list(commands),
     )
 
 
 def update_current_mode(current_mode_id: str) -> CurrentModeUpdate:
-    return CurrentModeUpdate(sessionUpdate="current_mode_update", currentModeId=current_mode_id)
+    return CurrentModeUpdate(session_update="current_mode_update", current_mode_id=current_mode_id)
 
 
 def session_notification(session_id: str, update: SessionUpdate) -> SessionNotification:
-    return SessionNotification(sessionId=session_id, update=update)
+    return SessionNotification(session_id=session_id, update=update)
 
 
 def start_tool_call(
@@ -200,15 +200,15 @@ def start_tool_call(
     raw_output: Any | None = None,
 ) -> ToolCallStart:
     return ToolCallStart(
-        sessionUpdate="tool_call",
-        toolCallId=tool_call_id,
+        session_update="tool_call",
+        tool_call_id=tool_call_id,
         title=title,
         kind=kind,
         status=status,
         content=list(content) if content is not None else None,
         locations=list(locations) if locations is not None else None,
-        rawInput=raw_input,
-        rawOutput=raw_output,
+        raw_input=raw_input,
+        raw_output=raw_output,
     )
 
 
@@ -266,13 +266,13 @@ def update_tool_call(
     raw_output: Any | None = None,
 ) -> ToolCallProgress:
     return ToolCallProgress(
-        sessionUpdate="tool_call_update",
-        toolCallId=tool_call_id,
+        session_update="tool_call_update",
+        tool_call_id=tool_call_id,
         title=title,
         kind=kind,
         status=status,
         content=list(content) if content is not None else None,
         locations=list(locations) if locations is not None else None,
-        rawInput=raw_input,
-        rawOutput=raw_output,
+        raw_input=raw_input,
+        raw_output=raw_output,
     )

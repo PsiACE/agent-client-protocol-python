@@ -97,7 +97,7 @@ class AgentSideConnection:
             params,
             CreateTerminalResponse,
         )
-        return TerminalHandle(create_response.terminalId, params.sessionId, self._conn)
+        return TerminalHandle(create_response.terminal_id, params.session_id, self._conn)
 
     async def terminalOutput(self, params: TerminalOutputRequest) -> TerminalOutputResponse:
         return await request_model(

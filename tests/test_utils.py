@@ -4,7 +4,7 @@ from acp.utils import serialize_params
 
 def test_serialize_params_uses_meta_aliases() -> None:
     chunk = AgentMessageChunk(
-        sessionUpdate="agent_message_chunk",
+        session_update="agent_message_chunk",
         content=TextContentBlock(type="text", text="demo", field_meta={"inner": "value"}),
         field_meta={"outer": "value"},
     )
@@ -17,7 +17,7 @@ def test_serialize_params_uses_meta_aliases() -> None:
 
 def test_serialize_params_omits_meta_when_absent() -> None:
     chunk = AgentMessageChunk(
-        sessionUpdate="agent_message_chunk",
+        session_update="agent_message_chunk",
         content=TextContentBlock(type="text", text="demo"),
     )
 
@@ -29,7 +29,7 @@ def test_serialize_params_omits_meta_when_absent() -> None:
 
 def test_field_meta_can_be_set_by_name_on_models() -> None:
     chunk = AgentMessageChunk(
-        sessionUpdate="agent_message_chunk",
+        session_update="agent_message_chunk",
         content=TextContentBlock(type="text", text="demo", field_meta={"inner": "value"}),
         field_meta={"outer": "value"},
     )

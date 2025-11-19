@@ -25,7 +25,7 @@ class LongRunningAgent(TestAgent):
         except asyncio.TimeoutError as exc:
             msg = "Cancel notification did not arrive while prompt pending"
             raise AssertionError(msg) from exc
-        return PromptResponse(stopReason="cancelled")
+        return PromptResponse(stop_reason="cancelled")
 
     async def cancel(self, params: CancelNotification) -> None:
         await super().cancel(params)
@@ -37,11 +37,11 @@ async def test_cancel_reaches_agent_during_prompt() -> None:
     async with _Server() as server:
         agent = LongRunningAgent()
         client = TestClient()
-        agent_conn = ClientSideConnection(lambda _conn: client, server.client_writer, server.client_reader)
-        _client_conn = AgentSideConnection(lambda _conn: agent, server.server_writer, server.server_reader)
+        agent_conn = ClientSideConnection(lambda _conn: client, server._client_writer, server._client_reader)
+        _client_conn = AgentSideConnection(lambda _conn: agent, server._server_writer, server._server_reader)
 
         prompt_request = PromptRequest(
-            sessionId="sess-xyz",
+            session_id="sess-xyz",
             prompt=[TextContentBlock(type="text", text="hello")],
         )
         prompt_task = asyncio.create_task(agent_conn.prompt(prompt_request))
@@ -49,10 +49,10 @@ async def test_cancel_reaches_agent_during_prompt() -> None:
         await agent.prompt_started.wait()
         assert not prompt_task.done(), "Prompt finished before cancel was sent"
 
-        await agent_conn.cancel(CancelNotification(sessionId="sess-xyz"))
+        await agent_conn.cancel(CancelNotification(session_id="sess-xyz"))
 
         await asyncio.wait_for(agent.cancel_received.wait(), timeout=1.0)
 
         response = await asyncio.wait_for(prompt_task, timeout=1.0)
-        assert response.stopReason == "cancelled"
+        assert response.stop_reason == "cancelled"
         assert agent.cancellations == ["sess-xyz"]
