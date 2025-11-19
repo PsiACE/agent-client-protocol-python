@@ -32,7 +32,6 @@ dev = [
     "datamodel-code-generator>=0.25",
     "pytest>=7.2.0",
     "pytest-asyncio>=0.21.0",
-    "pre-commit>=2.20.0",
     "tox-uv>=1.11.3",
     "deptry>=0.23.0",
     "ty>=0.0.1a16",
@@ -41,6 +40,7 @@ dev = [
     "mkdocs-material>=8.5.10",
     "mkdocstrings[python]>=0.26.1",
     "python-dotenv>=1.1.1",
+    "prek>=0.2.17",
 ]
 
 [project.optional-dependencies]
@@ -117,3 +117,6 @@ exclude = [
     "src/acp/meta.py",
     "src/acp/schema.py",
 ]
+
+[tool.deptry.package_module_name_map]
+opentelemetry-sdk = "opentelemetry"

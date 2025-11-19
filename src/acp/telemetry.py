@@ -6,15 +6,15 @@ from contextlib import AbstractContextManager, ExitStack, nullcontext
 from typing import Any, cast
 
 try:
-    from logfire import span as logfire_span
-except Exception:  # pragma: no cover - logfire is optional
+    from logfire import span as logfire_span  # type: ignore[unresolved-import]
+except ModuleNotFoundError:  # pragma: no cover - logfire is optional
     logfire_span = None  # type: ignore[assignment]
 else:  # pragma: no cover - optional
     os.environ.setdefault("LOGFIRE_IGNORE_NO_CONFIG", "1")
 
 try:  # pragma: no cover - opentelemetry is optional
-    from opentelemetry.trace import get_tracer as otel_get_tracer
-except Exception:  # pragma: no cover - opentelemetry is optional
+    from opentelemetry.trace import get_tracer as otel_get_tracer  # type: ignore[unresolved-import]
+except ModuleNotFoundError:  # pragma: no cover - opentelemetry is optional
     otel_get_tracer = None  # type: ignore[assignment]
 
 DEFAULT_TAGS = ["acp"]
