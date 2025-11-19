@@ -20,12 +20,12 @@ class PermissionRequestAgent(TestAgent):
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         permission = await self._conn.requestPermission(
             RequestPermissionRequest(
-                sessionId=params.sessionId,
+                session_id=params.session_id,
                 options=[
-                    PermissionOption(optionId="allow", name="Allow", kind="allow_once"),
-                    PermissionOption(optionId="deny", name="Deny", kind="reject_once"),
+                    PermissionOption(option_id="allow", name="Allow", kind="allow_once"),
+                    PermissionOption(option_id="deny", name="Deny", kind="reject_once"),
                 ],
-                toolCall=ToolCall(toolCallId="call-1", title="Write File"),
+                tool_call=ToolCall(tool_call_id="call-1", title="Write File"),
             )
         )
         self.permission_responses.append(permission)
@@ -40,27 +40,27 @@ async def test_agent_request_permission_roundtrip() -> None:
 
         captured_agent = []
 
-        agent_conn = ClientSideConnection(lambda _conn: client, server.client_writer, server.client_reader)
+        agent_conn = ClientSideConnection(lambda _conn: client, server._client_writer, server._client_reader)
         _agent_conn = AgentSideConnection(
             lambda conn: captured_agent.append(PermissionRequestAgent(conn)) or captured_agent[-1],
-            server.server_writer,
-            server.server_reader,
+            server._server_writer,
+            server._server_reader,
         )
 
         response = await asyncio.wait_for(
             agent_conn.prompt(
                 PromptRequest(
-                    sessionId="sess-perm",
+                    session_id="sess-perm",
                     prompt=[TextContentBlock(type="text", text="needs approval")],
                 )
             ),
             timeout=1.0,
         )
-        assert response.stopReason == "end_turn"
+        assert response.stop_reason == "end_turn"
 
         assert captured_agent, "Agent was not constructed"
         [agent] = captured_agent
         assert agent.permission_responses, "Agent did not receive permission response"
         permission_response = agent.permission_responses[0]
         assert permission_response.outcome.outcome == "selected"
-        assert permission_response.outcome.optionId == "allow"
+        assert permission_response.outcome.option_id == "allow"

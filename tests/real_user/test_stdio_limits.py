@@ -22,7 +22,7 @@ def _large_line_script(size: int = LARGE_LINE_SIZE) -> str:
 @pytest.mark.asyncio
 async def test_spawn_stdio_transport_hits_default_limit() -> None:
     script = _large_line_script()
-    async with spawn_stdio_transport(sys.executable, "-c", script) as (reader, writer, _process):
+    async with spawn_stdio_transport(sys.executable, "-c", script) as (reader, _writer, _process):
         # readline() re-raises LimitOverrunError as ValueError on CPython 3.12+.
         with pytest.raises(ValueError):
             await reader.readline()
@@ -36,6 +36,6 @@ async def test_spawn_stdio_transport_custom_limit_handles_large_line() -> None:
         "-c",
         script,
         limit=LARGE_LINE_SIZE * 2,
-    ) as (reader, writer, _process):
+    ) as (reader, _writer, _process):
         line = await reader.readline()
         assert len(line) == LARGE_LINE_SIZE + 1

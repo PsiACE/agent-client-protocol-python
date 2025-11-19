@@ -32,10 +32,11 @@ class AuthenticateRequest(BaseModel):
     ] = None
     # The ID of the authentication method to use.
     # Must be one of the methods advertised in the initialize response.
-    methodId: Annotated[
+    method_id: Annotated[
         str,
         Field(
-            description="The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response."
+            alias="methodId",
+            description="The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response.",
         ),
     ]
 
@@ -71,7 +72,7 @@ class BlobResourceContents(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     blob: str
-    mimeType: Optional[str] = None
+    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
     uri: str
 
 
@@ -82,7 +83,13 @@ class CreateTerminalResponse(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The unique identifier for the created terminal.
-    terminalId: Annotated[str, Field(description="The unique identifier for the created terminal.")]
+    terminal_id: Annotated[
+        str,
+        Field(
+            alias="terminalId",
+            description="The unique identifier for the created terminal.",
+        ),
+    ]
 
 
 class EnvVariable(BaseModel):
@@ -131,14 +138,20 @@ class FileSystemCapability(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Whether the Client supports `fs/read_text_file` requests.
-    readTextFile: Annotated[
+    read_text_file: Annotated[
         Optional[bool],
-        Field(description="Whether the Client supports `fs/read_text_file` requests."),
+        Field(
+            alias="readTextFile",
+            description="Whether the Client supports `fs/read_text_file` requests.",
+        ),
     ] = False
     # Whether the Client supports `fs/write_text_file` requests.
-    writeTextFile: Annotated[
+    write_text_file: Annotated[
         Optional[bool],
-        Field(description="Whether the Client supports `fs/write_text_file` requests."),
+        Field(
+            alias="writeTextFile",
+            description="Whether the Client supports `fs/write_text_file` requests.",
+        ),
     ] = False
 
 
@@ -256,7 +269,7 @@ class ModelInfo(BaseModel):
     # Optional description of the model.
     description: Annotated[Optional[str], Field(description="Optional description of the model.")] = None
     # Unique identifier for the model.
-    modelId: Annotated[str, Field(description="Unique identifier for the model.")]
+    model_id: Annotated[str, Field(alias="modelId", description="Unique identifier for the model.")]
     # Human-readable name of the model.
     name: Annotated[str, Field(description="Human-readable name of the model.")]
 
@@ -273,9 +286,12 @@ class NewSessionRequest(BaseModel):
         Field(description="The working directory for this session. Must be an absolute path."),
     ]
     # List of MCP (Model Context Protocol) servers the agent should connect to.
-    mcpServers: Annotated[
+    mcp_servers: Annotated[
         List[Union[HttpMcpServer, SseMcpServer, StdioMcpServer]],
-        Field(description="List of MCP (Model Context Protocol) servers the agent should connect to."),
+        Field(
+            alias="mcpServers",
+            description="List of MCP (Model Context Protocol) servers the agent should connect to.",
+        ),
     ]
 
 
@@ -291,10 +307,11 @@ class PromptCapabilities(BaseModel):
     #
     # When enabled, the Client is allowed to include [`ContentBlock::Resource`]
     # in prompt requests for pieces of context that are referenced in the message.
-    embeddedContext: Annotated[
+    embedded_context: Annotated[
         Optional[bool],
         Field(
-            description="Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message."
+            alias="embeddedContext",
+            description="Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
         ),
     ] = False
     # Agent supports [`ContentBlock::Image`].
@@ -324,7 +341,10 @@ class DeniedOutcome(BaseModel):
 
 class AllowedOutcome(BaseModel):
     # The ID of the option the user selected.
-    optionId: Annotated[str, Field(description="The ID of the option the user selected.")]
+    option_id: Annotated[
+        str,
+        Field(alias="optionId", description="The ID of the option the user selected."),
+    ]
     outcome: Literal["selected"]
 
 
@@ -356,9 +376,18 @@ class SessionModelState(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The set of models that the Agent can use
-    availableModels: Annotated[List[ModelInfo], Field(description="The set of models that the Agent can use")]
+    available_models: Annotated[
+        List[ModelInfo],
+        Field(
+            alias="availableModels",
+            description="The set of models that the Agent can use",
+        ),
+    ]
     # The current model the Agent is in.
-    currentModelId: Annotated[str, Field(description="The current model the Agent is in.")]
+    current_model_id: Annotated[
+        str,
+        Field(alias="currentModelId", description="The current model the Agent is in."),
+    ]
 
 
 class CurrentModeUpdate(BaseModel):
@@ -368,8 +397,8 @@ class CurrentModeUpdate(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The ID of the current mode
-    currentModeId: Annotated[str, Field(description="The ID of the current mode")]
-    sessionUpdate: Literal["current_mode_update"]
+    current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
+    session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
 
 
 class SetSessionModeRequest(BaseModel):
@@ -379,9 +408,12 @@ class SetSessionModeRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The ID of the mode to set.
-    modeId: Annotated[str, Field(description="The ID of the mode to set.")]
+    mode_id: Annotated[str, Field(alias="modeId", description="The ID of the mode to set.")]
     # The ID of the session to set the mode for.
-    sessionId: Annotated[str, Field(description="The ID of the session to set the mode for.")]
+    session_id: Annotated[
+        str,
+        Field(alias="sessionId", description="The ID of the session to set the mode for."),
+    ]
 
 
 class SetSessionModeResponse(BaseModel):
@@ -395,9 +427,12 @@ class SetSessionModelRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The ID of the model to set.
-    modelId: Annotated[str, Field(description="The ID of the model to set.")]
+    model_id: Annotated[str, Field(alias="modelId", description="The ID of the model to set.")]
     # The ID of the session to set the model for.
-    sessionId: Annotated[str, Field(description="The ID of the session to set the model for.")]
+    session_id: Annotated[
+        str,
+        Field(alias="sessionId", description="The ID of the session to set the model for."),
+    ]
 
 
 class SetSessionModelResponse(BaseModel):
@@ -415,9 +450,10 @@ class TerminalExitStatus(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The process exit code (may be null if terminated by signal).
-    exitCode: Annotated[
+    exit_code: Annotated[
         Optional[int],
         Field(
+            alias="exitCode",
             description="The process exit code (may be null if terminated by signal).",
             ge=0,
         ),
@@ -436,9 +472,12 @@ class TerminalOutputRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # The ID of the terminal to get output from.
-    terminalId: Annotated[str, Field(description="The ID of the terminal to get output from.")]
+    terminal_id: Annotated[
+        str,
+        Field(alias="terminalId", description="The ID of the terminal to get output from."),
+    ]
 
 
 class TerminalOutputResponse(BaseModel):
@@ -448,9 +487,9 @@ class TerminalOutputResponse(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Exit status if the command has completed.
-    exitStatus: Annotated[
+    exit_status: Annotated[
         Optional[TerminalExitStatus],
-        Field(description="Exit status if the command has completed."),
+        Field(alias="exitStatus", description="Exit status if the command has completed."),
     ] = None
     # The terminal output captured so far.
     output: Annotated[str, Field(description="The terminal output captured so far.")]
@@ -464,7 +503,7 @@ class TextResourceContents(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    mimeType: Optional[str] = None
+    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
     text: str
     uri: str
 
@@ -476,16 +515,19 @@ class FileEditToolCallContent(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The new content after modification.
-    newText: Annotated[str, Field(description="The new content after modification.")]
+    new_text: Annotated[str, Field(alias="newText", description="The new content after modification.")]
     # The original content (None for new files).
-    oldText: Annotated[Optional[str], Field(description="The original content (None for new files).")] = None
+    old_text: Annotated[
+        Optional[str],
+        Field(alias="oldText", description="The original content (None for new files)."),
+    ] = None
     # The file path being modified.
     path: Annotated[str, Field(description="The file path being modified.")]
     type: Literal["diff"]
 
 
 class TerminalToolCallContent(BaseModel):
-    terminalId: str
+    terminal_id: Annotated[str, Field(alias="terminalId")]
     type: Literal["terminal"]
 
 
@@ -508,9 +550,12 @@ class WaitForTerminalExitRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # The ID of the terminal to wait for.
-    terminalId: Annotated[str, Field(description="The ID of the terminal to wait for.")]
+    terminal_id: Annotated[
+        str,
+        Field(alias="terminalId", description="The ID of the terminal to wait for."),
+    ]
 
 
 class WaitForTerminalExitResponse(BaseModel):
@@ -520,9 +565,10 @@ class WaitForTerminalExitResponse(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The process exit code (may be null if terminated by signal).
-    exitCode: Annotated[
+    exit_code: Annotated[
         Optional[int],
         Field(
+            alias="exitCode",
             description="The process exit code (may be null if terminated by signal).",
             ge=0,
         ),
@@ -545,7 +591,7 @@ class WriteTextFileRequest(BaseModel):
     # Absolute path to the file to write.
     path: Annotated[str, Field(description="Absolute path to the file to write.")]
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
 
 
 class WriteTextFileResponse(BaseModel):
@@ -563,17 +609,29 @@ class AgentCapabilities(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Whether the agent supports `session/load`.
-    loadSession: Annotated[Optional[bool], Field(description="Whether the agent supports `session/load`.")] = False
+    load_session: Annotated[
+        Optional[bool],
+        Field(
+            alias="loadSession",
+            description="Whether the agent supports `session/load`.",
+        ),
+    ] = False
     # MCP capabilities supported by the agent.
-    mcpCapabilities: Annotated[
+    mcp_capabilities: Annotated[
         Optional[McpCapabilities],
-        Field(description="MCP capabilities supported by the agent."),
-    ] = McpCapabilities(http=False, sse=False)
+        Field(
+            alias="mcpCapabilities",
+            description="MCP capabilities supported by the agent.",
+        ),
+    ] = {"http": False, "sse": False}
     # Prompt capabilities supported by the agent.
-    promptCapabilities: Annotated[
+    prompt_capabilities: Annotated[
         Optional[PromptCapabilities],
-        Field(description="Prompt capabilities supported by the agent."),
-    ] = PromptCapabilities(audio=False, embeddedContext=False, image=False)
+        Field(
+            alias="promptCapabilities",
+            description="Prompt capabilities supported by the agent.",
+        ),
+    ] = {"audio": False, "embeddedContext": False, "image": False}
 
 
 class AgentErrorMessage(BaseModel):
@@ -603,7 +661,7 @@ class Annotations(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     audience: Optional[List[Role]] = None
-    lastModified: Optional[str] = None
+    last_modified: Annotated[Optional[str], Field(alias="lastModified")] = None
     priority: Optional[float] = None
 
 
@@ -651,7 +709,13 @@ class CancelNotification(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The ID of the session to cancel operations for.
-    sessionId: Annotated[str, Field(description="The ID of the session to cancel operations for.")]
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="The ID of the session to cancel operations for.",
+        ),
+    ]
 
 
 class ClientCapabilities(BaseModel):
@@ -720,7 +784,7 @@ class ImageContentBlock(BaseModel):
     ] = None
     annotations: Optional[Annotations] = None
     data: str
-    mimeType: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
     type: Literal["image"]
     uri: Optional[str] = None
 
@@ -733,7 +797,7 @@ class AudioContentBlock(BaseModel):
     ] = None
     annotations: Optional[Annotations] = None
     data: str
-    mimeType: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
     type: Literal["audio"]
 
 
@@ -745,7 +809,7 @@ class ResourceContentBlock(BaseModel):
     ] = None
     annotations: Optional[Annotations] = None
     description: Optional[str] = None
-    mimeType: Optional[str] = None
+    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
     name: str
     size: Optional[int] = None
     title: Optional[str] = None
@@ -781,15 +845,16 @@ class CreateTerminalRequest(BaseModel):
     # The Client MUST ensure truncation happens at a character boundary to maintain valid
     # string output, even if this means the retained output is slightly less than the
     # specified limit.
-    outputByteLimit: Annotated[
+    output_byte_limit: Annotated[
         Optional[int],
         Field(
+            alias="outputByteLimit",
             description="Maximum number of output bytes to retain.\n\nWhen the limit is exceeded, the Client truncates from the beginning of the output\nto stay within the limit.\n\nThe Client MUST ensure truncation happens at a character boundary to maintain valid\nstring output, even if this means the retained output is slightly less than the\nspecified limit.",
             ge=0,
         ),
     ] = None
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
 
 
 class InitializeRequest(BaseModel):
@@ -799,23 +864,28 @@ class InitializeRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Capabilities supported by the client.
-    clientCapabilities: Annotated[
+    client_capabilities: Annotated[
         Optional[ClientCapabilities],
-        Field(description="Capabilities supported by the client."),
-    ] = ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)
+        Field(
+            alias="clientCapabilities",
+            description="Capabilities supported by the client.",
+        ),
+    ] = {"fs": {"readTextFile": False, "writeTextFile": False}, "terminal": False}
     # Information about the Client name and version sent to the Agent.
     #
     # Note: in future versions of the protocol, this will be required.
-    clientInfo: Annotated[
+    client_info: Annotated[
         Optional[Implementation],
         Field(
-            description="Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required."
+            alias="clientInfo",
+            description="Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required.",
         ),
     ] = None
     # The latest protocol version supported by the client.
-    protocolVersion: Annotated[
+    protocol_version: Annotated[
         int,
         Field(
+            alias="protocolVersion",
             description="The latest protocol version supported by the client.",
             ge=0,
             le=65535,
@@ -830,35 +900,47 @@ class InitializeResponse(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Capabilities supported by the agent.
-    agentCapabilities: Annotated[
+    agent_capabilities: Annotated[
         Optional[AgentCapabilities],
-        Field(description="Capabilities supported by the agent."),
-    ] = AgentCapabilities(
-        loadSession=False,
-        mcpCapabilities=McpCapabilities(http=False, sse=False),
-        promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False),
-    )
+        Field(
+            alias="agentCapabilities",
+            description="Capabilities supported by the agent.",
+        ),
+    ] = {
+        "loadSession": False,
+        "mcpCapabilities": {"http": False, "sse": False},
+        "promptCapabilities": {
+            "audio": False,
+            "embeddedContext": False,
+            "image": False,
+        },
+    }
     # Information about the Agent name and version sent to the Client.
     #
     # Note: in future versions of the protocol, this will be required.
-    agentInfo: Annotated[
+    agent_info: Annotated[
         Optional[Implementation],
         Field(
-            description="Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required."
+            alias="agentInfo",
+            description="Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
         ),
     ] = None
     # Authentication methods supported by the agent.
-    authMethods: Annotated[
+    auth_methods: Annotated[
         Optional[List[AuthMethod]],
-        Field(description="Authentication methods supported by the agent."),
+        Field(
+            alias="authMethods",
+            description="Authentication methods supported by the agent.",
+        ),
     ] = []
     # The protocol version the client specified if supported by the agent,
     # or the latest protocol version supported by the agent.
     #
     # The client should disconnect, if it doesn't support this version.
-    protocolVersion: Annotated[
+    protocol_version: Annotated[
         int,
         Field(
+            alias="protocolVersion",
             description="The protocol version the client specified if supported by the agent,\nor the latest protocol version supported by the agent.\n\nThe client should disconnect, if it doesn't support this version.",
             ge=0,
             le=65535,
@@ -873,9 +955,9 @@ class KillTerminalCommandRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # The ID of the terminal to kill.
-    terminalId: Annotated[str, Field(description="The ID of the terminal to kill.")]
+    terminal_id: Annotated[str, Field(alias="terminalId", description="The ID of the terminal to kill.")]
 
 
 class LoadSessionRequest(BaseModel):
@@ -887,12 +969,15 @@ class LoadSessionRequest(BaseModel):
     # The working directory for this session.
     cwd: Annotated[str, Field(description="The working directory for this session.")]
     # List of MCP servers to connect to for this session.
-    mcpServers: Annotated[
+    mcp_servers: Annotated[
         List[Union[HttpMcpServer, SseMcpServer, StdioMcpServer]],
-        Field(description="List of MCP servers to connect to for this session."),
+        Field(
+            alias="mcpServers",
+            description="List of MCP servers to connect to for this session.",
+        ),
     ]
     # The ID of the session to load.
-    sessionId: Annotated[str, Field(description="The ID of the session to load.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to load.")]
 
 
 class PermissionOption(BaseModel):
@@ -906,7 +991,13 @@ class PermissionOption(BaseModel):
     # Human-readable label to display to the user.
     name: Annotated[str, Field(description="Human-readable label to display to the user.")]
     # Unique identifier for this permission option.
-    optionId: Annotated[str, Field(description="Unique identifier for this permission option.")]
+    option_id: Annotated[
+        str,
+        Field(
+            alias="optionId",
+            description="Unique identifier for this permission option.",
+        ),
+    ]
 
 
 class PlanEntry(BaseModel):
@@ -939,7 +1030,13 @@ class PromptResponse(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Indicates why the agent stopped processing the turn.
-    stopReason: Annotated[StopReason, Field(description="Indicates why the agent stopped processing the turn.")]
+    stop_reason: Annotated[
+        str,
+        Field(
+            alias="stopReason",
+            description="Indicates why the agent stopped processing the turn.",
+        ),
+    ]
 
 
 class ReadTextFileRequest(BaseModel):
@@ -958,7 +1055,7 @@ class ReadTextFileRequest(BaseModel):
     # Absolute path to the file to read.
     path: Annotated[str, Field(description="Absolute path to the file to read.")]
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
 
 
 class ReleaseTerminalRequest(BaseModel):
@@ -968,9 +1065,9 @@ class ReleaseTerminalRequest(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # The ID of the terminal to release.
-    terminalId: Annotated[str, Field(description="The ID of the terminal to release.")]
+    terminal_id: Annotated[str, Field(alias="terminalId", description="The ID of the terminal to release.")]
 
 
 class SessionMode(BaseModel):
@@ -992,12 +1089,18 @@ class SessionModeState(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The set of modes that the Agent can operate in
-    availableModes: Annotated[
+    available_modes: Annotated[
         List[SessionMode],
-        Field(description="The set of modes that the Agent can operate in"),
+        Field(
+            alias="availableModes",
+            description="The set of modes that the Agent can operate in",
+        ),
     ]
     # The current mode the Agent is in.
-    currentModeId: Annotated[str, Field(description="The current mode the Agent is in.")]
+    current_mode_id: Annotated[
+        str,
+        Field(alias="currentModeId", description="The current mode the Agent is in."),
+    ]
 
 
 class AgentPlanUpdate(BaseModel):
@@ -1016,7 +1119,7 @@ class AgentPlanUpdate(BaseModel):
             description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
         ),
     ]
-    sessionUpdate: Literal["plan"]
+    session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
 
 
 class AvailableCommandsUpdate(BaseModel):
@@ -1026,8 +1129,11 @@ class AvailableCommandsUpdate(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # Commands the agent can execute
-    availableCommands: Annotated[List[AvailableCommand], Field(description="Commands the agent can execute")]
-    sessionUpdate: Literal["available_commands_update"]
+    available_commands: Annotated[
+        List[AvailableCommand],
+        Field(alias="availableCommands", description="Commands the agent can execute"),
+    ]
+    session_update: Annotated[Literal["available_commands_update"], Field(alias="sessionUpdate")]
 
 
 class ClientResponseMessage(BaseModel):
@@ -1143,10 +1249,11 @@ class NewSessionResponse(BaseModel):
     # Unique identifier for the created session.
     #
     # Used in all subsequent requests for this conversation.
-    sessionId: Annotated[
+    session_id: Annotated[
         str,
         Field(
-            description="Unique identifier for the created session.\n\nUsed in all subsequent requests for this conversation."
+            alias="sessionId",
+            description="Unique identifier for the created session.\n\nUsed in all subsequent requests for this conversation.",
         ),
     ]
 
@@ -1185,7 +1292,13 @@ class PromptRequest(BaseModel):
         ),
     ]
     # The ID of the session to send this user message to
-    sessionId: Annotated[str, Field(description="The ID of the session to send this user message to")]
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="The ID of the session to send this user message to",
+        ),
+    ]
 
 
 class UserMessageChunk(BaseModel):
@@ -1201,7 +1314,7 @@ class UserMessageChunk(BaseModel):
         ],
         Field(description="A single item of content", discriminator="type"),
     ]
-    sessionUpdate: Literal["user_message_chunk"]
+    session_update: Annotated[Literal["user_message_chunk"], Field(alias="sessionUpdate")]
 
 
 class AgentMessageChunk(BaseModel):
@@ -1217,7 +1330,7 @@ class AgentMessageChunk(BaseModel):
         ],
         Field(description="A single item of content", discriminator="type"),
     ]
-    sessionUpdate: Literal["agent_message_chunk"]
+    session_update: Annotated[Literal["agent_message_chunk"], Field(alias="sessionUpdate")]
 
 
 class AgentThoughtChunk(BaseModel):
@@ -1233,7 +1346,7 @@ class AgentThoughtChunk(BaseModel):
         ],
         Field(description="A single item of content", discriminator="type"),
     ]
-    sessionUpdate: Literal["agent_thought_chunk"]
+    session_update: Annotated[Literal["agent_thought_chunk"], Field(alias="sessionUpdate")]
 
 
 class ContentToolCallContent(BaseModel):
@@ -1266,15 +1379,18 @@ class ToolCall(BaseModel):
         Field(description="Replace the locations collection."),
     ] = None
     # Update the raw input.
-    rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
+    raw_input: Annotated[Optional[Any], Field(alias="rawInput", description="Update the raw input.")] = None
     # Update the raw output.
-    rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
+    raw_output: Annotated[Optional[Any], Field(alias="rawOutput", description="Update the raw output.")] = None
     # Update the execution status.
     status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     # Update the human-readable title.
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     # The ID of the tool call being updated.
-    toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
+    tool_call_id: Annotated[
+        str,
+        Field(alias="toolCallId", description="The ID of the tool call being updated."),
+    ]
 
 
 class RequestPermissionRequest(BaseModel):
@@ -1289,9 +1405,15 @@ class RequestPermissionRequest(BaseModel):
         Field(description="Available permission options for the user to choose from."),
     ]
     # The session ID for this request.
-    sessionId: Annotated[str, Field(description="The session ID for this request.")]
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # Details about the tool call requiring permission.
-    toolCall: Annotated[ToolCall, Field(description="Details about the tool call requiring permission.")]
+    tool_call: Annotated[
+        ToolCall,
+        Field(
+            alias="toolCall",
+            description="Details about the tool call requiring permission.",
+        ),
+    ]
 
 
 class ToolCallStart(BaseModel):
@@ -1320,10 +1442,16 @@ class ToolCallStart(BaseModel):
         Field(description='File locations affected by this tool call.\nEnables "follow-along" features in clients.'),
     ] = None
     # Raw input parameters sent to the tool.
-    rawInput: Annotated[Optional[Any], Field(description="Raw input parameters sent to the tool.")] = None
+    raw_input: Annotated[
+        Optional[Any],
+        Field(alias="rawInput", description="Raw input parameters sent to the tool."),
+    ] = None
     # Raw output returned by the tool.
-    rawOutput: Annotated[Optional[Any], Field(description="Raw output returned by the tool.")] = None
-    sessionUpdate: Literal["tool_call"]
+    raw_output: Annotated[
+        Optional[Any],
+        Field(alias="rawOutput", description="Raw output returned by the tool."),
+    ] = None
+    session_update: Annotated[Literal["tool_call"], Field(alias="sessionUpdate")]
     # Current execution status of the tool call.
     status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     # Human-readable title describing what the tool is doing.
@@ -1332,9 +1460,12 @@ class ToolCallStart(BaseModel):
         Field(description="Human-readable title describing what the tool is doing."),
     ]
     # Unique identifier for this tool call within the session.
-    toolCallId: Annotated[
+    tool_call_id: Annotated[
         str,
-        Field(description="Unique identifier for this tool call within the session."),
+        Field(
+            alias="toolCallId",
+            description="Unique identifier for this tool call within the session.",
+        ),
     ]
 
 
@@ -1357,16 +1488,19 @@ class ToolCallProgress(BaseModel):
         Field(description="Replace the locations collection."),
     ] = None
     # Update the raw input.
-    rawInput: Annotated[Optional[Any], Field(description="Update the raw input.")] = None
+    raw_input: Annotated[Optional[Any], Field(alias="rawInput", description="Update the raw input.")] = None
     # Update the raw output.
-    rawOutput: Annotated[Optional[Any], Field(description="Update the raw output.")] = None
-    sessionUpdate: Literal["tool_call_update"]
+    raw_output: Annotated[Optional[Any], Field(alias="rawOutput", description="Update the raw output.")] = None
+    session_update: Annotated[Literal["tool_call_update"], Field(alias="sessionUpdate")]
     # Update the execution status.
     status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     # Update the human-readable title.
     title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
     # The ID of the tool call being updated.
-    toolCallId: Annotated[str, Field(description="The ID of the tool call being updated.")]
+    tool_call_id: Annotated[
+        str,
+        Field(alias="toolCallId", description="The ID of the tool call being updated."),
+    ]
 
 
 class AgentResponseMessage(BaseModel):
@@ -1448,7 +1582,13 @@ class SessionNotification(BaseModel):
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
     # The ID of the session this update pertains to.
-    sessionId: Annotated[str, Field(description="The ID of the session this update pertains to.")]
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="The ID of the session this update pertains to.",
+        ),
+    ]
     # The actual update content.
     update: Annotated[
         Union[
@@ -1461,7 +1601,7 @@ class SessionNotification(BaseModel):
             AvailableCommandsUpdate,
             CurrentModeUpdate,
         ],
-        Field(description="The actual update content.", discriminator="sessionUpdate"),
+        Field(description="The actual update content.", discriminator="session_update"),
     ]
 
 

@@ -104,7 +104,7 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
         try:
             await conn.prompt(
                 PromptRequest(
-                    sessionId=session_id,
+                    session_id=session_id,
                     prompt=[text_block(line)],
                 )
             )
@@ -146,14 +146,14 @@ async def main(argv: list[str]) -> int:
 
     await conn.initialize(
         InitializeRequest(
-            protocolVersion=PROTOCOL_VERSION,
-            clientCapabilities=ClientCapabilities(),
-            clientInfo=Implementation(name="example-client", title="Example Client", version="0.1.0"),
+            protocol_version=PROTOCOL_VERSION,
+            client_capabilities=ClientCapabilities(),
+            client_info=Implementation(name="example-client", title="Example Client", version="0.1.0"),
         )
     )
-    session = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=os.getcwd()))
+    session = await conn.newSession(NewSessionRequest(mcp_servers=[], cwd=os.getcwd()))
 
-    await interactive_loop(conn, session.sessionId)
+    await interactive_loop(conn, session.session_id)
 
     if proc.returncode is None:
         proc.terminate()

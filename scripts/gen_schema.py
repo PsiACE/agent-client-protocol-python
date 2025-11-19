@@ -173,6 +173,7 @@ def generate_schema(*, format_output: bool = True) -> None:
         "--output-model-type",
         "pydantic_v2.BaseModel",
         "--use-annotated",
+        "--snake-case-field",
     ]
 
     subprocess.check_call(cmd)  # noqa: S603

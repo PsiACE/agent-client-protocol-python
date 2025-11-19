@@ -22,10 +22,10 @@ class EchoAgent(Agent):
         self._conn = conn
 
     async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        return InitializeResponse(protocolVersion=params.protocolVersion)
+        return InitializeResponse(protocol_version=params.protocol_version)
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
-        return NewSessionResponse(sessionId=uuid4().hex)
+        return NewSessionResponse(session_id=uuid4().hex)
 
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         for block in params.prompt:
@@ -34,16 +34,16 @@ class EchoAgent(Agent):
             chunk.field_meta = {"echo": True}
             chunk.content.field_meta = {"echo": True}
 
-            notification = session_notification(params.sessionId, chunk)
+            notification = session_notification(params.session_id, chunk)
             notification.field_meta = {"source": "echo_agent"}
 
             await self._conn.sessionUpdate(notification)
-        return PromptResponse(stopReason="end_turn")
+        return PromptResponse(stop_reason="end_turn")
 
 
 async def main() -> None:
     reader, writer = await stdio_streams()
-    AgentSideConnection(lambda conn: EchoAgent(conn), writer, reader)
+    AgentSideConnection(EchoAgent, writer, reader)
     await asyncio.Event().wait()
 
 
