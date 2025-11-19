@@ -60,3 +60,15 @@ jobs:
 
       - name: Check if documentation can be built
         run: make docs-test
+
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@1ef33e2493308e49729a7789ddd73e7f8bed8f45
+        with:
+          fail: false
