@@ -21,4 +21,3 @@ repos:
         args: [ --exit-non-zero-on-fix ]
         exclude: ^src/acp/(meta|schema)\.py$
       - id: ruff-format
-        exclude: ^src/acp/(meta|schema)\.py$

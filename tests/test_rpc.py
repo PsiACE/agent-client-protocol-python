@@ -3,38 +3,34 @@ import contextlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from acp import (
     Agent,
     AgentSideConnection,
-    AuthenticateRequest,
     AuthenticateResponse,
-    CancelNotification,
     Client,
     ClientSideConnection,
-    InitializeRequest,
+    CreateTerminalResponse,
     InitializeResponse,
-    LoadSessionRequest,
+    KillTerminalCommandResponse,
     LoadSessionResponse,
-    NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
-    ReadTextFileRequest,
     ReadTextFileResponse,
+    ReleaseTerminalResponse,
     RequestError,
     RequestPermissionRequest,
     RequestPermissionResponse,
     SessionNotification,
-    SetSessionModelRequest,
     SetSessionModelResponse,
-    SetSessionModeRequest,
     SetSessionModeResponse,
-    WriteTextFileRequest,
+    TerminalOutputResponse,
+    WaitForTerminalExitResponse,
     WriteTextFileResponse,
-    session_notification,
     spawn_agent_process,
     start_tool_call,
     update_agent_message_text,
@@ -42,9 +38,23 @@ from acp import (
 )
 from acp.schema import (
     AgentMessageChunk,
+    AgentPlanUpdate,
+    AgentThoughtChunk,
     AllowedOutcome,
+    AudioContentBlock,
+    AvailableCommandsUpdate,
+    ClientCapabilities,
+    CurrentModeUpdate,
     DeniedOutcome,
+    EmbeddedResourceContentBlock,
+    EnvVariable,
+    HttpMcpServer,
+    ImageContentBlock,
+    Implementation,
     PermissionOption,
+    ResourceContentBlock,
+    SseMcpServer,
+    StdioMcpServer,
     TextContentBlock,
     ToolCall,
     ToolCallLocation,
@@ -137,45 +147,80 @@ class TestClient(Client):
             RequestPermissionResponse(outcome=AllowedOutcome(option_id=option_id, outcome="selected"))
         )
 
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+    async def request_permission(
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+    ) -> RequestPermissionResponse:
         if self.permission_outcomes:
             return self.permission_outcomes.pop()
         return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse:
-        self.files[str(params.path)] = params.content
+    async def write_text_file(
+        self, content: str, path: str, session_id: str, **kwargs: Any
+    ) -> WriteTextFileResponse | None:
+        self.files[str(path)] = content
         return WriteTextFileResponse()
 
-    async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse:
-        content = self.files.get(str(params.path), "default content")
+    async def read_text_file(
+        self, path: str, session_id: str, limit: int | None = None, line: int | None = None, **kwargs: Any
+    ) -> ReadTextFileResponse:
+        content = self.files.get(str(path), "default content")
         return ReadTextFileResponse(content=content)
 
-    async def sessionUpdate(self, params: SessionNotification) -> None:
-        self.notifications.append(params)
+    async def session_update(
+        self,
+        session_id: str,
+        update: UserMessageChunk
+        | AgentMessageChunk
+        | AgentThoughtChunk
+        | ToolCallStart
+        | ToolCallProgress
+        | AgentPlanUpdate
+        | AvailableCommandsUpdate
+        | CurrentModeUpdate,
+        **kwargs: Any,
+    ) -> None:
+        self.notifications.append(SessionNotification(session_id=session_id, update=update, field_meta=kwargs or None))
 
     # Optional terminal methods (not implemented in this test client)
-    async def createTerminal(self, params):  # pragma: no cover - placeholder
+    async def create_terminal(
+        self,
+        command: str,
+        session_id: str,
+        args: list[str] | None = None,
+        cwd: str | None = None,
+        env: list[EnvVariable] | None = None,
+        output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> CreateTerminalResponse:
         raise NotImplementedError
 
-    async def terminalOutput(self, params):  # pragma: no cover - placeholder
+    async def terminal_output(
+        self, session_id: str, terminal_id: str | None = None, **kwargs: Any
+    ) -> TerminalOutputResponse:  # pragma: no cover - placeholder
         raise NotImplementedError
 
-    async def releaseTerminal(self, params):  # pragma: no cover - placeholder
+    async def release_terminal(
+        self, session_id: str, terminal_id: str | None = None, **kwargs: Any
+    ) -> ReleaseTerminalResponse | None:
         raise NotImplementedError
 
-    async def waitForTerminalExit(self, params):  # pragma: no cover - placeholder
+    async def wait_for_terminal_exit(
+        self, session_id: str, terminal_id: str | None = None, **kwargs: Any
+    ) -> WaitForTerminalExitResponse:
         raise NotImplementedError
 
-    async def killTerminal(self, params):  # pragma: no cover - placeholder
+    async def kill_terminal(
+        self, session_id: str, terminal_id: str | None = None, **kwargs: Any
+    ) -> KillTerminalCommandResponse | None:
         raise NotImplementedError
 
-    async def extMethod(self, method: str, params: dict) -> dict:
+    async def ext_method(self, method: str, params: dict) -> dict:
         self.ext_calls.append((method, params))
         if method == "example.com/ping":
             return {"response": "pong", "params": params}
         raise RequestError.method_not_found(method)
 
-    async def extNotification(self, method: str, params: dict) -> None:
+    async def ext_notification(self, method: str, params: dict) -> None:
         self.ext_notes.append((method, params))
 
 
@@ -188,39 +233,60 @@ class TestAgent(Agent):
         self.ext_calls: list[tuple[str, dict]] = []
         self.ext_notes: list[tuple[str, dict]] = []
 
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
+    async def initialize(
+        self,
+        protocol_version: int,
+        client_capabilities: ClientCapabilities | None = None,
+        client_info: Implementation | None = None,
+        **kwargs: Any,
+    ) -> InitializeResponse:
         # Avoid serializer warnings by omitting defaults
-        return InitializeResponse(protocol_version=params.protocol_version, agent_capabilities=None, auth_methods=[])
+        return InitializeResponse(protocol_version=protocol_version, agent_capabilities=None, auth_methods=[])
 
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
+    async def new_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+    ) -> NewSessionResponse:
         return NewSessionResponse(session_id="test-session-123")
 
-    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse:
+    async def load_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+    ) -> LoadSessionResponse | None:
         return LoadSessionResponse()
 
-    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse:
+    async def authenticate(self, method_id: str, **kwargs: Any) -> AuthenticateResponse | None:
         return AuthenticateResponse()
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        self.prompts.append(params)
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
+        self.prompts.append(PromptRequest(prompt=prompt, session_id=session_id, field_meta=kwargs or None))
         return PromptResponse(stop_reason="end_turn")
 
-    async def cancel(self, params: CancelNotification) -> None:
-        self.cancellations.append(params.session_id)
+    async def cancel(self, session_id: str, **kwargs: Any) -> None:
+        self.cancellations.append(session_id)
 
-    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse:
+    async def set_session_mode(self, mode_id: str, session_id: str, **kwargs: Any) -> SetSessionModeResponse | None:
         return SetSessionModeResponse()
 
-    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse:
+    async def set_session_model(self, model_id: str, session_id: str, **kwargs: Any) -> SetSessionModelResponse | None:
         return SetSessionModelResponse()
 
-    async def extMethod(self, method: str, params: dict) -> dict:
+    async def ext_method(self, method: str, params: dict) -> dict:
         self.ext_calls.append((method, params))
         if method == "example.com/echo":
             return {"echo": params}
         raise RequestError.method_not_found(method)
 
-    async def extNotification(self, method: str, params: dict) -> None:
+    async def ext_notification(self, method: str, params: dict) -> None:
         self.ext_notes.append((method, params))
 
 
@@ -234,31 +300,25 @@ async def test_initialize_and_new_session():
         client = TestClient()
         # server side is agent; client side is client
         agent_conn = ClientSideConnection(lambda _conn: client, s._client_writer, s._client_reader)
-        _client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
+        AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
-        resp = await agent_conn.initialize(InitializeRequest(protocol_version=1))
+        resp = await agent_conn.initialize(protocol_version=1)
         assert isinstance(resp, InitializeResponse)
         assert resp.protocol_version == 1
 
-        new_sess = await agent_conn.newSession(NewSessionRequest(mcp_servers=[], cwd="/test"))
+        new_sess = await agent_conn.new_session(mcp_servers=[], cwd="/test")
         assert new_sess.session_id == "test-session-123"
 
-        load_resp = await agent_conn.loadSession(
-            LoadSessionRequest(session_id=new_sess.session_id, cwd="/test", mcp_servers=[])
-        )
+        load_resp = await agent_conn.load_session(session_id=new_sess.session_id, cwd="/test", mcp_servers=[])
         assert isinstance(load_resp, LoadSessionResponse)
 
-        auth_resp = await agent_conn.authenticate(AuthenticateRequest(method_id="password"))
+        auth_resp = await agent_conn.authenticate(method_id="password")
         assert isinstance(auth_resp, AuthenticateResponse)
 
-        mode_resp = await agent_conn.setSessionMode(
-            SetSessionModeRequest(session_id=new_sess.session_id, mode_id="ask")
-        )
+        mode_resp = await agent_conn.set_session_mode(session_id=new_sess.session_id, mode_id="ask")
         assert isinstance(mode_resp, SetSessionModeResponse)
 
-        model_resp = await agent_conn.setSessionModel(
-            SetSessionModelRequest(session_id=new_sess.session_id, model_id="gpt-4o")
-        )
+        model_resp = await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
         assert isinstance(model_resp, SetSessionModelResponse)
 
 
@@ -272,13 +332,11 @@ async def test_bidirectional_file_ops():
         client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
         # Agent asks client to read
-        res = await client_conn.readTextFile(ReadTextFileRequest(session_id="sess", path="/test/file.txt"))
+        res = await client_conn.read_text_file(session_id="sess", path="/test/file.txt")
         assert res.content == "Hello, World!"
 
         # Agent asks client to write
-        write_result = await client_conn.writeTextFile(
-            WriteTextFileRequest(session_id="sess", path="/test/file.txt", content="Updated")
-        )
+        write_result = await client_conn.write_text_file(session_id="sess", path="/test/file.txt", content="Updated")
         assert isinstance(write_result, WriteTextFileResponse)
         assert client.files["/test/file.txt"] == "Updated"
 
@@ -293,7 +351,7 @@ async def test_cancel_notification_and_capture_wire():
         _client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
         # Send cancel notification from client-side connection to agent
-        await agent_conn.cancel(CancelNotification(session_id="test-123"))
+        await agent_conn.cancel(session_id="test-123")
 
         # Read raw line from server peer (it will be consumed by agent receive loop quickly).
         # Instead, wait a brief moment and assert agent recorded it.
@@ -313,23 +371,19 @@ async def test_session_notifications_flow():
         client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
         # Agent -> Client notifications
-        await client_conn.sessionUpdate(
-            SessionNotification(
-                session_id="sess",
-                update=AgentMessageChunk(
-                    session_update="agent_message_chunk",
-                    content=TextContentBlock(type="text", text="Hello"),
-                ),
-            )
+        await client_conn.session_update(
+            session_id="sess",
+            update=AgentMessageChunk(
+                session_update="agent_message_chunk",
+                content=TextContentBlock(type="text", text="Hello"),
+            ),
         )
-        await client_conn.sessionUpdate(
-            SessionNotification(
-                session_id="sess",
-                update=UserMessageChunk(
-                    session_update="user_message_chunk",
-                    content=TextContentBlock(type="text", text="World"),
-                ),
-            )
+        await client_conn.session_update(
+            session_id="sess",
+            update=UserMessageChunk(
+                session_update="user_message_chunk",
+                content=TextContentBlock(type="text", text="World"),
+            ),
         )
 
         # Wait for async dispatch
@@ -352,7 +406,7 @@ async def test_concurrent_reads():
         client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
         async def read_one(i: int):
-            return await client_conn.readTextFile(ReadTextFileRequest(session_id="sess", path=f"/test/file{i}.txt"))
+            return await client_conn.read_text_file(session_id="sess", path=f"/test/file{i}.txt")
 
         results = await asyncio.gather(*(read_one(i) for i in range(5)))
         for i, res in enumerate(results):
@@ -404,24 +458,24 @@ async def test_set_session_mode_and_extensions():
         client_conn = AgentSideConnection(lambda _conn: agent, s._server_writer, s._server_reader)
 
         # setSessionMode
-        resp = await agent_conn.setSessionMode(SetSessionModeRequest(session_id="sess", mode_id="yolo"))
+        resp = await agent_conn.set_session_mode(session_id="sess", mode_id="yolo")
         assert isinstance(resp, SetSessionModeResponse)
 
-        model_resp = await agent_conn.setSessionModel(SetSessionModelRequest(session_id="sess", model_id="gpt-4o-mini"))
+        model_resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
         assert isinstance(model_resp, SetSessionModelResponse)
 
         # extMethod
-        echo = await agent_conn.extMethod("example.com/echo", {"x": 1})
+        echo = await agent_conn.ext_method("example.com/echo", {"x": 1})
         assert echo == {"echo": {"x": 1}}
 
         # extNotification
-        await agent_conn.extNotification("note", {"y": 2})
+        await agent_conn.ext_notification("note", {"y": 2})
         # allow dispatch
         await asyncio.sleep(0.05)
         assert agent.ext_notes and agent.ext_notes[-1][0] == "note"
 
         # client extension method
-        ping = await client_conn.extMethod("example.com/ping", {"k": 3})
+        ping = await client_conn.ext_method("example.com/ping", {"k": 3})
         assert ping == {"response": "pong", "params": {"k": 3}}
         assert client.ext_calls and client.ext_calls[-1] == ("example.com/ping", {"k": 3})
 
@@ -459,40 +513,55 @@ class _ExampleAgent(Agent):
         self._conn = conn
         return self
 
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        return InitializeResponse(protocol_version=params.protocol_version)
+    async def initialize(
+        self,
+        protocol_version: int,
+        client_capabilities: ClientCapabilities | None = None,
+        client_info: Implementation | None = None,
+        **kwargs: Any,
+    ) -> InitializeResponse:
+        return InitializeResponse(protocol_version=protocol_version)
 
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
+    async def new_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+    ) -> NewSessionResponse:
         return NewSessionResponse(session_id="sess_demo")
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
         assert self._conn is not None
-        self.prompt_requests.append(params)
+        self.prompt_requests.append(PromptRequest(prompt=prompt, session_id=session_id, field_meta=kwargs or None))
 
-        await self._conn.sessionUpdate(
-            session_notification(
-                params.session_id,
-                update_agent_message_text("I'll help you with that."),
-            )
+        await self._conn.session_update(
+            session_id,
+            update_agent_message_text("I'll help you with that."),
         )
 
-        await self._conn.sessionUpdate(
-            session_notification(
-                params.session_id,
-                start_tool_call(
-                    "call_1",
-                    "Modifying configuration",
-                    kind="edit",
-                    status="pending",
-                    locations=[ToolCallLocation(path="/project/config.json")],
-                    raw_input={"path": "/project/config.json"},
-                ),
-            )
+        await self._conn.session_update(
+            session_id,
+            start_tool_call(
+                "call_1",
+                "Modifying configuration",
+                kind="edit",
+                status="pending",
+                locations=[ToolCallLocation(path="/project/config.json")],
+                raw_input={"path": "/project/config.json"},
+            ),
         )
 
-        permission_request = RequestPermissionRequest(
-            session_id=params.session_id,
-            tool_call=ToolCall(
+        permission_request = {
+            "session_id": session_id,
+            "tool_call": ToolCall(
                 tool_call_id="call_1",
                 title="Modifying configuration",
                 kind="edit",
@@ -500,30 +569,26 @@ class _ExampleAgent(Agent):
                 locations=[ToolCallLocation(path="/project/config.json")],
                 raw_input={"path": "/project/config.json"},
             ),
-            options=[
+            "options": [
                 PermissionOption(kind="allow_once", name="Allow", option_id="allow"),
                 PermissionOption(kind="reject_once", name="Reject", option_id="reject"),
             ],
-        )
-        response = await self._conn.requestPermission(permission_request)
+        }
+        response = await self._conn.request_permission(**permission_request)
         self.permission_response = response
 
         if isinstance(response.outcome, AllowedOutcome) and response.outcome.option_id == "allow":
-            await self._conn.sessionUpdate(
-                session_notification(
-                    params.session_id,
-                    update_tool_call(
-                        "call_1",
-                        status="completed",
-                        raw_output={"success": True},
-                    ),
-                )
+            await self._conn.session_update(
+                session_id,
+                update_tool_call(
+                    "call_1",
+                    status="completed",
+                    raw_output={"success": True},
+                ),
             )
-            await self._conn.sessionUpdate(
-                session_notification(
-                    params.session_id,
-                    update_agent_message_text("Done."),
-                )
+            await self._conn.session_update(
+                session_id,
+                update_agent_message_text("Done."),
             )
 
         return PromptResponse(stop_reason="end_turn")
@@ -536,7 +601,23 @@ class _ExampleClient(TestClient):
         super().__init__()
         self.permission_requests: list[RequestPermissionRequest] = []
 
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+    async def request_permission(
+        self,
+        options: list[PermissionOption] | RequestPermissionRequest,
+        session_id: str | None = None,
+        tool_call: ToolCall | None = None,
+        **kwargs: Any,
+    ) -> RequestPermissionResponse:
+        if isinstance(options, RequestPermissionRequest):
+            params = options
+        else:
+            assert session_id is not None and tool_call is not None
+            params = RequestPermissionRequest(
+                options=options,
+                session_id=session_id,
+                tool_call=tool_call,
+                field_meta=kwargs or None,
+            )
         self.permission_requests.append(params)
         if not params.options:
             return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
@@ -553,16 +634,16 @@ async def test_example_agent_permission_flow():
         agent_conn = ClientSideConnection(lambda _conn: client, s._client_writer, s._client_reader)
         AgentSideConnection(lambda conn: agent.bind(conn), s._server_writer, s._server_reader)
 
-        init = await agent_conn.initialize(InitializeRequest(protocol_version=1))
+        init = await agent_conn.initialize(protocol_version=1)
         assert init.protocol_version == 1
 
-        session = await agent_conn.newSession(NewSessionRequest(mcp_servers=[], cwd="/workspace"))
+        session = await agent_conn.new_session(mcp_servers=[], cwd="/workspace")
         assert session.session_id == "sess_demo"
-        prompt = PromptRequest(
+
+        resp = await agent_conn.prompt(
             session_id=session.session_id,
             prompt=[TextContentBlock(type="text", text="Please edit config")],
         )
-        resp = await agent_conn.prompt(prompt)
         assert resp.stop_reason == "end_turn"
         for _ in range(50):
             if len(client.notifications) >= 4:
@@ -610,14 +691,13 @@ async def test_spawn_agent_process_roundtrip(tmp_path):
     test_client = TestClient()
 
     async with spawn_agent_process(lambda _agent: test_client, sys.executable, str(script)) as (client_conn, process):
-        init = await client_conn.initialize(InitializeRequest(protocol_version=1))
+        init = await client_conn.initialize(protocol_version=1)
         assert isinstance(init, InitializeResponse)
-        session = await client_conn.newSession(NewSessionRequest(cwd=str(tmp_path), mcp_servers=[]))
-        prompt = PromptRequest(
+        session = await client_conn.new_session(mcp_servers=[], cwd=str(tmp_path))
+        await client_conn.prompt(
             session_id=session.session_id,
             prompt=[TextContentBlock(type="text", text="hi spawn")],
         )
-        await client_conn.prompt(prompt)
 
         # Wait for echo agent notification to arrive
         for _ in range(50):

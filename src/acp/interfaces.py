@@ -3,11 +3,23 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from .schema import (
+    AgentMessageChunk,
+    AgentPlanUpdate,
+    AgentThoughtChunk,
+    AudioContentBlock,
     AuthenticateRequest,
     AuthenticateResponse,
+    AvailableCommandsUpdate,
     CancelNotification,
+    ClientCapabilities,
     CreateTerminalRequest,
     CreateTerminalResponse,
+    CurrentModeUpdate,
+    EmbeddedResourceContentBlock,
+    EnvVariable,
+    HttpMcpServer,
+    ImageContentBlock,
+    Implementation,
     InitializeRequest,
     InitializeResponse,
     KillTerminalCommandRequest,
@@ -16,6 +28,7 @@ from .schema import (
     LoadSessionResponse,
     NewSessionRequest,
     NewSessionResponse,
+    PermissionOption,
     PromptRequest,
     PromptResponse,
     ReadTextFileRequest,
@@ -24,63 +37,145 @@ from .schema import (
     ReleaseTerminalResponse,
     RequestPermissionRequest,
     RequestPermissionResponse,
+    ResourceContentBlock,
     SessionNotification,
     SetSessionModelRequest,
     SetSessionModelResponse,
     SetSessionModeRequest,
     SetSessionModeResponse,
+    SseMcpServer,
+    StdioMcpServer,
     TerminalOutputRequest,
     TerminalOutputResponse,
+    TextContentBlock,
+    ToolCall,
+    ToolCallProgress,
+    ToolCallStart,
+    UserMessageChunk,
     WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
     WriteTextFileRequest,
     WriteTextFileResponse,
 )
+from .utils import param_model
 
 __all__ = ["Agent", "Client"]
 
 
 class Client(Protocol):
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse: ...
+    @param_model(RequestPermissionRequest)
+    async def request_permission(
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+    ) -> RequestPermissionResponse: ...
 
-    async def sessionUpdate(self, params: SessionNotification) -> None: ...
+    @param_model(SessionNotification)
+    async def session_update(
+        self,
+        session_id: str,
+        update: UserMessageChunk
+        | AgentMessageChunk
+        | AgentThoughtChunk
+        | ToolCallStart
+        | ToolCallProgress
+        | AgentPlanUpdate
+        | AvailableCommandsUpdate
+        | CurrentModeUpdate,
+        **kwargs: Any,
+    ) -> None: ...
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse | None: ...
+    @param_model(WriteTextFileRequest)
+    async def write_text_file(
+        self, content: str, path: str, session_id: str, **kwargs: Any
+    ) -> WriteTextFileResponse | None: ...
 
-    async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse: ...
+    @param_model(ReadTextFileRequest)
+    async def read_text_file(
+        self, path: str, session_id: str, limit: int | None = None, line: int | None = None, **kwargs: Any
+    ) -> ReadTextFileResponse: ...
 
-    async def createTerminal(self, params: CreateTerminalRequest) -> CreateTerminalResponse: ...
+    @param_model(CreateTerminalRequest)
+    async def create_terminal(
+        self,
+        command: str,
+        session_id: str,
+        args: list[str] | None = None,
+        cwd: str | None = None,
+        env: list[EnvVariable] | None = None,
+        output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> CreateTerminalResponse: ...
 
-    async def terminalOutput(self, params: TerminalOutputRequest) -> TerminalOutputResponse: ...
+    @param_model(TerminalOutputRequest)
+    async def terminal_output(self, session_id: str, terminal_id: str, **kwargs: Any) -> TerminalOutputResponse: ...
 
-    async def releaseTerminal(self, params: ReleaseTerminalRequest) -> ReleaseTerminalResponse | None: ...
+    @param_model(ReleaseTerminalRequest)
+    async def release_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> ReleaseTerminalResponse | None: ...
 
-    async def waitForTerminalExit(self, params: WaitForTerminalExitRequest) -> WaitForTerminalExitResponse: ...
+    @param_model(WaitForTerminalExitRequest)
+    async def wait_for_terminal_exit(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> WaitForTerminalExitResponse: ...
 
-    async def killTerminal(self, params: KillTerminalCommandRequest) -> KillTerminalCommandResponse | None: ...
+    @param_model(KillTerminalCommandRequest)
+    async def kill_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> KillTerminalCommandResponse | None: ...
 
-    async def extMethod(self, method: str, params: dict[str, Any]) -> dict[str, Any]: ...
+    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]: ...
 
-    async def extNotification(self, method: str, params: dict[str, Any]) -> None: ...
+    async def ext_notification(self, method: str, params: dict[str, Any]) -> None: ...
 
 
 class Agent(Protocol):
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse: ...
+    @param_model(InitializeRequest)
+    async def initialize(
+        self,
+        protocol_version: int,
+        client_capabilities: ClientCapabilities | None = None,
+        client_info: Implementation | None = None,
+        **kwargs: Any,
+    ) -> InitializeResponse: ...
 
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse: ...
+    @param_model(NewSessionRequest)
+    async def new_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+    ) -> NewSessionResponse: ...
 
-    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse | None: ...
+    @param_model(LoadSessionRequest)
+    async def load_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+    ) -> LoadSessionResponse | None: ...
 
-    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse | None: ...
+    @param_model(SetSessionModeRequest)
+    async def set_session_mode(self, mode_id: str, session_id: str, **kwargs: Any) -> SetSessionModeResponse | None: ...
 
-    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse | None: ...
+    @param_model(SetSessionModelRequest)
+    async def set_session_model(
+        self, model_id: str, session_id: str, **kwargs: Any
+    ) -> SetSessionModelResponse | None: ...
 
-    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse | None: ...
+    @param_model(AuthenticateRequest)
+    async def authenticate(self, method_id: str, **kwargs: Any) -> AuthenticateResponse | None: ...
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse: ...
+    @param_model(PromptRequest)
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse: ...
 
-    async def cancel(self, params: CancelNotification) -> None: ...
+    @param_model(CancelNotification)
+    async def cancel(self, session_id: str, **kwargs: Any) -> None: ...
 
-    async def extMethod(self, method: str, params: dict[str, Any]) -> dict[str, Any]: ...
+    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]: ...
 
-    async def extNotification(self, method: str, params: dict[str, Any]) -> None: ...
+    async def ext_notification(self, method: str, params: dict[str, Any]) -> None: ...

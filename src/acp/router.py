@@ -1,192 +1,135 @@
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel
 
 from .exceptions import RequestError
 
-__all__ = [
-    "MessageRouter",
-    "Route",
-    "RouterBuilder",
-    "attribute_handler",
-]
+__all__ = ["MessageRouter", "Route"]
 
 
 AsyncHandler = Callable[[Any], Awaitable[Any | None]]
+RequestHandler = Callable[[str, dict[str, Any]], Awaitable[Any]]
+HandlerT = TypeVar("HandlerT", bound=RequestHandler)
 
 
 @dataclass(slots=True)
 class Route:
     method: str
-    model: type[BaseModel]
-    handle: Callable[[], AsyncHandler | None]
+    func: AsyncHandler | None
     kind: Literal["request", "notification"]
     optional: bool = False
     default_result: Any = None
     adapt_result: Callable[[Any | None], Any] | None = None
 
-
-class MessageRouter:
-    def __init__(
-        self,
-        routes: Sequence[Route],
-        *,
-        request_extensions: Callable[[str, dict[str, Any]], Awaitable[Any]] | None = None,
-        notification_extensions: Callable[[str, dict[str, Any]], Awaitable[None]] | None = None,
-    ) -> None:
-        self._requests: Mapping[str, Route] = {route.method: route for route in routes if route.kind == "request"}
-        self._notifications: Mapping[str, Route] = {
-            route.method: route for route in routes if route.kind == "notification"
-        }
-        self._request_extensions = request_extensions
-        self._notification_extensions = notification_extensions
-
-    async def dispatch_request(self, method: str, params: Any | None) -> Any:
-        if isinstance(method, str) and method.startswith("_"):
-            if self._request_extensions is None:
-                raise RequestError.method_not_found(method)
-            payload = params if isinstance(params, dict) else {}
-            return await self._request_extensions(method[1:], payload)
-
-        route = self._requests.get(method)
-        if route is None:
-            raise RequestError.method_not_found(method)
-        model = route.model
-        parsed = model.model_validate(params)
-
-        handler = route.handle()
-        if handler is None:
-            if route.optional:
-                return route.default_result
-            raise RequestError.method_not_found(method)
-
-        result = await handler(parsed)
-        if route.adapt_result is not None:
-            return route.adapt_result(result)
+    async def handle(self, params: Any) -> Any:
+        if self.func is None:
+            if self.optional:
+                return self.default_result
+            raise RequestError.method_not_found(self.method)
+        result = await self.func(params)
+        if self.adapt_result is not None and self.kind == "request":
+            return self.adapt_result(result)
         return result
 
-    async def dispatch_notification(self, method: str, params: Any | None) -> None:
-        if isinstance(method, str) and method.startswith("_"):
-            if self._notification_extensions is None:
-                return
-            payload = params if isinstance(params, dict) else {}
-            await self._notification_extensions(method[1:], payload)
-            return
 
-        route = self._notifications.get(method)
-        if route is None:
-            raise RequestError.method_not_found(method)
-        model = route.model
-        parsed = model.model_validate(params)
-
-        handler = route.handle()
-        if handler is None:
-            if route.optional:
-                return
-            raise RequestError.method_not_found(method)
-        await handler(parsed)
-
-
-class RouterBuilder:
+class MessageRouter:
     def __init__(self) -> None:
-        self._routes: list[Route] = []
+        self._requests: dict[str, Route] = {}
+        self._notifications: dict[str, Route] = {}
+        self._request_extensions: RequestHandler | None = None
+        self._notification_extensions: RequestHandler | None = None
 
-    def request(
-        self,
-        method: str,
-        model: type[BaseModel],
-        *,
-        optional: bool = False,
-        default_result: Any = None,
-        adapt_result: Callable[[Any | None], Any] | None = None,
-    ) -> Callable[[Callable[[], AsyncHandler | None]], Callable[[], AsyncHandler | None]]:
-        def decorator(factory: Callable[[], AsyncHandler | None]) -> Callable[[], AsyncHandler | None]:
-            self._routes.append(
-                Route(
-                    method=method,
-                    model=model,
-                    handle=factory,
-                    kind="request",
-                    optional=optional,
-                    default_result=default_result,
-                    adapt_result=adapt_result,
-                )
-            )
-            return factory
+    def add_route(self, route: Route) -> None:
+        if route.kind == "request":
+            self._requests[route.method] = route
+        else:
+            self._notifications[route.method] = route
 
-        return decorator
+    def _make_func(self, model: type[BaseModel], obj: Any, attr: str) -> AsyncHandler | None:
+        func = getattr(obj, attr, None)
+        if func is None or not callable(func):
+            return None
 
-    def notification(
-        self,
-        method: str,
-        model: type[BaseModel],
-        *,
-        optional: bool = False,
-    ) -> Callable[[Callable[[], AsyncHandler | None]], Callable[[], AsyncHandler | None]]:
-        def decorator(factory: Callable[[], AsyncHandler | None]) -> Callable[[], AsyncHandler | None]:
-            self._routes.append(
-                Route(
-                    method=method,
-                    model=model,
-                    handle=factory,
-                    kind="notification",
-                    optional=optional,
-                )
-            )
-            return factory
+        async def wrapper(params: Any) -> Any:
+            model_obj = model.model_validate(params)
+            params = {k: getattr(model_obj, k) for k in model.model_fields if k != "field_meta"}
+            if meta := getattr(model_obj, "field_meta", None):
+                params.update(meta)
+            return await func(**params)  # type: ignore[arg-type]
 
-        return decorator
+        return wrapper
 
-    def build(
-        self,
-        *,
-        request_extensions: Callable[[str, dict[str, Any]], Awaitable[Any]] | None = None,
-        notification_extensions: Callable[[str, dict[str, Any]], Awaitable[None]] | None = None,
-    ) -> MessageRouter:
-        return MessageRouter(
-            routes=self._routes,
-            request_extensions=request_extensions,
-            notification_extensions=notification_extensions,
-        )
-
-    def request_attr(
+    def route_request(
         self,
         method: str,
         model: type[BaseModel],
         obj: Any,
         attr: str,
-        *,
         optional: bool = False,
         default_result: Any = None,
         adapt_result: Callable[[Any | None], Any] | None = None,
-    ) -> None:
-        self.request(
-            method,
-            model,
+    ) -> Route:
+        """Register a request route with obj and attribute name."""
+        route = Route(
+            method=method,
+            func=self._make_func(model, obj, attr),
+            kind="request",
             optional=optional,
             default_result=default_result,
             adapt_result=adapt_result,
-        )(attribute_handler(obj, attr))
+        )
+        self.add_route(route)
+        return route
 
-    def notification_attr(
+    def route_notification(
         self,
         method: str,
         model: type[BaseModel],
         obj: Any,
         attr: str,
-        *,
         optional: bool = False,
-    ) -> None:
-        self.notification(method, model, optional=optional)(attribute_handler(obj, attr))
+    ) -> Route:
+        """Register a notification route with obj and attribute name."""
+        route = Route(
+            method=method,
+            func=self._make_func(model, obj, attr),
+            kind="notification",
+            optional=optional,
+        )
+        self.add_route(route)
+        return route
 
+    def handle_extension_request(self, handler: HandlerT) -> HandlerT:
+        """Register a handler for extension requests."""
+        self._request_extensions = handler
+        return handler
 
-def attribute_handler(obj: Any, attr: str) -> Callable[[], AsyncHandler | None]:
-    def factory() -> AsyncHandler | None:
-        func = getattr(obj, attr, None)
-        return func if callable(func) else None
+    def handle_extension_notification(self, handler: HandlerT) -> HandlerT:
+        """Register a handler for extension notifications."""
+        self._notification_extensions = handler
+        return handler
 
-    return factory
+    async def __call__(self, method: str, params: Any | None, is_notification: bool) -> Any:
+        """The main router call to handle a request or notification."""
+        if is_notification:
+            ext_handler = self._notification_extensions
+            routes = self._notifications
+        else:
+            ext_handler = self._request_extensions
+            routes = self._requests
+
+        if isinstance(method, str) and method.startswith("_"):
+            if ext_handler is None:
+                raise RequestError.method_not_found(method)
+            payload = params if isinstance(params, dict) else {}
+            return await ext_handler(method[1:], payload)
+
+        route = routes.get(method)
+        if route is None:
+            raise RequestError.method_not_found(method)
+
+        return await route.handle(params)

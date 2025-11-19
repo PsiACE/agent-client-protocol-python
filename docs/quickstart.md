@@ -76,27 +76,26 @@ from pathlib import Path
 
 from acp import spawn_agent_process, text_block
 from acp.interfaces import Client
-from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, SessionNotification
 
 
 class SimpleClient(Client):
-    async def requestPermission(self, params):  # pragma: no cover - minimal stub
+    async def request_permission(
+        self, options, session_id, tool_call, **kwargs: Any
+    )
         return {"outcome": {"outcome": "cancelled"}}
 
-    async def sessionUpdate(self, params: SessionNotification) -> None:
-        print("update:", params.session_id, params.update)
+    async def session_update(self, session_id, update, **kwargs):
+        print("update:", session_id, update)
 
 
 async def main() -> None:
     script = Path("examples/echo_agent.py")
     async with spawn_agent_process(lambda _agent: SimpleClient(), sys.executable, str(script)) as (conn, _proc):
-        await conn.initialize(InitializeRequest(protocol_version=1))
-        session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcp_servers=[]))
+        await conn.initialize(protocol_version=1)
+        session = await conn.new_session(cwd=str(script.parent), mcp_servers=[])
         await conn.prompt(
-            PromptRequest(
-                session_id=session.session_id,
-                prompt=[text_block("Hello from spawn!")],
-            )
+            session_id=session.session_id,
+            prompt=[text_block("Hello from spawn!")],
         )
 
 asyncio.run(main())
@@ -111,12 +110,12 @@ _Swap the echo demo for your own `Agent` subclass._
 Create your own agent by subclassing `acp.Agent`. The pattern mirrors the echo example:
 
 ```python
-from acp import Agent, PromptRequest, PromptResponse
+from acp import Agent, PromptResponse
 
 
 class MyAgent(Agent):
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        # inspect params.prompt, stream updates, then finish the turn
+    async def prompt(self, prompt, session_id, **kwargs) -> PromptResponse:
+        # inspect prompt, stream updates, then finish the turn
         return PromptResponse(stop_reason="end_turn")
 ```
 
