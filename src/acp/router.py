@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import inspect
+import warnings
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel
+
+from acp.utils import to_camel_case
 
 from .exceptions import RequestError
 
@@ -50,12 +54,34 @@ class MessageRouter:
             self._notifications[route.method] = route
 
     def _make_func(self, model: type[BaseModel], obj: Any, attr: str) -> AsyncHandler | None:
+        legacy_api = False
         func = getattr(obj, attr, None)
+        if func is None and "_" in attr:
+            attr = to_camel_case(attr)
+            func = getattr(obj, attr, None)
+            legacy_api = True
+        elif callable(func) and "_" not in attr:
+            original_func = func
+            if hasattr(func, "__func__"):
+                original_func = func.__func__
+            parameters = inspect.signature(original_func).parameters
+            if len(parameters) == 2 and "params" in parameters:
+                legacy_api = True
+
         if func is None or not callable(func):
             return None
 
         async def wrapper(params: Any) -> Any:
+            if legacy_api:
+                warnings.warn(
+                    f"The old style method {type(obj).__name__}.{attr} is deprecated, "
+                    "please update to the snake-cased form.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
             model_obj = model.model_validate(params)
+            if legacy_api:
+                return await func(model_obj)  # type: ignore[arg-type]
             params = {k: getattr(model_obj, k) for k in model.model_fields if k != "field_meta"}
             if meta := getattr(model_obj, "field_meta", None):
                 params.update(meta)

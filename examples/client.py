@@ -10,9 +10,7 @@ from typing import Any
 from acp import (
     Client,
     ClientSideConnection,
-    InitializeRequest,
-    NewSessionRequest,
-    PromptRequest,
+    connect_to_agent,
     RequestError,
     text_block,
     PROTOCOL_VERSION,
@@ -190,7 +188,7 @@ async def main(argv: list[str]) -> int:
         return 1
 
     client_impl = ExampleClient()
-    conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
+    conn = connect_to_agent(client_impl, proc.stdin, proc.stdout)
 
     await conn.initialize(
         protocol_version=PROTOCOL_VERSION,

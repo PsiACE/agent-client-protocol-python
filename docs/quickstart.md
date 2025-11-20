@@ -90,7 +90,7 @@ class SimpleClient(Client):
 
 async def main() -> None:
     script = Path("examples/echo_agent.py")
-    async with spawn_agent_process(lambda _agent: SimpleClient(), sys.executable, str(script)) as (conn, _proc):
+    async with spawn_agent_process(SimpleClient(), sys.executable, str(script)) as (conn, _proc):
         await conn.initialize(protocol_version=1)
         session = await conn.new_session(cwd=str(script.parent), mcp_servers=[])
         await conn.prompt(
@@ -119,7 +119,7 @@ class MyAgent(Agent):
         return PromptResponse(stop_reason="end_turn")
 ```
 
-Hook it up with `AgentSideConnection` inside an async entrypoint and wire it to your client. Refer to:
+Run it with `run_agent()` inside an async entrypoint and wire it to your client. Refer to:
 
 - [`examples/echo_agent.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/echo_agent.py) for the smallest streaming agent
 - [`examples/agent.py`](https://github.com/agentclientprotocol/python-sdk/blob/main/examples/agent.py) for an implementation that negotiates capabilities and streams richer updates
