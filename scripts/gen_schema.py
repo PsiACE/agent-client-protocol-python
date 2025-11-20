@@ -6,6 +6,7 @@ import json
 import re
 import subprocess
 import sys
+import textwrap
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -327,11 +328,20 @@ def _ensure_custom_base_model(content: str) -> str:
         if not has_config:
             new_imports.append("ConfigDict")
         lines[idx] = "from pydantic import " + ", ".join(new_imports)
+        to_insert = textwrap.dedent("""\
+            class BaseModel(_BaseModel):
+                model_config = ConfigDict(populate_by_name=True)
+
+                def __getattr__(self, item: str) -> Any:
+                    if item.lower() != item:
+                        snake_cased = "".join("_" + c.lower() if c.isupper() and i > 0 else c.lower() for i, c in enumerate(item))
+                        return getattr(self, snake_cased)
+                    raise AttributeError(f"'{type(self).__name__}' object has no attribute '{item}'")
+        """)
         insert_idx = idx + 1
         lines.insert(insert_idx, "")
-        lines.insert(insert_idx + 1, "class BaseModel(_BaseModel):")
-        lines.insert(insert_idx + 2, "    model_config = ConfigDict(populate_by_name=True)")
-        lines.insert(insert_idx + 3, "")
+        for offset, line in enumerate(to_insert.splitlines(), 1):
+            lines.insert(insert_idx + offset, line)
         break
     return "\n".join(lines) + "\n"
 

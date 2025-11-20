@@ -13,11 +13,12 @@ from typing import Any, Iterable
 
 from acp import (
     Client,
-    ClientSideConnection,
+    connect_to_agent,
     PROTOCOL_VERSION,
     RequestError,
     text_block,
 )
+from acp.core import ClientSideConnection
 from acp.schema import (
     AgentMessageChunk,
     AgentPlanUpdate,
@@ -316,7 +317,7 @@ async def run(argv: list[str]) -> int:
         return 1
 
     client_impl = GeminiClient(auto_approve=args.yolo)
-    conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
+    conn = connect_to_agent(client_impl, proc.stdin, proc.stdout)
 
     try:
         init_resp = await conn.initialize(

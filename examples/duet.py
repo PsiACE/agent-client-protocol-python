@@ -30,7 +30,7 @@ async def main() -> int:
     client_module = _load_client_module(root / "client.py")
     client = client_module.ExampleClient()
 
-    async with spawn_agent_process(lambda _agent: client, sys.executable, str(agent_path), env=env) as (
+    async with spawn_agent_process(client, sys.executable, str(agent_path), env=env) as (
         conn,
         process,
     ):
