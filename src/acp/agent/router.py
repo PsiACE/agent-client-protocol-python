@@ -5,7 +5,7 @@ from typing import Any
 from ..exceptions import RequestError
 from ..interfaces import Agent
 from ..meta import AGENT_METHODS
-from ..router import MessageRouter, RouterBuilder
+from ..router import MessageRouter
 from ..schema import (
     AuthenticateRequest,
     CancelNotification,
@@ -22,33 +22,33 @@ __all__ = ["build_agent_router"]
 
 
 def build_agent_router(agent: Agent) -> MessageRouter:
-    builder = RouterBuilder()
+    router = MessageRouter()
 
-    builder.request_attr(AGENT_METHODS["initialize"], InitializeRequest, agent, "initialize")
-    builder.request_attr(AGENT_METHODS["session_new"], NewSessionRequest, agent, "newSession")
-    builder.request_attr(
+    router.route_request(AGENT_METHODS["initialize"], InitializeRequest, agent, "initialize")
+    router.route_request(AGENT_METHODS["session_new"], NewSessionRequest, agent, "new_session")
+    router.route_request(
         AGENT_METHODS["session_load"],
         LoadSessionRequest,
         agent,
-        "loadSession",
+        "load_session",
         adapt_result=normalize_result,
     )
-    builder.request_attr(
+    router.route_request(
         AGENT_METHODS["session_set_mode"],
         SetSessionModeRequest,
         agent,
-        "setSessionMode",
+        "set_session_mode",
         adapt_result=normalize_result,
     )
-    builder.request_attr(AGENT_METHODS["session_prompt"], PromptRequest, agent, "prompt")
-    builder.request_attr(
+    router.route_request(AGENT_METHODS["session_prompt"], PromptRequest, agent, "prompt")
+    router.route_request(
         AGENT_METHODS["session_set_model"],
         SetSessionModelRequest,
         agent,
-        "setSessionModel",
+        "set_session_model",
         adapt_result=normalize_result,
     )
-    builder.request_attr(
+    router.route_request(
         AGENT_METHODS["authenticate"],
         AuthenticateRequest,
         agent,
@@ -56,21 +56,20 @@ def build_agent_router(agent: Agent) -> MessageRouter:
         adapt_result=normalize_result,
     )
 
-    builder.notification_attr(AGENT_METHODS["session_cancel"], CancelNotification, agent, "cancel")
+    router.route_notification(AGENT_METHODS["session_cancel"], CancelNotification, agent, "cancel")
 
-    async def handle_extension_request(name: str, payload: dict[str, Any]) -> Any:
-        ext = getattr(agent, "extMethod", None)
+    @router.handle_extension_request
+    async def _handle_extension_request(name: str, payload: dict[str, Any]) -> Any:
+        ext = getattr(agent, "ext_method", None)
         if ext is None:
             raise RequestError.method_not_found(f"_{name}")
         return await ext(name, payload)
 
-    async def handle_extension_notification(name: str, payload: dict[str, Any]) -> None:
-        ext = getattr(agent, "extNotification", None)
+    @router.handle_extension_notification
+    async def _handle_extension_notification(name: str, payload: dict[str, Any]) -> None:
+        ext = getattr(agent, "ext_notification", None)
         if ext is None:
             return
         await ext(name, payload)
 
-    return builder.build(
-        request_extensions=handle_extension_request,
-        notification_extensions=handle_extension_notification,
-    )
+    return router

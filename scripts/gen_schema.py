@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 import ast
 import json
 import re
-import shutil
 import subprocess
 import sys
 from collections.abc import Callable
@@ -87,7 +85,7 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
     ("PermissionOption", "kind", "PermissionOptionKind", False),
     ("PlanEntry", "priority", "PlanEntryPriority", False),
     ("PlanEntry", "status", "PlanEntryStatus", False),
-    ("PromptResponse", "stopReason", "StopReason", False),
+    ("PromptResponse", "stop_reason", "StopReason", False),
     ("ToolCallProgress", "kind", "ToolKind", True),
     ("ToolCallProgress", "status", "ToolCallStatus", True),
     ("ToolCallStart", "kind", "ToolKind", True),
@@ -97,23 +95,23 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
 )
 
 DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
-    ("AgentCapabilities", "mcpCapabilities", "McpCapabilities(http=False, sse=False)"),
+    ("AgentCapabilities", "mcp_capabilities", "McpCapabilities()"),
     (
         "AgentCapabilities",
-        "promptCapabilities",
-        "PromptCapabilities(audio=False, embeddedContext=False, image=False)",
+        "prompt_capabilities",
+        "PromptCapabilities()",
     ),
-    ("ClientCapabilities", "fs", "FileSystemCapability(readTextFile=False, writeTextFile=False)"),
+    ("ClientCapabilities", "fs", "FileSystemCapability()"),
     ("ClientCapabilities", "terminal", "False"),
     (
         "InitializeRequest",
-        "clientCapabilities",
-        "ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)",
+        "client_capabilities",
+        "ClientCapabilities()",
     ),
     (
         "InitializeResponse",
-        "agentCapabilities",
-        "AgentCapabilities(loadSession=False, mcpCapabilities=McpCapabilities(http=False, sse=False), promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False))",
+        "agent_capabilities",
+        "AgentCapabilities()",
     ),
 )
 
@@ -126,30 +124,11 @@ class _ProcessingStep:
     apply: Callable[[str], str]
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate src/acp/schema.py from the ACP JSON schema.")
-    parser.add_argument(
-        "--format",
-        dest="format_output",
-        action="store_true",
-        help="Format generated files with 'uv run ruff format'.",
-    )
-    parser.add_argument(
-        "--no-format",
-        dest="format_output",
-        action="store_false",
-        help="Disable formatting with ruff.",
-    )
-    parser.set_defaults(format_output=True)
-    return parser.parse_args()
-
-
 def main() -> None:
-    args = parse_args()
-    generate_schema(format_output=args.format_output)
+    generate_schema()
 
 
-def generate_schema(*, format_output: bool = True) -> None:
+def generate_schema() -> None:
     if not SCHEMA_JSON.exists():
         print(
             "Schema file missing. Ensure schema/schema.json exists (run gen_all.py --version to download).",
@@ -180,9 +159,6 @@ def generate_schema(*, format_output: bool = True) -> None:
     warnings = postprocess_generated_schema(SCHEMA_OUT)
     for warning in warnings:
         print(f"Warning: {warning}", file=sys.stderr)
-
-    if format_output:
-        format_with_ruff(SCHEMA_OUT)
 
 
 def postprocess_generated_schema(output_path: Path) -> list[str]:
@@ -527,17 +503,6 @@ def _inject_enum_aliases(content: str) -> str:
         return content
     insertion_point = class_index + 1  # include leading newline
     return content[:insertion_point] + block + content[insertion_point:]
-
-
-def format_with_ruff(file_path: Path) -> None:
-    uv_executable = shutil.which("uv")
-    if uv_executable is None:
-        print("Warning: 'uv' executable not found; skipping formatting.", file=sys.stderr)
-        return
-    try:
-        subprocess.check_call([uv_executable, "run", "ruff", "format", str(file_path)])  # noqa: S603
-    except (FileNotFoundError, subprocess.CalledProcessError) as exc:  # pragma: no cover - best effort
-        print(f"Warning: failed to format {file_path}: {exc}", file=sys.stderr)
 
 
 if __name__ == "__main__":

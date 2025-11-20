@@ -34,9 +34,9 @@ async def main() -> int:
         conn,
         process,
     ):
-        await conn.initialize(InitializeRequest(protocolVersion=PROTOCOL_VERSION, clientCapabilities=None))
-        session = await conn.newSession(NewSessionRequest(mcpServers=[], cwd=str(root)))
-        await client_module.interactive_loop(conn, session.sessionId)
+        await conn.initialize(protocol_version=PROTOCOL_VERSION, client_capabilities=None)
+        session = await conn.new_session(mcp_servers=[], cwd=str(root))
+        await client_module.interactive_loop(conn, session.session_id)
 
     return process.returncode or 0
 

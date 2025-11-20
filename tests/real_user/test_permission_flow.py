@@ -1,9 +1,18 @@
 import asyncio
+from typing import Any
 
 import pytest
 
-from acp import AgentSideConnection, ClientSideConnection, PromptRequest, PromptResponse, RequestPermissionRequest
-from acp.schema import PermissionOption, TextContentBlock, ToolCall
+from acp import AgentSideConnection, ClientSideConnection, PromptResponse
+from acp.schema import (
+    AudioContentBlock,
+    EmbeddedResourceContentBlock,
+    ImageContentBlock,
+    PermissionOption,
+    ResourceContentBlock,
+    TextContentBlock,
+    ToolCall,
+)
 from tests.test_rpc import TestAgent, TestClient, _Server
 
 # Regression from real-world runs where agents paused prompts to obtain user permission.
@@ -17,19 +26,28 @@ class PermissionRequestAgent(TestAgent):
         self._conn = conn
         self.permission_responses = []
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        permission = await self._conn.requestPermission(
-            RequestPermissionRequest(
-                session_id=params.session_id,
-                options=[
-                    PermissionOption(option_id="allow", name="Allow", kind="allow_once"),
-                    PermissionOption(option_id="deny", name="Deny", kind="reject_once"),
-                ],
-                tool_call=ToolCall(tool_call_id="call-1", title="Write File"),
-            )
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
+        permission = await self._conn.request_permission(
+            session_id=session_id,
+            options=[
+                PermissionOption(option_id="allow", name="Allow", kind="allow_once"),
+                PermissionOption(option_id="deny", name="Deny", kind="reject_once"),
+            ],
+            tool_call=ToolCall(tool_call_id="call-1", title="Write File"),
         )
         self.permission_responses.append(permission)
-        return await super().prompt(params)
+        return await super().prompt(prompt, session_id, **kwargs)
 
 
 @pytest.mark.asyncio
@@ -49,10 +67,8 @@ async def test_agent_request_permission_roundtrip() -> None:
 
         response = await asyncio.wait_for(
             agent_conn.prompt(
-                PromptRequest(
-                    session_id="sess-perm",
-                    prompt=[TextContentBlock(type="text", text="needs approval")],
-                )
+                session_id="sess-perm",
+                prompt=[TextContentBlock(type="text", text="needs approval")],
             ),
             timeout=1.0,
         )

@@ -113,10 +113,6 @@ ignore = [
 
 [tool.ruff.format]
 preview = true
-exclude = [
-    "src/acp/meta.py",
-    "src/acp/schema.py",
-]
 
 [tool.deptry.package_module_name_map]
 opentelemetry-sdk = "opentelemetry"

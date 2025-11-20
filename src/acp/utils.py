@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
@@ -20,6 +21,8 @@ __all__ = [
 ]
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
+MethodT = TypeVar("MethodT", bound=Callable)
+ClassT = TypeVar("ClassT", bound=type)
 
 
 def serialize_params(params: BaseModel) -> dict[str, Any]:
@@ -94,3 +97,14 @@ async def request_optional_model(
 async def notify_model(conn: Connection, method: str, params: BaseModel) -> None:
     """Send a notification with serialized params."""
     await conn.send_notification(method, serialize_params(params))
+
+
+def param_model(param_cls: type[BaseModel]) -> Callable[[MethodT], MethodT]:
+    """Decorator to map the method parameters to a Pydantic model.
+    It is just a marker and does nothing at runtime.
+    """
+
+    def decorator(func: MethodT) -> MethodT:
+        return func
+
+    return decorator
