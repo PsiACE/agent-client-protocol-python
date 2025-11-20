@@ -41,8 +41,8 @@ async def run_agent(
 
     Args:
         agent: The agent implementation to run.
-        input_stream: The input stream to read from (e.g., ``sys.stdin``), defaults to ``sys.stdin``.
-        output_stream: The output stream to write to (e.g., ``sys.stdout``), defaults to ``sys.stdout``.
+        input_stream: The (client) input stream to write to (defaults: ``sys.stdin``).
+        output_stream: The (client) output stream to read from (defaults: ``sys.stdout``).
         **connection_kwargs: Additional keyword arguments to pass to the
             :class:`AgentSideConnection` constructor.
     """
@@ -61,8 +61,8 @@ def connect_to_agent(
 
     Args:
         client: The client implementation to use.
-        input_stream: The input stream to read from (e.g., ``sys.stdin``).
-        output_stream: The output stream to write to (e.g., ``sys.stdout``).
+        input_stream: The (agent) input stream to write to (default: ``sys.stdin``).
+        output_stream: The (agent) output stream to read from (default: ``sys.stdout``).
         **connection_kwargs: Additional keyword arguments to pass to the
             :class:`ClientSideConnection` constructor.
 
