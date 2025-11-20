@@ -11,11 +11,12 @@ from acp import (
     NewSessionResponse,
     PromptResponse,
     SetSessionModeResponse,
-    stdio_streams,
+    run_agent,
     text_block,
     update_agent_message,
     PROTOCOL_VERSION,
 )
+from acp.interfaces import Client
 from acp.schema import (
     AgentCapabilities,
     AgentMessageChunk,
@@ -33,10 +34,14 @@ from acp.schema import (
 
 
 class ExampleAgent(Agent):
-    def __init__(self, conn: AgentSideConnection) -> None:
-        self._conn = conn
+    _conn: Client
+
+    def __init__(self) -> None:
         self._next_session_id = 0
         self._sessions: set[str] = set()
+
+    def on_connect(self, conn: Client) -> None:
+        self._conn = conn
 
     async def _send_agent_message(self, session_id: str, content: Any) -> None:
         update = content if isinstance(content, AgentMessageChunk) else update_agent_message(content)
@@ -114,9 +119,7 @@ class ExampleAgent(Agent):
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    reader, writer = await stdio_streams()
-    AgentSideConnection(ExampleAgent, writer, reader)
-    await asyncio.Event().wait()
+    await run_agent(ExampleAgent())
 
 
 if __name__ == "__main__":

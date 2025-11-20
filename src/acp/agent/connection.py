@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast, final
 
 from ..connection import Connection
-from ..interfaces import Agent
+from ..interfaces import Agent, Client
 from ..meta import CLIENT_METHODS
 from ..schema import (
     AgentMessageChunk,
@@ -38,28 +38,37 @@ from ..schema import (
     WriteTextFileResponse,
 )
 from ..terminal import TerminalHandle
-from ..utils import notify_model, param_model, request_model, request_optional_model
+from ..utils import compatible_class, notify_model, param_model, request_model, request_optional_model
 from .router import build_agent_router
 
 __all__ = ["AgentSideConnection"]
 _AGENT_CONNECTION_ERROR = "AgentSideConnection requires asyncio StreamWriter/StreamReader"
 
 
+@final
+@compatible_class
 class AgentSideConnection:
     """Agent-side connection wrapper that dispatches JSON-RPC messages to a Client implementation."""
 
     def __init__(
         self,
-        to_agent: Callable[[AgentSideConnection], Agent],
+        to_agent: Callable[[Client], Agent] | Agent,
         input_stream: Any,
         output_stream: Any,
+        listening: bool = False,
         **connection_kwargs: Any,
     ) -> None:
-        agent = to_agent(self)
-        handler = build_agent_router(agent)
+        agent = to_agent(cast(Client, self)) if callable(to_agent) else to_agent
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_AGENT_CONNECTION_ERROR)
-        self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
+        handler = build_agent_router(agent)  # type: ignore[arg-type]
+        self._conn = Connection(handler, input_stream, output_stream, listening=listening, **connection_kwargs)
+        if on_connect := getattr(agent, "on_connect", None):
+            on_connect(self)
+
+    async def listen(self) -> None:
+        """Start listening for incoming messages."""
+        await self._conn.main_loop()
 
     @param_model(SessionNotification)
     async def session_update(

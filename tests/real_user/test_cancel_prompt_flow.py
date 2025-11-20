@@ -3,16 +3,16 @@ from typing import Any
 
 import pytest
 
-from acp import AgentSideConnection, ClientSideConnection, PromptResponse
 from acp.schema import (
     AudioContentBlock,
     EmbeddedResourceContentBlock,
     ImageContentBlock,
     PromptRequest,
+    PromptResponse,
     ResourceContentBlock,
     TextContentBlock,
 )
-from tests.test_rpc import TestAgent, TestClient, _Server
+from tests.conftest import TestAgent
 
 # Regression from a real user session where cancel needed to interrupt a long-running prompt.
 
@@ -52,27 +52,24 @@ class LongRunningAgent(TestAgent):
 
 
 @pytest.mark.asyncio
-async def test_cancel_reaches_agent_during_prompt() -> None:
-    async with _Server() as server:
-        agent = LongRunningAgent()
-        client = TestClient()
-        agent_conn = ClientSideConnection(lambda _conn: client, server._client_writer, server._client_reader)
-        _client_conn = AgentSideConnection(lambda _conn: agent, server._server_writer, server._server_reader)
+@pytest.mark.parametrize("agent", [LongRunningAgent()])
+async def test_cancel_reaches_agent_during_prompt(connect, agent) -> None:
+    _, agent_conn = connect()
 
-        prompt_task = asyncio.create_task(
-            agent_conn.prompt(
-                session_id="sess-xyz",
-                prompt=[TextContentBlock(type="text", text="hello")],
-            )
+    prompt_task = asyncio.create_task(
+        agent_conn.prompt(
+            session_id="sess-xyz",
+            prompt=[TextContentBlock(type="text", text="hello")],
         )
+    )
 
-        await agent.prompt_started.wait()
-        assert not prompt_task.done(), "Prompt finished before cancel was sent"
+    await agent.prompt_started.wait()
+    assert not prompt_task.done(), "Prompt finished before cancel was sent"
 
-        await agent_conn.cancel(session_id="sess-xyz")
+    await agent_conn.cancel(session_id="sess-xyz")
 
-        await asyncio.wait_for(agent.cancel_received.wait(), timeout=1.0)
+    await asyncio.wait_for(agent.cancel_received.wait(), timeout=1.0)
 
-        response = await asyncio.wait_for(prompt_task, timeout=1.0)
-        assert response.stop_reason == "cancelled"
-        assert agent.cancellations == ["sess-xyz"]
+    response = await asyncio.wait_for(prompt_task, timeout=1.0)
+    assert response.stop_reason == "cancelled"
+    assert agent.cancellations == ["sess-xyz"]

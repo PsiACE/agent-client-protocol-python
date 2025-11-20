@@ -8,10 +8,11 @@ from acp import (
     InitializeResponse,
     NewSessionResponse,
     PromptResponse,
-    stdio_streams,
+    run_agent,
     text_block,
     update_agent_message,
 )
+from acp.interfaces import Client
 from acp.schema import (
     AudioContentBlock,
     ClientCapabilities,
@@ -27,7 +28,9 @@ from acp.schema import (
 
 
 class EchoAgent(Agent):
-    def __init__(self, conn: AgentSideConnection) -> None:
+    _conn: Client
+
+    def on_connect(self, conn: Client) -> None:
         self._conn = conn
 
     async def initialize(
@@ -67,9 +70,7 @@ class EchoAgent(Agent):
 
 
 async def main() -> None:
-    reader, writer = await stdio_streams()
-    AgentSideConnection(EchoAgent, writer, reader)
-    await asyncio.Event().wait()
+    await run_agent(EchoAgent())
 
 
 if __name__ == "__main__":

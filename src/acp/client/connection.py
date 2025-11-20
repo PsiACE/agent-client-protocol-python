@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast, final
 
 from ..connection import Connection
 from ..interfaces import Agent, Client
@@ -34,24 +34,32 @@ from ..schema import (
     StdioMcpServer,
     TextContentBlock,
 )
-from ..utils import notify_model, param_model, request_model, request_model_from_dict
+from ..utils import compatible_class, notify_model, param_model, request_model, request_model_from_dict
 from .router import build_client_router
 
 __all__ = ["ClientSideConnection"]
 _CLIENT_CONNECTION_ERROR = "ClientSideConnection requires asyncio StreamWriter/StreamReader"
 
 
+@final
+@compatible_class
 class ClientSideConnection:
     """Client-side connection wrapper that dispatches JSON-RPC messages to an Agent implementation."""
 
     def __init__(
-        self, to_client: Callable[[Agent], Client], input_stream: Any, output_stream: Any, **connection_kwargs: Any
+        self,
+        to_client: Callable[[Agent], Client] | Client,
+        input_stream: Any,
+        output_stream: Any,
+        **connection_kwargs: Any,
     ) -> None:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
-        client = to_client(self)
-        handler = build_client_router(client)
+        client = to_client(cast(Agent, self)) if callable(to_client) else to_client
+        handler = build_client_router(client)  # type: ignore[arg-type]
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
+        if on_connect := getattr(client, "on_connect", None):
+            on_connect(self)
 
     @param_model(InitializeRequest)
     async def initialize(
