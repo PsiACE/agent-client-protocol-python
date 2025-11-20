@@ -50,7 +50,7 @@ async def run_agent(
 
     if input_stream is None and output_stream is None:
         output_stream, input_stream = await stdio_streams()
-    conn = AgentSideConnection(agent, input_stream, output_stream, **connection_kwargs)
+    conn = AgentSideConnection(agent, input_stream, output_stream, listening=False, **connection_kwargs)
     await conn.listen()
 
 
