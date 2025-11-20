@@ -13,6 +13,7 @@ nav:
   - Use Cases: use-cases.md
   - Experimental Contrib: contrib.md
   - Releasing: releasing.md
+  - 0.7 Migration Guide: migration-guide-0.7.md
 plugins:
   - search
   - mkdocstrings:

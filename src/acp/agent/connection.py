@@ -55,7 +55,7 @@ class AgentSideConnection:
         to_agent: Callable[[Client], Agent] | Agent,
         input_stream: Any,
         output_stream: Any,
-        listening: bool = False,
+        listening: bool = True,
         **connection_kwargs: Any,
     ) -> None:
         agent = to_agent(cast(Client, self)) if callable(to_agent) else to_agent

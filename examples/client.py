@@ -9,12 +9,12 @@ from typing import Any
 
 from acp import (
     Client,
-    ClientSideConnection,
     connect_to_agent,
     RequestError,
     text_block,
     PROTOCOL_VERSION,
 )
+from acp.core import ClientSideConnection
 from acp.schema import (
     AgentMessageChunk,
     AgentPlanUpdate,
