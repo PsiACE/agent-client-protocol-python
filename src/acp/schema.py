@@ -19,6 +19,12 @@ ToolKind = Literal["read", "edit", "delete", "move", "search", "execute", "think
 class BaseModel(_BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
+    def __getattr__(self, item: str) -> Any:
+        if item.lower() != item:
+            snake_cased = "".join("_" + c.lower() if c.isupper() and i > 0 else c.lower() for i, c in enumerate(item))
+            return getattr(self, snake_cased)
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{item}'")
+
 
 class Jsonrpc(Enum):
     field_2_0 = "2.0"

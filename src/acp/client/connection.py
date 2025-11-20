@@ -56,7 +56,7 @@ class ClientSideConnection:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
         client = to_client(cast(Agent, self)) if callable(to_client) else to_client
-        handler = build_client_router(client)  # type: ignore[arg-type]
+        handler = build_client_router(cast(Client, client))
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
         if on_connect := getattr(client, "on_connect", None):
             on_connect(self)
