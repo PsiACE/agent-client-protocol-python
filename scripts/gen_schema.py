@@ -85,7 +85,7 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
     ("PermissionOption", "kind", "PermissionOptionKind", False),
     ("PlanEntry", "priority", "PlanEntryPriority", False),
     ("PlanEntry", "status", "PlanEntryStatus", False),
-    ("PromptResponse", "stopReason", "StopReason", False),
+    ("PromptResponse", "stop_reason", "StopReason", False),
     ("ToolCallProgress", "kind", "ToolKind", True),
     ("ToolCallProgress", "status", "ToolCallStatus", True),
     ("ToolCallStart", "kind", "ToolKind", True),
@@ -95,23 +95,23 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
 )
 
 DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
-    ("AgentCapabilities", "mcpCapabilities", "McpCapabilities(http=False, sse=False)"),
+    ("AgentCapabilities", "mcp_capabilities", "McpCapabilities()"),
     (
         "AgentCapabilities",
-        "promptCapabilities",
-        "PromptCapabilities(audio=False, embeddedContext=False, image=False)",
+        "prompt_capabilities",
+        "PromptCapabilities()",
     ),
-    ("ClientCapabilities", "fs", "FileSystemCapability(readTextFile=False, writeTextFile=False)"),
+    ("ClientCapabilities", "fs", "FileSystemCapability()"),
     ("ClientCapabilities", "terminal", "False"),
     (
         "InitializeRequest",
-        "clientCapabilities",
-        "ClientCapabilities(fs=FileSystemCapability(readTextFile=False, writeTextFile=False), terminal=False)",
+        "client_capabilities",
+        "ClientCapabilities()",
     ),
     (
         "InitializeResponse",
-        "agentCapabilities",
-        "AgentCapabilities(loadSession=False, mcpCapabilities=McpCapabilities(http=False, sse=False), promptCapabilities=PromptCapabilities(audio=False, embeddedContext=False, image=False))",
+        "agent_capabilities",
+        "AgentCapabilities()",
     ),
 )
 

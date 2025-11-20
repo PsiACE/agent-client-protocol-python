@@ -86,7 +86,7 @@ class NodeTransformer(ast.NodeTransformer):
         ann = field.annotation
         if field.default is PydanticUndefined:
             default = None
-        elif isinstance(field.default, dict):
+        elif isinstance(field.default, dict | BaseModel):
             default = ast.Constant(None)
         else:
             default = ast.Constant(value=field.default)
@@ -128,6 +128,9 @@ class NodeTransformer(ast.NodeTransformer):
 
 
 def gen_signature(source_dir: Path) -> None:
+    import importlib
+
+    importlib.reload(schema)  # Ensure schema is up to date
     for source_file in source_dir.rglob("*.py"):
         transformer = NodeTransformer()
         transformer.transform(source_file)

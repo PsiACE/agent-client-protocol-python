@@ -623,7 +623,7 @@ class AgentCapabilities(BaseModel):
             alias="mcpCapabilities",
             description="MCP capabilities supported by the agent.",
         ),
-    ] = {"http": False, "sse": False}
+    ] = McpCapabilities()
     # Prompt capabilities supported by the agent.
     prompt_capabilities: Annotated[
         Optional[PromptCapabilities],
@@ -631,7 +631,7 @@ class AgentCapabilities(BaseModel):
             alias="promptCapabilities",
             description="Prompt capabilities supported by the agent.",
         ),
-    ] = {"audio": False, "embeddedContext": False, "image": False}
+    ] = PromptCapabilities()
 
 
 class AgentErrorMessage(BaseModel):
@@ -731,7 +731,7 @@ class ClientCapabilities(BaseModel):
         Field(
             description="File system capabilities supported by the client.\nDetermines which file operations the agent can request."
         ),
-    ] = FileSystemCapability(readTextFile=False, writeTextFile=False)
+    ] = FileSystemCapability()
     # Whether the Client support all `terminal/*` methods.
     terminal: Annotated[
         Optional[bool],
@@ -870,7 +870,7 @@ class InitializeRequest(BaseModel):
             alias="clientCapabilities",
             description="Capabilities supported by the client.",
         ),
-    ] = {"fs": {"readTextFile": False, "writeTextFile": False}, "terminal": False}
+    ] = ClientCapabilities()
     # Information about the Client name and version sent to the Agent.
     #
     # Note: in future versions of the protocol, this will be required.
@@ -906,15 +906,7 @@ class InitializeResponse(BaseModel):
             alias="agentCapabilities",
             description="Capabilities supported by the agent.",
         ),
-    ] = {
-        "loadSession": False,
-        "mcpCapabilities": {"http": False, "sse": False},
-        "promptCapabilities": {
-            "audio": False,
-            "embeddedContext": False,
-            "image": False,
-        },
-    }
+    ] = AgentCapabilities()
     # Information about the Agent name and version sent to the Client.
     #
     # Note: in future versions of the protocol, this will be required.
@@ -1031,7 +1023,7 @@ class PromptResponse(BaseModel):
     ] = None
     # Indicates why the agent stopped processing the turn.
     stop_reason: Annotated[
-        str,
+        StopReason,
         Field(
             alias="stopReason",
             description="Indicates why the agent stopped processing the turn.",
