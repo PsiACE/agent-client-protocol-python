@@ -1,10 +1,12 @@
+from typing import Any
+
 from .core import (
     Agent,
-    AgentSideConnection,
     Client,
-    ClientSideConnection,
     RequestError,
     TerminalHandle,
+    connect_to_agent,
+    run_agent,
 )
 from .helpers import (
     audio_block,
@@ -73,6 +75,19 @@ from .schema import (
 from .stdio import spawn_agent_process, spawn_client_process, spawn_stdio_connection, stdio_streams
 from .transports import default_environment, spawn_stdio_transport
 
+_DEPRECATED_NAMES = [
+    (
+        "AgentSideConnection",
+        "acp.core:AgentSideConnection",
+        "Using `AgentSideConnection` directly is deprecated, please use `acp.run_agent` instead.",
+    ),
+    (
+        "ClientSideConnection",
+        "acp.core:ClientSideConnection",
+        "Using `ClientSideConnection` directly is deprecated, please use `acp.connect_to_agent` instead.",
+    ),
+]
+
 __all__ = [  # noqa: RUF022
     # constants
     "PROTOCOL_VERSION",
@@ -113,8 +128,8 @@ __all__ = [  # noqa: RUF022
     "ReleaseTerminalRequest",
     "ReleaseTerminalResponse",
     # core
-    "AgentSideConnection",
-    "ClientSideConnection",
+    "run_agent",
+    "connect_to_agent",
     "RequestError",
     "Agent",
     "Client",
@@ -151,3 +166,16 @@ __all__ = [  # noqa: RUF022
     "start_edit_tool_call",
     "update_tool_call",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    import warnings
+    from importlib import import_module
+
+    for deprecated_name, new_path, warning in _DEPRECATED_NAMES:
+        if name == deprecated_name:
+            warnings.warn(warning, DeprecationWarning, stacklevel=2)
+            module_name, attr_name = new_path.split(":")
+            module = import_module(module_name)
+            return getattr(module, attr_name)
+    raise AttributeError(f"module {__name__} has no attribute {name}")  # noqa: TRY003

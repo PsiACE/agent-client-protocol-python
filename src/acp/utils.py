@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import functools
+import warnings
+from collections.abc import Callable
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
@@ -20,6 +23,9 @@ __all__ = [
 ]
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
+MethodT = TypeVar("MethodT", bound=Callable)
+ClassT = TypeVar("ClassT", bound=type)
+T = TypeVar("T")
 
 
 def serialize_params(params: BaseModel) -> dict[str, Any]:
@@ -94,3 +100,75 @@ async def request_optional_model(
 async def notify_model(conn: Connection, method: str, params: BaseModel) -> None:
     """Send a notification with serialized params."""
     await conn.send_notification(method, serialize_params(params))
+
+
+def param_model(param_cls: type[BaseModel]) -> Callable[[MethodT], MethodT]:
+    """Decorator to map the method parameters to a Pydantic model.
+    It is just a marker and does nothing at runtime.
+    """
+
+    def decorator(func: MethodT) -> MethodT:
+        func.__param_model__ = param_cls  # type: ignore[attr-defined]
+        return func
+
+    return decorator
+
+
+def to_camel_case(snake_str: str) -> str:
+    """Convert snake_case strings to camelCase."""
+    components = snake_str.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
+def _make_legacy_func(func: Callable[..., T], model: type[BaseModel]) -> Callable[[Any, BaseModel], T]:
+    @functools.wraps(func)
+    def wrapped(self, params: BaseModel) -> T:
+        warnings.warn(
+            f"Calling {func.__name__} with {model.__name__} parameter is "  # type: ignore[attr-defined]
+            "deprecated, please update to the new API style.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        kwargs = {k: getattr(params, k) for k in model.model_fields if k != "field_meta"}
+        if meta := getattr(params, "field_meta", None):
+            kwargs.update(meta)
+        return func(self, **kwargs)  # type: ignore[arg-type]
+
+    return wrapped
+
+
+def _make_compatible_func(func: Callable[..., T], model: type[BaseModel]) -> Callable[..., T]:
+    @functools.wraps(func)
+    def wrapped(self, *args: Any, **kwargs: Any) -> T:
+        param = None
+        if not kwargs and len(args) == 1:
+            param = args[0]
+        elif not args and len(kwargs) == 1:
+            param = kwargs.get("params")
+        if isinstance(param, model):
+            warnings.warn(
+                f"Calling {func.__name__} with {model.__name__} parameter "  # type: ignore[attr-defined]
+                "is deprecated, please update to the new API style.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            kwargs = {k: getattr(param, k) for k in model.model_fields if k != "field_meta"}
+            if meta := getattr(param, "field_meta", None):
+                kwargs.update(meta)
+            return func(self, **kwargs)  # type: ignore[arg-type]
+        return func(self, *args, **kwargs)
+
+    return wrapped
+
+
+def compatible_class(cls: ClassT) -> ClassT:
+    """Mark a class as backward compatible with old API style."""
+    for attr in dir(cls):
+        func = getattr(cls, attr)
+        if not callable(func) or (model := getattr(func, "__param_model__", None)) is None:
+            continue
+        if "_" in attr:
+            setattr(cls, to_camel_case(attr), _make_legacy_func(func, model))
+        else:
+            setattr(cls, attr, _make_compatible_func(func, model))
+    return cls

@@ -72,6 +72,7 @@ class Connection:
         dispatcher_factory: DispatcherFactory | None = None,
         sender_factory: SenderFactory | None = None,
         observers: list[StreamObserver] | None = None,
+        listening: bool = True,
     ) -> None:
         self._handler = handler
         self._writer = writer
@@ -83,11 +84,14 @@ class Connection:
         self._queue = queue or InMemoryMessageQueue()
         self._closed = False
         self._sender = (sender_factory or self._default_sender_factory)(self._writer, self._tasks)
-        self._recv_task = self._tasks.create(
-            self._receive_loop(),
-            name="acp.Connection.receive",
-            on_error=self._on_receive_error,
-        )
+        if listening:
+            self._recv_task = self._tasks.create(
+                self._receive_loop(),
+                name="acp.Connection.receive",
+                on_error=self._on_receive_error,
+            )
+        else:
+            self._recv_task = None
         dispatcher_factory = dispatcher_factory or self._default_dispatcher_factory
         self._dispatcher = dispatcher_factory(
             self._queue,
@@ -108,6 +112,14 @@ class Connection:
         await self._sender.close()
         await self._tasks.shutdown()
         self._state.reject_all_outgoing(ConnectionError("Connection closed"))
+
+    async def main_loop(self) -> None:
+        try:
+            await self._receive_loop()
+        except Exception as exc:
+            logging.exception("Connection main loop failed", exc_info=exc)
+            self._on_receive_error(None, exc)  # type: ignore[arg-type]
+            raise
 
     async def __aenter__(self) -> Connection:
         return self

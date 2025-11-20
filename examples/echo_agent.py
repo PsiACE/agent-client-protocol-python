@@ -1,50 +1,76 @@
 import asyncio
+from typing import Any
 from uuid import uuid4
 
 from acp import (
     Agent,
     AgentSideConnection,
-    InitializeRequest,
     InitializeResponse,
-    NewSessionRequest,
     NewSessionResponse,
-    PromptRequest,
     PromptResponse,
-    session_notification,
-    stdio_streams,
+    run_agent,
     text_block,
     update_agent_message,
+)
+from acp.interfaces import Client
+from acp.schema import (
+    AudioContentBlock,
+    ClientCapabilities,
+    EmbeddedResourceContentBlock,
+    HttpMcpServer,
+    ImageContentBlock,
+    Implementation,
+    ResourceContentBlock,
+    SseMcpServer,
+    StdioMcpServer,
+    TextContentBlock,
 )
 
 
 class EchoAgent(Agent):
-    def __init__(self, conn):
+    _conn: Client
+
+    def on_connect(self, conn: Client) -> None:
         self._conn = conn
 
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
-        return InitializeResponse(protocolVersion=params.protocolVersion)
+    async def initialize(
+        self,
+        protocol_version: int,
+        client_capabilities: ClientCapabilities | None = None,
+        client_info: Implementation | None = None,
+        **kwargs: Any,
+    ) -> InitializeResponse:
+        return InitializeResponse(protocol_version=protocol_version)
 
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
-        return NewSessionResponse(sessionId=uuid4().hex)
+    async def new_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+    ) -> NewSessionResponse:
+        return NewSessionResponse(session_id=uuid4().hex)
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        for block in params.prompt:
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
+        for block in prompt:
             text = block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "")
             chunk = update_agent_message(text_block(text))
             chunk.field_meta = {"echo": True}
             chunk.content.field_meta = {"echo": True}
 
-            notification = session_notification(params.sessionId, chunk)
-            notification.field_meta = {"source": "echo_agent"}
-
-            await self._conn.sessionUpdate(notification)
-        return PromptResponse(stopReason="end_turn")
+            await self._conn.session_update(session_id=session_id, update=chunk, source="echo_agent")
+        return PromptResponse(stop_reason="end_turn")
 
 
 async def main() -> None:
-    reader, writer = await stdio_streams()
-    AgentSideConnection(lambda conn: EchoAgent(conn), writer, reader)
-    await asyncio.Event().wait()
+    await run_agent(EchoAgent())
 
 
 if __name__ == "__main__":

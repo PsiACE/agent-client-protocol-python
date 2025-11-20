@@ -29,9 +29,9 @@ class MissingPermissionOptionsError(PermissionBrokerError):
 def default_permission_options() -> tuple[PermissionOption, PermissionOption, PermissionOption]:
     """Return a standard approval/reject option set."""
     return (
-        PermissionOption(optionId="approve", name="Approve", kind="allow_once"),
-        PermissionOption(optionId="approve_for_session", name="Approve for session", kind="allow_always"),
-        PermissionOption(optionId="reject", name="Reject", kind="reject_once"),
+        PermissionOption(option_id="approve", name="Approve", kind="allow_once"),
+        PermissionOption(option_id="approve_for_session", name="Approve for session", kind="allow_always"),
+        PermissionOption(option_id="reject", name="Reject", kind="reject_once"),
     )
 
 
@@ -83,8 +83,8 @@ class PermissionBroker:
             raise MissingPermissionOptionsError()
 
         request = RequestPermissionRequest(
-            sessionId=self._session_id,
-            toolCall=tool_call,
+            session_id=self._session_id,
+            tool_call=tool_call,
             options=list(option_set),
         )
         return await self._requester(request)

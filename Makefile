@@ -8,6 +8,8 @@ install: ## Install the virtual environment and install the pre-commit hooks
 gen-all: ## Generate all code from schema
 	@echo "🚀 Generating all code"
 	@uv run scripts/gen_all.py
+	@uv run ruff check --fix
+	@uv run ruff format .
 
 .PHONY: check
 check: ## Run code quality tools.

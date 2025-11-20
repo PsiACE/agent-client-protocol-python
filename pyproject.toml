@@ -5,7 +5,7 @@ description = "A Python implement of Agent Client Protocol (ACP, by Zed Industri
 authors = [{ name = "Chojan Shang", email = "psiace@apache.org" }]
 readme = "README.md"
 keywords = ['python']
-requires-python = ">=3.10,<=3.14"
+requires-python = ">=3.10,<3.15"
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
@@ -113,10 +113,6 @@ ignore = [
 
 [tool.ruff.format]
 preview = true
-exclude = [
-    "src/acp/meta.py",
-    "src/acp/schema.py",
-]
 
 [tool.deptry.package_module_name_map]
 opentelemetry-sdk = "opentelemetry"

@@ -5,7 +5,7 @@ from typing import Any
 from ..exceptions import RequestError
 from ..interfaces import Client
 from ..meta import CLIENT_METHODS
-from ..router import MessageRouter, RouterBuilder
+from ..router import MessageRouter
 from ..schema import (
     CreateTerminalRequest,
     KillTerminalCommandRequest,
@@ -23,74 +23,73 @@ __all__ = ["build_client_router"]
 
 
 def build_client_router(client: Client) -> MessageRouter:
-    builder = RouterBuilder()
+    router = MessageRouter()
 
-    builder.request_attr(CLIENT_METHODS["fs_write_text_file"], WriteTextFileRequest, client, "writeTextFile")
-    builder.request_attr(CLIENT_METHODS["fs_read_text_file"], ReadTextFileRequest, client, "readTextFile")
-    builder.request_attr(
+    router.route_request(CLIENT_METHODS["fs_write_text_file"], WriteTextFileRequest, client, "write_text_file")
+    router.route_request(CLIENT_METHODS["fs_read_text_file"], ReadTextFileRequest, client, "read_text_file")
+    router.route_request(
         CLIENT_METHODS["session_request_permission"],
         RequestPermissionRequest,
         client,
-        "requestPermission",
+        "request_permission",
     )
-    builder.request_attr(
+    router.route_request(
         CLIENT_METHODS["terminal_create"],
         CreateTerminalRequest,
         client,
-        "createTerminal",
+        "create_terminal",
         optional=True,
         default_result=None,
     )
-    builder.request_attr(
+    router.route_request(
         CLIENT_METHODS["terminal_output"],
         TerminalOutputRequest,
         client,
-        "terminalOutput",
+        "terminal_output",
         optional=True,
         default_result=None,
     )
-    builder.request_attr(
+    router.route_request(
         CLIENT_METHODS["terminal_release"],
         ReleaseTerminalRequest,
         client,
-        "releaseTerminal",
+        "release_terminal",
         optional=True,
         default_result={},
         adapt_result=normalize_result,
     )
-    builder.request_attr(
+    router.route_request(
         CLIENT_METHODS["terminal_wait_for_exit"],
         WaitForTerminalExitRequest,
         client,
-        "waitForTerminalExit",
+        "wait_for_terminal_exit",
         optional=True,
         default_result=None,
     )
-    builder.request_attr(
+    router.route_request(
         CLIENT_METHODS["terminal_kill"],
         KillTerminalCommandRequest,
         client,
-        "killTerminal",
+        "kill_terminal",
         optional=True,
         default_result={},
         adapt_result=normalize_result,
     )
 
-    builder.notification_attr(CLIENT_METHODS["session_update"], SessionNotification, client, "sessionUpdate")
+    router.route_notification(CLIENT_METHODS["session_update"], SessionNotification, client, "session_update")
 
-    async def handle_extension_request(name: str, payload: dict[str, Any]) -> Any:
-        ext = getattr(client, "extMethod", None)
+    @router.handle_extension_request
+    async def _handle_extension_request(name: str, payload: dict[str, Any]) -> Any:
+        ext = getattr(client, "ext_method", None)
         if ext is None:
             raise RequestError.method_not_found(f"_{name}")
         return await ext(name, payload)
 
-    async def handle_extension_notification(name: str, payload: dict[str, Any]) -> None:
-        ext = getattr(client, "extNotification", None)
+    @router.handle_extension_notification
+    async def _handle_extension_notification(name: str, payload: dict[str, Any]) -> None:
+        ext = getattr(client, "ext_notification", None)
         if ext is None:
             return
         await ext(name, payload)
 
-    return builder.build(
-        request_extensions=handle_extension_request,
-        notification_extensions=handle_extension_notification,
-    )
+    return router

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
-from scripts import gen_meta, gen_schema  # noqa: E402  pylint: disable=wrong-import-position
+from scripts import gen_meta, gen_schema, gen_signature  # noqa: E402  pylint: disable=wrong-import-position
 
 SCHEMA_DIR = ROOT / "schema"
 SCHEMA_JSON = SCHEMA_DIR / "schema.json"
@@ -44,18 +44,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip downloading schema files even when a version is provided.",
     )
-    parser.add_argument(
-        "--format",
-        dest="format_output",
-        action="store_true",
-        help="Format generated files with 'uv run ruff format'.",
-    )
-    parser.add_argument(
-        "--no-format",
-        dest="format_output",
-        action="store_false",
-        help="Disable formatting with ruff.",
-    )
     parser.set_defaults(format_output=True)
     parser.add_argument(
         "--force",
@@ -82,8 +70,9 @@ def main() -> None:
         print("schema/schema.json or schema/meta.json missing; run with --version to fetch them.", file=sys.stderr)
         sys.exit(1)
 
-    gen_schema.generate_schema(format_output=args.format_output)
+    gen_schema.generate_schema()
     gen_meta.generate_meta()
+    gen_signature.gen_signature(ROOT / "src" / "acp")
 
     if ref:
         print(f"Generated schema using ref: {ref}")

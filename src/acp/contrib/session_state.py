@@ -62,8 +62,8 @@ class _MutableToolCallState:
         self.status = update.status
         self.content = _copy_model_list(update.content)
         self.locations = _copy_model_list(update.locations)
-        self.raw_input = update.rawInput
-        self.raw_output = update.rawOutput
+        self.raw_input = update.raw_input
+        self.raw_output = update.raw_output
 
     def apply_progress(self, update: ToolCallProgress) -> None:
         if update.title is not None:
@@ -76,10 +76,10 @@ class _MutableToolCallState:
             self.content = _copy_model_list(update.content)
         if update.locations is not None:
             self.locations = _copy_model_list(update.locations)
-        if update.rawInput is not None:
-            self.raw_input = update.rawInput
-        if update.rawOutput is not None:
-            self.raw_output = update.rawOutput
+        if update.raw_input is not None:
+            self.raw_input = update.raw_input
+        if update.raw_output is not None:
+            self.raw_output = update.raw_output
 
     def snapshot(self) -> ToolCallView:
         return ToolCallView(
@@ -185,11 +185,11 @@ class SessionAccumulator:
 
     def _ensure_session(self, notification: SessionNotification) -> None:
         if self.session_id is None:
-            self.session_id = notification.sessionId
+            self.session_id = notification.session_id
             return
 
-        if notification.sessionId != self.session_id:
-            self._handle_session_change(notification.sessionId)
+        if notification.session_id != self.session_id:
+            self._handle_session_change(notification.session_id)
 
     def _handle_session_change(self, session_id: str) -> None:
         expected = self.session_id
@@ -206,14 +206,14 @@ class SessionAccumulator:
     def _apply_update(self, update: Any) -> None:
         if isinstance(update, ToolCallStart):
             state = self._tool_calls.setdefault(
-                update.toolCallId, _MutableToolCallState(tool_call_id=update.toolCallId)
+                update.tool_call_id, _MutableToolCallState(tool_call_id=update.tool_call_id)
             )
             state.apply_start(update)
             return
 
         if isinstance(update, ToolCallProgress):
             state = self._tool_calls.setdefault(
-                update.toolCallId, _MutableToolCallState(tool_call_id=update.toolCallId)
+                update.tool_call_id, _MutableToolCallState(tool_call_id=update.tool_call_id)
             )
             state.apply_progress(update)
             return
@@ -223,11 +223,11 @@ class SessionAccumulator:
             return
 
         if isinstance(update, CurrentModeUpdate):
-            self._current_mode_id = update.currentModeId
+            self._current_mode_id = update.current_mode_id
             return
 
         if isinstance(update, AvailableCommandsUpdate):
-            self._available_commands = _copy_model_list(update.availableCommands) or []
+            self._available_commands = _copy_model_list(update.available_commands) or []
             return
 
         if isinstance(update, UserMessageChunk):

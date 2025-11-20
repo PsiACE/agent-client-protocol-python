@@ -9,52 +9,48 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from acp import (
     Client,
-    ClientSideConnection,
+    connect_to_agent,
     PROTOCOL_VERSION,
     RequestError,
     text_block,
 )
+from acp.core import ClientSideConnection
 from acp.schema import (
     AgentMessageChunk,
     AgentPlanUpdate,
     AgentThoughtChunk,
     AllowedOutcome,
+    AvailableCommandsUpdate,
     CancelNotification,
     ClientCapabilities,
+    CurrentModeUpdate,
+    EnvVariable,
     FileEditToolCallContent,
     FileSystemCapability,
-    CreateTerminalRequest,
     CreateTerminalResponse,
     DeniedOutcome,
     EmbeddedResourceContentBlock,
-    KillTerminalCommandRequest,
     KillTerminalCommandResponse,
     InitializeRequest,
     NewSessionRequest,
     PermissionOption,
     PromptRequest,
-    ReadTextFileRequest,
     ReadTextFileResponse,
-    RequestPermissionRequest,
     RequestPermissionResponse,
     ResourceContentBlock,
-    ReleaseTerminalRequest,
     ReleaseTerminalResponse,
-    SessionNotification,
     TerminalToolCallContent,
-    TerminalOutputRequest,
     TerminalOutputResponse,
     TextContentBlock,
+    ToolCall,
     ToolCallProgress,
     ToolCallStart,
     UserMessageChunk,
-    WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
-    WriteTextFileRequest,
     WriteTextFileResponse,
 )
 
@@ -65,22 +61,21 @@ class GeminiClient(Client):
     def __init__(self, auto_approve: bool) -> None:
         self._auto_approve = auto_approve
 
-    async def requestPermission(
-        self,
-        params: RequestPermissionRequest,
-    ) -> RequestPermissionResponse:  # type: ignore[override]
+    async def request_permission(
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+    ) -> RequestPermissionResponse:
         if self._auto_approve:
-            option = _pick_preferred_option(params.options)
+            option = _pick_preferred_option(options)
             if option is None:
                 return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
-            return RequestPermissionResponse(outcome=AllowedOutcome(optionId=option.optionId, outcome="selected"))
+            return RequestPermissionResponse(outcome=AllowedOutcome(option_id=option.option_id, outcome="selected"))
 
-        title = params.toolCall.title or "<permission>"
-        if not params.options:
+        title = tool_call.title or "<permission>"
+        if not options:
             print(f"\n🔐 Permission requested: {title} (no options, cancelling)")
             return RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled"))
         print(f"\n🔐 Permission requested: {title}")
-        for idx, opt in enumerate(params.options, start=1):
+        for idx, opt in enumerate(options, start=1):
             print(f"  {idx}. {opt.name} ({opt.kind})")
 
         loop = asyncio.get_running_loop()
@@ -90,41 +85,49 @@ class GeminiClient(Client):
                 continue
             if choice.isdigit():
                 idx = int(choice) - 1
-                if 0 <= idx < len(params.options):
-                    opt = params.options[idx]
-                    return RequestPermissionResponse(outcome=AllowedOutcome(optionId=opt.optionId, outcome="selected"))
+                if 0 <= idx < len(options):
+                    opt = options[idx]
+                    return RequestPermissionResponse(
+                        outcome=AllowedOutcome(option_id=opt.option_id, outcome="selected")
+                    )
             print("Invalid selection, try again.")
 
-    async def writeTextFile(
-        self,
-        params: WriteTextFileRequest,
-    ) -> WriteTextFileResponse:  # type: ignore[override]
-        path = Path(params.path)
-        if not path.is_absolute():
-            raise RequestError.invalid_params({"path": params.path, "reason": "path must be absolute"})
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(params.content)
-        print(f"[Client] Wrote {path} ({len(params.content)} bytes)")
+    async def write_text_file(
+        self, content: str, path: str, session_id: str, **kwargs: Any
+    ) -> WriteTextFileResponse | None:
+        pathlib_path = Path(path)
+        if not pathlib_path.is_absolute():
+            raise RequestError.invalid_params({"path": pathlib_path, "reason": "path must be absolute"})
+        pathlib_path.parent.mkdir(parents=True, exist_ok=True)
+        pathlib_path.write_text(content)
+        print(f"[Client] Wrote {pathlib_path} ({len(content)} bytes)")
         return WriteTextFileResponse()
 
-    async def readTextFile(
-        self,
-        params: ReadTextFileRequest,
-    ) -> ReadTextFileResponse:  # type: ignore[override]
-        path = Path(params.path)
-        if not path.is_absolute():
-            raise RequestError.invalid_params({"path": params.path, "reason": "path must be absolute"})
-        text = path.read_text()
-        print(f"[Client] Read {path} ({len(text)} bytes)")
-        if params.line is not None or params.limit is not None:
-            text = _slice_text(text, params.line, params.limit)
+    async def read_text_file(
+        self, path: str, session_id: str, limit: int | None = None, line: int | None = None, **kwargs: Any
+    ) -> ReadTextFileResponse:
+        pathlib_path = Path(path)
+        if not pathlib_path.is_absolute():
+            raise RequestError.invalid_params({"path": pathlib_path, "reason": "path must be absolute"})
+        text = pathlib_path.read_text()
+        print(f"[Client] Read {pathlib_path} ({len(text)} bytes)")
+        if line is not None or limit is not None:
+            text = _slice_text(text, line, limit)
         return ReadTextFileResponse(content=text)
 
-    async def sessionUpdate(
+    async def session_update(
         self,
-        params: SessionNotification,
-    ) -> None:  # type: ignore[override]
-        update = params.update
+        session_id: str,
+        update: UserMessageChunk
+        | AgentMessageChunk
+        | AgentThoughtChunk
+        | ToolCallStart
+        | ToolCallProgress
+        | AgentPlanUpdate
+        | AvailableCommandsUpdate
+        | CurrentModeUpdate,
+        **kwargs: Any,
+    ) -> None:
         if isinstance(update, AgentMessageChunk):
             _print_text_content(update.content)
         elif isinstance(update, AgentThoughtChunk):
@@ -141,52 +144,52 @@ class GeminiClient(Client):
             print(f"\n🔧 {update.title} ({update.status or 'pending'})")
         elif isinstance(update, ToolCallProgress):
             status = update.status or "in_progress"
-            print(f"\n🔧 Tool call `{update.toolCallId}` → {status}")
+            print(f"\n🔧 Tool call `{update.tool_call_id}` → {status}")
             if update.content:
                 for item in update.content:
                     if isinstance(item, FileEditToolCallContent):
                         print(f"  diff: {item.path}")
                     elif isinstance(item, TerminalToolCallContent):
-                        print(f"  terminal: {item.terminalId}")
+                        print(f"  terminal: {item.terminal_id}")
                     elif isinstance(item, dict):
                         print(f"  content: {json.dumps(item, indent=2)}")
         else:
             print(f"\n[session update] {update}")
 
     # Optional / terminal-related methods ---------------------------------
-    async def createTerminal(
+    async def create_terminal(
         self,
-        params: CreateTerminalRequest,
-    ) -> CreateTerminalResponse:  # type: ignore[override]
-        print(f"[Client] createTerminal: {params}")
-        return CreateTerminalResponse(terminalId="term-1")
+        command: str,
+        session_id: str,
+        args: list[str] | None = None,
+        cwd: str | None = None,
+        env: list[EnvVariable] | None = None,
+        output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> CreateTerminalResponse:
+        print(f"[Client] createTerminal: {command} {args or []} (cwd={cwd})")
+        return CreateTerminalResponse(terminal_id="term-1")
 
-    async def terminalOutput(
-        self,
-        params: TerminalOutputRequest,
-    ) -> TerminalOutputResponse:  # type: ignore[override]
-        print(f"[Client] terminalOutput: {params}")
+    async def terminal_output(self, session_id: str, terminal_id: str, **kwargs: Any) -> TerminalOutputResponse:
+        print(f"[Client] terminalOutput: {session_id} {terminal_id}")
         return TerminalOutputResponse(output="", truncated=False)
 
-    async def releaseTerminal(
-        self,
-        params: ReleaseTerminalRequest,
-    ) -> ReleaseTerminalResponse:  # type: ignore[override]
-        print(f"[Client] releaseTerminal: {params}")
+    async def release_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> ReleaseTerminalResponse | None:
+        print(f"[Client] releaseTerminal: {session_id} {terminal_id}")
         return ReleaseTerminalResponse()
 
-    async def waitForTerminalExit(
-        self,
-        params: WaitForTerminalExitRequest,
-    ) -> WaitForTerminalExitResponse:  # type: ignore[override]
-        print(f"[Client] waitForTerminalExit: {params}")
+    async def wait_for_terminal_exit(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> WaitForTerminalExitResponse:
+        print(f"[Client] waitForTerminalExit: {session_id} {terminal_id}")
         return WaitForTerminalExitResponse()
 
-    async def killTerminal(
-        self,
-        params: KillTerminalCommandRequest,
-    ) -> KillTerminalCommandResponse:  # type: ignore[override]
-        print(f"[Client] killTerminal: {params}")
+    async def kill_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> KillTerminalCommandResponse | None:
+        print(f"[Client] killTerminal: {session_id} {terminal_id}")
         return KillTerminalCommandResponse()
 
 
@@ -246,15 +249,13 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
         if line in {":exit", ":quit"}:
             break
         if line == ":cancel":
-            await conn.cancel(CancelNotification(sessionId=session_id))
+            await conn.cancel(session_id=session_id)
             continue
 
         try:
             await conn.prompt(
-                PromptRequest(
-                    sessionId=session_id,
-                    prompt=[text_block(line)],
-                )
+                session_id=session_id,
+                prompt=[text_block(line)],
             )
         except RequestError as err:
             _print_request_error("prompt", err)
@@ -316,17 +317,15 @@ async def run(argv: list[str]) -> int:
         return 1
 
     client_impl = GeminiClient(auto_approve=args.yolo)
-    conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
+    conn = connect_to_agent(client_impl, proc.stdin, proc.stdout)
 
     try:
         init_resp = await conn.initialize(
-            InitializeRequest(
-                protocolVersion=PROTOCOL_VERSION,
-                clientCapabilities=ClientCapabilities(
-                    fs=FileSystemCapability(readTextFile=True, writeTextFile=True),
-                    terminal=True,
-                ),
-            )
+            protocol_version=PROTOCOL_VERSION,
+            client_capabilities=ClientCapabilities(
+                fs=FileSystemCapability(read_text_file=True, write_text_file=True),
+                terminal=True,
+            ),
         )
     except RequestError as err:
         _print_request_error("initialize", err)
@@ -337,14 +336,12 @@ async def run(argv: list[str]) -> int:
         await _shutdown(proc, conn)
         return 1
 
-    print(f"✅ Connected to Gemini (protocol v{init_resp.protocolVersion})")
+    print(f"✅ Connected to Gemini (protocol v{init_resp.protocol_version})")
 
     try:
-        session = await conn.newSession(
-            NewSessionRequest(
-                cwd=os.getcwd(),
-                mcpServers=[],
-            )
+        session = await conn.new_session(
+            cwd=os.getcwd(),
+            mcp_servers=[],
         )
     except RequestError as err:
         _print_request_error("new_session", err)
@@ -355,10 +352,10 @@ async def run(argv: list[str]) -> int:
         await _shutdown(proc, conn)
         return 1
 
-    print(f"📝 Created session: {session.sessionId}")
+    print(f"📝 Created session: {session.session_id}")
 
     try:
-        await interactive_loop(conn, session.sessionId)
+        await interactive_loop(conn, session.session_id)
     finally:
         await _shutdown(proc, conn)
 
