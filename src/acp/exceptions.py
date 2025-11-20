@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 __all__ = ["RequestError"]
 
@@ -13,34 +13,34 @@ class RequestError(Exception):
         self.code = code
         self.data = data
 
-    @staticmethod
-    def parse_error(data: dict[str, Any] | None = None) -> RequestError:
-        return RequestError(-32700, "Parse error", data)
+    @classmethod
+    def parse_error(cls, data: dict[str, Any] | None = None) -> Self:
+        return cls(-32700, "Parse error", data)
 
-    @staticmethod
-    def invalid_request(data: dict[str, Any] | None = None) -> RequestError:
-        return RequestError(-32600, "Invalid request", data)
+    @classmethod
+    def invalid_request(cls, data: dict[str, Any] | None = None) -> Self:
+        return cls(-32600, "Invalid request", data)
 
-    @staticmethod
-    def method_not_found(method: str) -> RequestError:
-        return RequestError(-32601, "Method not found", {"method": method})
+    @classmethod
+    def method_not_found(cls, method: str) -> Self:
+        return cls(-32601, "Method not found", {"method": method})
 
-    @staticmethod
-    def invalid_params(data: dict[str, Any] | None = None) -> RequestError:
-        return RequestError(-32602, "Invalid params", data)
+    @classmethod
+    def invalid_params(cls, data: dict[str, Any] | None = None) -> Self:
+        return cls(-32602, "Invalid params", data)
 
-    @staticmethod
-    def internal_error(data: dict[str, Any] | None = None) -> RequestError:
-        return RequestError(-32603, "Internal error", data)
+    @classmethod
+    def internal_error(cls, data: dict[str, Any] | None = None) -> Self:
+        return cls(-32603, "Internal error", data)
 
-    @staticmethod
-    def auth_required(data: dict[str, Any] | None = None) -> RequestError:
-        return RequestError(-32000, "Authentication required", data)
+    @classmethod
+    def auth_required(cls, data: dict[str, Any] | None = None) -> Self:
+        return cls(-32000, "Authentication required", data)
 
-    @staticmethod
-    def resource_not_found(uri: str | None = None) -> RequestError:
+    @classmethod
+    def resource_not_found(cls, uri: str | None = None) -> Self:
         data = {"uri": uri} if uri is not None else None
-        return RequestError(-32002, "Resource not found", data)
+        return cls(-32002, "Resource not found", data)
 
     def to_error_obj(self) -> dict[str, Any]:
         return {"code": self.code, "message": str(self), "data": self.data}
