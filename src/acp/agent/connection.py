@@ -4,14 +4,21 @@ import asyncio
 from collections.abc import Callable
 from typing import Any
 
-from ..connection import Connection, MethodHandler
+from ..connection import Connection
 from ..interfaces import Agent
 from ..meta import CLIENT_METHODS
 from ..schema import (
+    AgentMessageChunk,
+    AgentPlanUpdate,
+    AgentThoughtChunk,
+    AvailableCommandsUpdate,
     CreateTerminalRequest,
     CreateTerminalResponse,
+    CurrentModeUpdate,
+    EnvVariable,
     KillTerminalCommandRequest,
     KillTerminalCommandResponse,
+    PermissionOption,
     ReadTextFileRequest,
     ReadTextFileResponse,
     ReleaseTerminalRequest,
@@ -21,17 +28,20 @@ from ..schema import (
     SessionNotification,
     TerminalOutputRequest,
     TerminalOutputResponse,
+    ToolCall,
+    ToolCallProgress,
+    ToolCallStart,
+    UserMessageChunk,
     WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
     WriteTextFileRequest,
     WriteTextFileResponse,
 )
 from ..terminal import TerminalHandle
-from ..utils import notify_model, request_model, request_optional_model
+from ..utils import notify_model, param_model, request_model, request_optional_model
 from .router import build_agent_router
 
 __all__ = ["AgentSideConnection"]
-
 _AGENT_CONNECTION_ERROR = "AgentSideConnection requires asyncio StreamWriter/StreamReader"
 
 
@@ -46,95 +56,139 @@ class AgentSideConnection:
         **connection_kwargs: Any,
     ) -> None:
         agent = to_agent(self)
-        handler = self._create_handler(agent)
-
+        handler = build_agent_router(agent)
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_AGENT_CONNECTION_ERROR)
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
 
-    def _create_handler(self, agent: Agent) -> MethodHandler:
-        router = build_agent_router(agent)
+    @param_model(SessionNotification)
+    async def session_update(
+        self,
+        session_id: str,
+        update: UserMessageChunk
+        | AgentMessageChunk
+        | AgentThoughtChunk
+        | ToolCallStart
+        | ToolCallProgress
+        | AgentPlanUpdate
+        | AvailableCommandsUpdate
+        | CurrentModeUpdate,
+        **kwargs: Any,
+    ) -> None:
+        await notify_model(
+            self._conn,
+            CLIENT_METHODS["session_update"],
+            SessionNotification(session_id=session_id, update=update, field_meta=kwargs or None),
+        )
 
-        async def handler(method: str, params: Any | None, is_notification: bool) -> Any:
-            if is_notification:
-                await router.dispatch_notification(method, params)
-                return None
-            return await router.dispatch_request(method, params)
-
-        return handler
-
-    async def sessionUpdate(self, params: SessionNotification) -> None:
-        await notify_model(self._conn, CLIENT_METHODS["session_update"], params)
-
-    async def requestPermission(self, params: RequestPermissionRequest) -> RequestPermissionResponse:
+    @param_model(RequestPermissionRequest)
+    async def request_permission(
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+    ) -> RequestPermissionResponse:
         return await request_model(
             self._conn,
             CLIENT_METHODS["session_request_permission"],
-            params,
+            RequestPermissionRequest(
+                options=options, session_id=session_id, tool_call=tool_call, field_meta=kwargs or None
+            ),
             RequestPermissionResponse,
         )
 
-    async def readTextFile(self, params: ReadTextFileRequest) -> ReadTextFileResponse:
+    @param_model(ReadTextFileRequest)
+    async def read_text_file(
+        self, path: str, session_id: str, limit: int | None = None, line: int | None = None, **kwargs: Any
+    ) -> ReadTextFileResponse:
         return await request_model(
             self._conn,
             CLIENT_METHODS["fs_read_text_file"],
-            params,
+            ReadTextFileRequest(path=path, session_id=session_id, limit=limit, line=line, field_meta=kwargs or None),
             ReadTextFileResponse,
         )
 
-    async def writeTextFile(self, params: WriteTextFileRequest) -> WriteTextFileResponse | None:
+    @param_model(WriteTextFileRequest)
+    async def write_text_file(
+        self, content: str, path: str, session_id: str, **kwargs: Any
+    ) -> WriteTextFileResponse | None:
         return await request_optional_model(
             self._conn,
             CLIENT_METHODS["fs_write_text_file"],
-            params,
+            WriteTextFileRequest(content=content, path=path, session_id=session_id, field_meta=kwargs or None),
             WriteTextFileResponse,
         )
 
-    async def createTerminal(self, params: CreateTerminalRequest) -> TerminalHandle:
+    @param_model(CreateTerminalRequest)
+    async def create_terminal(
+        self,
+        command: str,
+        session_id: str,
+        args: list[str] | None = None,
+        cwd: str | None = None,
+        env: list[EnvVariable] | None = None,
+        output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> TerminalHandle:
         create_response = await request_model(
             self._conn,
             CLIENT_METHODS["terminal_create"],
-            params,
+            CreateTerminalRequest(
+                command=command,
+                session_id=session_id,
+                args=args,
+                cwd=cwd,
+                env=env,
+                output_byte_limit=output_byte_limit,
+                field_meta=kwargs or None,
+            ),
             CreateTerminalResponse,
         )
-        return TerminalHandle(create_response.terminal_id, params.session_id, self._conn)
+        return TerminalHandle(create_response.terminal_id, session_id, self._conn)
 
-    async def terminalOutput(self, params: TerminalOutputRequest) -> TerminalOutputResponse:
+    @param_model(TerminalOutputRequest)
+    async def terminal_output(self, session_id: str, terminal_id: str, **kwargs: Any) -> TerminalOutputResponse:
         return await request_model(
             self._conn,
             CLIENT_METHODS["terminal_output"],
-            params,
+            TerminalOutputRequest(session_id=session_id, terminal_id=terminal_id, field_meta=kwargs or None),
             TerminalOutputResponse,
         )
 
-    async def releaseTerminal(self, params: ReleaseTerminalRequest) -> ReleaseTerminalResponse | None:
+    @param_model(ReleaseTerminalRequest)
+    async def release_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> ReleaseTerminalResponse | None:
         return await request_optional_model(
             self._conn,
             CLIENT_METHODS["terminal_release"],
-            params,
+            ReleaseTerminalRequest(session_id=session_id, terminal_id=terminal_id, field_meta=kwargs or None),
             ReleaseTerminalResponse,
         )
 
-    async def waitForTerminalExit(self, params: WaitForTerminalExitRequest) -> WaitForTerminalExitResponse:
+    @param_model(WaitForTerminalExitRequest)
+    async def wait_for_terminal_exit(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> WaitForTerminalExitResponse:
         return await request_model(
             self._conn,
             CLIENT_METHODS["terminal_wait_for_exit"],
-            params,
+            WaitForTerminalExitRequest(session_id=session_id, terminal_id=terminal_id, field_meta=kwargs or None),
             WaitForTerminalExitResponse,
         )
 
-    async def killTerminal(self, params: KillTerminalCommandRequest) -> KillTerminalCommandResponse | None:
+    @param_model(KillTerminalCommandRequest)
+    async def kill_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> KillTerminalCommandResponse | None:
         return await request_optional_model(
             self._conn,
             CLIENT_METHODS["terminal_kill"],
-            params,
+            KillTerminalCommandRequest(session_id=session_id, terminal_id=terminal_id, field_meta=kwargs or None),
             KillTerminalCommandResponse,
         )
 
-    async def extMethod(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         return await self._conn.send_request(f"_{method}", params)
 
-    async def extNotification(self, method: str, params: dict[str, Any]) -> None:
+    async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
         await self._conn.send_notification(f"_{method}", params)
 
     async def close(self) -> None:

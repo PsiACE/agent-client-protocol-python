@@ -1,9 +1,17 @@
 import asyncio
+from typing import Any
 
 import pytest
 
-from acp import AgentSideConnection, CancelNotification, ClientSideConnection, PromptRequest, PromptResponse
-from acp.schema import TextContentBlock
+from acp import AgentSideConnection, ClientSideConnection, PromptResponse
+from acp.schema import (
+    AudioContentBlock,
+    EmbeddedResourceContentBlock,
+    ImageContentBlock,
+    PromptRequest,
+    ResourceContentBlock,
+    TextContentBlock,
+)
 from tests.test_rpc import TestAgent, TestClient, _Server
 
 # Regression from a real user session where cancel needed to interrupt a long-running prompt.
@@ -17,8 +25,19 @@ class LongRunningAgent(TestAgent):
         self.prompt_started = asyncio.Event()
         self.cancel_received = asyncio.Event()
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
-        self.prompts.append(params)
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
+        self.prompts.append(PromptRequest(prompt=prompt, session_id=session_id, field_meta=kwargs or None))
         self.prompt_started.set()
         try:
             await asyncio.wait_for(self.cancel_received.wait(), timeout=1.0)
@@ -27,8 +46,8 @@ class LongRunningAgent(TestAgent):
             raise AssertionError(msg) from exc
         return PromptResponse(stop_reason="cancelled")
 
-    async def cancel(self, params: CancelNotification) -> None:
-        await super().cancel(params)
+    async def cancel(self, session_id: str, **kwargs: Any) -> None:
+        await super().cancel(session_id, **kwargs)
         self.cancel_received.set()
 
 
@@ -40,16 +59,17 @@ async def test_cancel_reaches_agent_during_prompt() -> None:
         agent_conn = ClientSideConnection(lambda _conn: client, server._client_writer, server._client_reader)
         _client_conn = AgentSideConnection(lambda _conn: agent, server._server_writer, server._server_reader)
 
-        prompt_request = PromptRequest(
-            session_id="sess-xyz",
-            prompt=[TextContentBlock(type="text", text="hello")],
+        prompt_task = asyncio.create_task(
+            agent_conn.prompt(
+                session_id="sess-xyz",
+                prompt=[TextContentBlock(type="text", text="hello")],
+            )
         )
-        prompt_task = asyncio.create_task(agent_conn.prompt(prompt_request))
 
         await agent.prompt_started.wait()
         assert not prompt_task.done(), "Prompt finished before cancel was sent"
 
-        await agent_conn.cancel(CancelNotification(session_id="sess-xyz"))
+        await agent_conn.cancel(session_id="sess-xyz")
 
         await asyncio.wait_for(agent.cancel_received.wait(), timeout=1.0)
 

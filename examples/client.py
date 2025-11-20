@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 from acp import (
     Client,
@@ -13,49 +14,98 @@ from acp import (
     NewSessionRequest,
     PromptRequest,
     RequestError,
-    SessionNotification,
     text_block,
     PROTOCOL_VERSION,
 )
 from acp.schema import (
     AgentMessageChunk,
+    AgentPlanUpdate,
+    AgentThoughtChunk,
     AudioContentBlock,
+    AvailableCommandsUpdate,
     ClientCapabilities,
+    CreateTerminalResponse,
+    CurrentModeUpdate,
     EmbeddedResourceContentBlock,
+    EnvVariable,
     ImageContentBlock,
     Implementation,
+    KillTerminalCommandResponse,
+    PermissionOption,
+    ReadTextFileResponse,
+    ReleaseTerminalResponse,
+    RequestPermissionResponse,
     ResourceContentBlock,
+    TerminalOutputResponse,
     TextContentBlock,
+    ToolCall,
+    ToolCallProgress,
+    ToolCallStart,
+    UserMessageChunk,
+    WaitForTerminalExitResponse,
+    WriteTextFileResponse,
 )
 
 
 class ExampleClient(Client):
-    async def requestPermission(self, params):  # type: ignore[override]
+    async def request_permission(
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+    ) -> RequestPermissionResponse:
         raise RequestError.method_not_found("session/request_permission")
 
-    async def writeTextFile(self, params):  # type: ignore[override]
+    async def write_text_file(
+        self, content: str, path: str, session_id: str, **kwargs: Any
+    ) -> WriteTextFileResponse | None:
         raise RequestError.method_not_found("fs/write_text_file")
 
-    async def readTextFile(self, params):  # type: ignore[override]
+    async def read_text_file(
+        self, path: str, session_id: str, limit: int | None = None, line: int | None = None, **kwargs: Any
+    ) -> ReadTextFileResponse:
         raise RequestError.method_not_found("fs/read_text_file")
 
-    async def createTerminal(self, params):  # type: ignore[override]
+    async def create_terminal(
+        self,
+        command: str,
+        session_id: str,
+        args: list[str] | None = None,
+        cwd: str | None = None,
+        env: list[EnvVariable] | None = None,
+        output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> CreateTerminalResponse:
         raise RequestError.method_not_found("terminal/create")
 
-    async def terminalOutput(self, params):  # type: ignore[override]
+    async def terminal_output(self, session_id: str, terminal_id: str, **kwargs: Any) -> TerminalOutputResponse:
         raise RequestError.method_not_found("terminal/output")
 
-    async def releaseTerminal(self, params):  # type: ignore[override]
+    async def release_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> ReleaseTerminalResponse | None:
         raise RequestError.method_not_found("terminal/release")
 
-    async def waitForTerminalExit(self, params):  # type: ignore[override]
+    async def wait_for_terminal_exit(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> WaitForTerminalExitResponse:
         raise RequestError.method_not_found("terminal/wait_for_exit")
 
-    async def killTerminal(self, params):  # type: ignore[override]
+    async def kill_terminal(
+        self, session_id: str, terminal_id: str, **kwargs: Any
+    ) -> KillTerminalCommandResponse | None:
         raise RequestError.method_not_found("terminal/kill")
 
-    async def sessionUpdate(self, params: SessionNotification) -> None:
-        update = params.update
+    async def session_update(
+        self,
+        session_id: str,
+        update: UserMessageChunk
+        | AgentMessageChunk
+        | AgentThoughtChunk
+        | ToolCallStart
+        | ToolCallProgress
+        | AgentPlanUpdate
+        | AvailableCommandsUpdate
+        | CurrentModeUpdate,
+        **kwargs: Any,
+    ) -> None:
         if not isinstance(update, AgentMessageChunk):
             return
 
@@ -76,10 +126,10 @@ class ExampleClient(Client):
 
         print(f"| Agent: {text}")
 
-    async def extMethod(self, method: str, params: dict) -> dict:  # noqa: ARG002
+    async def ext_method(self, method: str, params: dict) -> dict:
         raise RequestError.method_not_found(method)
 
-    async def extNotification(self, method: str, params: dict) -> None:  # noqa: ARG002
+    async def ext_notification(self, method: str, params: dict) -> None:
         raise RequestError.method_not_found(method)
 
 
@@ -103,10 +153,8 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
 
         try:
             await conn.prompt(
-                PromptRequest(
-                    session_id=session_id,
-                    prompt=[text_block(line)],
-                )
+                session_id=session_id,
+                prompt=[text_block(line)],
             )
         except Exception as exc:  # noqa: BLE001
             logging.error("Prompt failed: %s", exc)
@@ -145,13 +193,11 @@ async def main(argv: list[str]) -> int:
     conn = ClientSideConnection(lambda _agent: client_impl, proc.stdin, proc.stdout)
 
     await conn.initialize(
-        InitializeRequest(
-            protocol_version=PROTOCOL_VERSION,
-            client_capabilities=ClientCapabilities(),
-            client_info=Implementation(name="example-client", title="Example Client", version="0.1.0"),
-        )
+        protocol_version=PROTOCOL_VERSION,
+        client_capabilities=ClientCapabilities(),
+        client_info=Implementation(name="example-client", title="Example Client", version="0.1.0"),
     )
-    session = await conn.newSession(NewSessionRequest(mcp_servers=[], cwd=os.getcwd()))
+    session = await conn.new_session(mcp_servers=[], cwd=os.getcwd())
 
     await interactive_loop(conn, session.session_id)
 

@@ -4,13 +4,19 @@ import asyncio
 from collections.abc import Callable
 from typing import Any
 
-from ..connection import Connection, MethodHandler
+from ..connection import Connection
 from ..interfaces import Agent, Client
 from ..meta import AGENT_METHODS
 from ..schema import (
+    AudioContentBlock,
     AuthenticateRequest,
     AuthenticateResponse,
     CancelNotification,
+    ClientCapabilities,
+    EmbeddedResourceContentBlock,
+    HttpMcpServer,
+    ImageContentBlock,
+    Implementation,
     InitializeRequest,
     InitializeResponse,
     LoadSessionRequest,
@@ -19,20 +25,19 @@ from ..schema import (
     NewSessionResponse,
     PromptRequest,
     PromptResponse,
+    ResourceContentBlock,
     SetSessionModelRequest,
     SetSessionModelResponse,
     SetSessionModeRequest,
     SetSessionModeResponse,
+    SseMcpServer,
+    StdioMcpServer,
+    TextContentBlock,
 )
-from ..utils import (
-    notify_model,
-    request_model,
-    request_model_from_dict,
-)
+from ..utils import notify_model, param_model, request_model, request_model_from_dict
 from .router import build_client_router
 
 __all__ = ["ClientSideConnection"]
-
 _CLIENT_CONNECTION_ERROR = "ClientSideConnection requires asyncio StreamWriter/StreamReader"
 
 
@@ -40,93 +45,115 @@ class ClientSideConnection:
     """Client-side connection wrapper that dispatches JSON-RPC messages to an Agent implementation."""
 
     def __init__(
-        self,
-        to_client: Callable[[Agent], Client],
-        input_stream: Any,
-        output_stream: Any,
-        **connection_kwargs: Any,
+        self, to_client: Callable[[Agent], Client], input_stream: Any, output_stream: Any, **connection_kwargs: Any
     ) -> None:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
-
-        client = to_client(self)  # type: ignore[arg-type]
-        handler = self._create_handler(client)
+        client = to_client(self)
+        handler = build_client_router(client)
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
 
-    def _create_handler(self, client: Client) -> MethodHandler:
-        router = build_client_router(client)
-
-        async def handler(method: str, params: Any | None, is_notification: bool) -> Any:
-            if is_notification:
-                await router.dispatch_notification(method, params)
-                return None
-            return await router.dispatch_request(method, params)
-
-        return handler
-
-    async def initialize(self, params: InitializeRequest) -> InitializeResponse:
+    @param_model(InitializeRequest)
+    async def initialize(
+        self,
+        protocol_version: int,
+        client_capabilities: ClientCapabilities | None = None,
+        client_info: Implementation | None = None,
+        **kwargs: Any,
+    ) -> InitializeResponse:
         return await request_model(
             self._conn,
             AGENT_METHODS["initialize"],
-            params,
+            InitializeRequest(
+                protocol_version=protocol_version,
+                client_capabilities=client_capabilities or ClientCapabilities(),
+                client_info=client_info,
+                field_meta=kwargs or None,
+            ),
             InitializeResponse,
         )
 
-    async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
+    @param_model(NewSessionRequest)
+    async def new_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+    ) -> NewSessionResponse:
         return await request_model(
             self._conn,
             AGENT_METHODS["session_new"],
-            params,
+            NewSessionRequest(cwd=cwd, mcp_servers=mcp_servers, field_meta=kwargs or None),
             NewSessionResponse,
         )
 
-    async def loadSession(self, params: LoadSessionRequest) -> LoadSessionResponse:
+    @param_model(LoadSessionRequest)
+    async def load_session(
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+    ) -> LoadSessionResponse:
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["session_load"],
-            params,
+            LoadSessionRequest(cwd=cwd, mcp_servers=mcp_servers, session_id=session_id, field_meta=kwargs or None),
             LoadSessionResponse,
         )
 
-    async def setSessionMode(self, params: SetSessionModeRequest) -> SetSessionModeResponse:
+    @param_model(SetSessionModeRequest)
+    async def set_session_mode(self, mode_id: str, session_id: str, **kwargs: Any) -> SetSessionModeResponse:
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["session_set_mode"],
-            params,
+            SetSessionModeRequest(mode_id=mode_id, session_id=session_id, field_meta=kwargs or None),
             SetSessionModeResponse,
         )
 
-    async def setSessionModel(self, params: SetSessionModelRequest) -> SetSessionModelResponse:
+    @param_model(SetSessionModelRequest)
+    async def set_session_model(self, model_id: str, session_id: str, **kwargs: Any) -> SetSessionModelResponse:
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["session_set_model"],
-            params,
+            SetSessionModelRequest(model_id=model_id, session_id=session_id, field_meta=kwargs or None),
             SetSessionModelResponse,
         )
 
-    async def authenticate(self, params: AuthenticateRequest) -> AuthenticateResponse:
+    @param_model(AuthenticateRequest)
+    async def authenticate(self, method_id: str, **kwargs: Any) -> AuthenticateResponse:
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["authenticate"],
-            params,
+            AuthenticateRequest(method_id=method_id, field_meta=kwargs or None),
             AuthenticateResponse,
         )
 
-    async def prompt(self, params: PromptRequest) -> PromptResponse:
+    @param_model(PromptRequest)
+    async def prompt(
+        self,
+        prompt: list[
+            TextContentBlock
+            | ImageContentBlock
+            | AudioContentBlock
+            | ResourceContentBlock
+            | EmbeddedResourceContentBlock
+        ],
+        session_id: str,
+        **kwargs: Any,
+    ) -> PromptResponse:
         return await request_model(
             self._conn,
             AGENT_METHODS["session_prompt"],
-            params,
+            PromptRequest(prompt=prompt, session_id=session_id, field_meta=kwargs or None),
             PromptResponse,
         )
 
-    async def cancel(self, params: CancelNotification) -> None:
-        await notify_model(self._conn, AGENT_METHODS["session_cancel"], params)
+    @param_model(CancelNotification)
+    async def cancel(self, session_id: str, **kwargs: Any) -> None:
+        await notify_model(
+            self._conn,
+            AGENT_METHODS["session_cancel"],
+            CancelNotification(session_id=session_id, field_meta=kwargs or None),
+        )
 
-    async def extMethod(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         return await self._conn.send_request(f"_{method}", params)
 
-    async def extNotification(self, method: str, params: dict[str, Any]) -> None:
+    async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
         await self._conn.send_notification(f"_{method}", params)
 
     async def close(self) -> None:
