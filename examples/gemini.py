@@ -8,14 +8,15 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from acp import (
-    Client,
-    connect_to_agent,
     PROTOCOL_VERSION,
+    Client,
     RequestError,
+    connect_to_agent,
     text_block,
 )
 from acp.core import ClientSideConnection
@@ -25,26 +26,22 @@ from acp.schema import (
     AgentThoughtChunk,
     AllowedOutcome,
     AvailableCommandsUpdate,
-    CancelNotification,
     ClientCapabilities,
+    CreateTerminalResponse,
     CurrentModeUpdate,
+    DeniedOutcome,
+    EmbeddedResourceContentBlock,
     EnvVariable,
     FileEditToolCallContent,
     FileSystemCapability,
-    CreateTerminalResponse,
-    DeniedOutcome,
-    EmbeddedResourceContentBlock,
     KillTerminalCommandResponse,
-    InitializeRequest,
-    NewSessionRequest,
     PermissionOption,
-    PromptRequest,
     ReadTextFileResponse,
+    ReleaseTerminalResponse,
     RequestPermissionResponse,
     ResourceContentBlock,
-    ReleaseTerminalResponse,
-    TerminalToolCallContent,
     TerminalOutputResponse,
+    TerminalToolCallContent,
     TextContentBlock,
     ToolCall,
     ToolCallProgress,
@@ -115,7 +112,7 @@ class GeminiClient(Client):
             text = _slice_text(text, line, limit)
         return ReadTextFileResponse(content=text)
 
-    async def session_update(
+    async def session_update(  # noqa: C901
         self,
         session_id: str,
         update: UserMessageChunk
@@ -259,7 +256,7 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
             )
         except RequestError as err:
             _print_request_error("prompt", err)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"Prompt failed: {exc}", file=sys.stderr)
 
 
@@ -275,7 +272,7 @@ def _resolve_gemini_cli(binary: str | None) -> str:
     raise FileNotFoundError("Unable to locate `gemini` CLI, provide --gemini path")
 
 
-async def run(argv: list[str]) -> int:
+async def run(argv: list[str]) -> int:  # noqa: C901
     parser = argparse.ArgumentParser(description="Interact with the Gemini CLI over ACP.")
     parser.add_argument("--gemini", help="Path to the Gemini CLI binary")
     parser.add_argument("--model", help="Model identifier to pass to Gemini")
@@ -331,7 +328,7 @@ async def run(argv: list[str]) -> int:
         _print_request_error("initialize", err)
         await _shutdown(proc, conn)
         return 1
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"initialize error: {exc}", file=sys.stderr)
         await _shutdown(proc, conn)
         return 1
@@ -347,7 +344,7 @@ async def run(argv: list[str]) -> int:
         _print_request_error("new_session", err)
         await _shutdown(proc, conn)
         return 1
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"new_session error: {exc}", file=sys.stderr)
         await _shutdown(proc, conn)
         return 1

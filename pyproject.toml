@@ -2,7 +2,10 @@
 name = "agent-client-protocol"
 version = "0.6.3"
 description = "A Python implement of Agent Client Protocol (ACP, by Zed Industries)"
-authors = [{ name = "Chojan Shang", email = "psiace@apache.org" }]
+authors = [
+    { name = "Chojan Shang", email = "psiace@apache.org" },
+    { name = "Frost Ming", email = "me@frostming.com" },
+]
 readme = "README.md"
 keywords = ['python']
 requires-python = ">=3.10,<3.15"
@@ -18,7 +21,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "pydantic>=2.7",
+    "pydantic>=2.7",
 ]
 
 
@@ -47,11 +50,11 @@ dev = [
 logfire = ["logfire>=0.14", "opentelemetry-sdk>=1.28.0"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/acp"]
+[tool.pdm.build]
+source-includes = ["examples/", "tests/"]
 
 [tool.ty.environment]
 python = "./.venv"
@@ -103,11 +106,12 @@ ignore = [
     "E501",
     # DoNotAssignLambda
     "E731",
+    # Long exception message
+    "TRY003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
-"examples/*" = ["ALL"]
 "src/acp/meta.py" = ["ALL"]
 "src/acp/schema.py" = ["ALL"]
 

@@ -178,4 +178,4 @@ def __getattr__(name: str) -> Any:
             module_name, attr_name = new_path.split(":")
             module = import_module(module_name)
             return getattr(module, attr_name)
-    raise AttributeError(f"module {__name__} has no attribute {name}")  # noqa: TRY003
+    raise AttributeError(f"module {__name__} has no attribute {name}")
