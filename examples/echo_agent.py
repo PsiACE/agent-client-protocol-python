@@ -4,7 +4,6 @@ from uuid import uuid4
 
 from acp import (
     Agent,
-    AgentSideConnection,
     InitializeResponse,
     NewSessionResponse,
     PromptResponse,

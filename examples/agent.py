@@ -3,8 +3,8 @@ import logging
 from typing import Any
 
 from acp import (
+    PROTOCOL_VERSION,
     Agent,
-    AgentSideConnection,
     AuthenticateResponse,
     InitializeResponse,
     LoadSessionResponse,
@@ -14,7 +14,6 @@ from acp import (
     run_agent,
     text_block,
     update_agent_message,
-    PROTOCOL_VERSION,
 )
 from acp.interfaces import Client
 from acp.schema import (

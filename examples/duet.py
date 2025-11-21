@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from acp import PROTOCOL_VERSION, spawn_agent_process
+
 
 def _load_client_module(path: Path):
     spec = importlib.util.spec_from_file_location("examples_client", path)
@@ -13,10 +15,6 @@ def _load_client_module(path: Path):
     sys.modules.setdefault("examples_client", module)
     spec.loader.exec_module(module)
     return module
-
-
-from acp import PROTOCOL_VERSION, spawn_agent_process
-from acp.schema import InitializeRequest, NewSessionRequest
 
 
 async def main() -> int:
