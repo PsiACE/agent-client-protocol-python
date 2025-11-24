@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from ..helpers import text_block, tool_content
-from ..schema import PermissionOption, RequestPermissionRequest, RequestPermissionResponse, ToolCall
+from ..schema import PermissionOption, RequestPermissionRequest, RequestPermissionResponse, ToolCallUpdate
 from .tool_calls import ToolCallTracker, _copy_model_list
 
 
@@ -60,7 +60,7 @@ class PermissionBroker:
         description: str | None = None,
         options: Sequence[PermissionOption] | None = None,
         content: Sequence[Any] | None = None,
-        tool_call: ToolCall | None = None,
+        tool_call: ToolCallUpdate | None = None,
     ) -> RequestPermissionResponse:
         """Request user approval for a tool call."""
         if tool_call is None:

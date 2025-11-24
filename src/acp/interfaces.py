@@ -48,9 +48,9 @@ from .schema import (
     TerminalOutputRequest,
     TerminalOutputResponse,
     TextContentBlock,
-    ToolCall,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
     WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
@@ -65,7 +65,7 @@ __all__ = ["Agent", "Client"]
 class Client(Protocol):
     @param_model(RequestPermissionRequest)
     async def request_permission(
-        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCallUpdate, **kwargs: Any
     ) -> RequestPermissionResponse: ...
 
     @param_model(SessionNotification)

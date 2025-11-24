@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.6.3
+# Schema ref: refs/heads/main
 
 from __future__ import annotations
 
@@ -396,17 +396,6 @@ class SessionModelState(BaseModel):
     ]
 
 
-class CurrentModeUpdate(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The ID of the current mode
-    current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
-    session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
-
-
 class SetSessionModeRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -671,6 +660,17 @@ class Annotations(BaseModel):
     priority: Optional[float] = None
 
 
+class AudioContent(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    data: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
+
+
 class AuthMethod(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -705,6 +705,19 @@ class AvailableCommand(BaseModel):
     name: Annotated[
         str,
         Field(description="Command name (e.g., `create_plan`, `research_codebase`)."),
+    ]
+
+
+class AvailableCommandsUpdate(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Commands the agent can execute
+    available_commands: Annotated[
+        List[AvailableCommand],
+        Field(alias="availableCommands", description="Commands the agent can execute"),
     ]
 
 
@@ -771,56 +784,8 @@ class ClientNotificationMessage(BaseModel):
     params: Optional[Union[CancelNotification, Any]] = None
 
 
-class TextContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    text: str
-    type: Literal["text"]
-
-
-class ImageContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mime_type: Annotated[str, Field(alias="mimeType")]
-    type: Literal["image"]
-    uri: Optional[str] = None
-
-
-class AudioContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mime_type: Annotated[str, Field(alias="mimeType")]
+class AudioContentBlock(AudioContent):
     type: Literal["audio"]
-
-
-class ResourceContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    description: Optional[str] = None
-    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
-    name: str
-    size: Optional[int] = None
-    title: Optional[str] = None
-    type: Literal["resource_link"]
-    uri: str
 
 
 class CreateTerminalRequest(BaseModel):
@@ -861,6 +826,28 @@ class CreateTerminalRequest(BaseModel):
     ] = None
     # The session ID for this request.
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
+
+
+class CurrentModeUpdate(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The ID of the current mode
+    current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
+
+
+class ImageContent(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    data: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
+    uri: Optional[str] = None
 
 
 class InitializeRequest(BaseModel):
@@ -1068,6 +1055,21 @@ class ReleaseTerminalRequest(BaseModel):
     terminal_id: Annotated[str, Field(alias="terminalId", description="The ID of the terminal to release.")]
 
 
+class ResourceLink(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    description: Optional[str] = None
+    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
+    name: str
+    size: Optional[int] = None
+    title: Optional[str] = None
+    uri: str
+
+
 class SessionMode(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1101,37 +1103,22 @@ class SessionModeState(BaseModel):
     ]
 
 
-class AgentPlanUpdate(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The list of tasks to be accomplished.
-    #
-    # When updating a plan, the agent must send a complete list of all entries
-    # with their current status. The client replaces the entire plan with each update.
-    entries: Annotated[
-        List[PlanEntry],
-        Field(
-            description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
-        ),
-    ]
-    session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
-
-
-class AvailableCommandsUpdate(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Commands the agent can execute
-    available_commands: Annotated[
-        List[AvailableCommand],
-        Field(alias="availableCommands", description="Commands the agent can execute"),
-    ]
+class AvailableCommandsUpdate(AvailableCommandsUpdate):
     session_update: Annotated[Literal["available_commands_update"], Field(alias="sessionUpdate")]
+
+
+class CurrentModeUpdate(CurrentModeUpdate):
+    session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
+
+
+class TextContent(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    text: str
 
 
 class ClientResponseMessage(BaseModel):
@@ -1175,7 +1162,19 @@ class ClientResponseMessage(BaseModel):
     ]
 
 
-class EmbeddedResourceContentBlock(BaseModel):
+class TextContentBlock(TextContent):
+    type: Literal["text"]
+
+
+class ImageContentBlock(ImageContent):
+    type: Literal["image"]
+
+
+class ResourceContentBlock(ResourceLink):
+    type: Literal["resource_link"]
+
+
+class EmbeddedResource(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1187,7 +1186,6 @@ class EmbeddedResourceContentBlock(BaseModel):
         Union[TextResourceContents, BlobResourceContents],
         Field(description="Resource content that can be embedded in a message."),
     ]
-    type: Literal["resource"]
 
 
 class LoadSessionResponse(BaseModel):
@@ -1256,6 +1254,47 @@ class NewSessionResponse(BaseModel):
     ]
 
 
+class Plan(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The list of tasks to be accomplished.
+    #
+    # When updating a plan, the agent must send a complete list of all entries
+    # with their current status. The client replaces the entire plan with each update.
+    entries: Annotated[
+        List[PlanEntry],
+        Field(
+            description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
+        ),
+    ]
+
+
+class AgentPlanUpdate(Plan):
+    session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
+
+
+class EmbeddedResourceContentBlock(EmbeddedResource):
+    type: Literal["resource"]
+
+
+class ContentChunk(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A single item of content
+    content: Annotated[
+        Union[
+            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
+        ],
+        Field(description="A single item of content", discriminator="type"),
+    ]
+
+
 class PromptRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1299,51 +1338,15 @@ class PromptRequest(BaseModel):
     ]
 
 
-class UserMessageChunk(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
+class UserMessageChunk(ContentChunk):
     session_update: Annotated[Literal["user_message_chunk"], Field(alias="sessionUpdate")]
 
 
-class AgentMessageChunk(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
+class AgentMessageChunk(ContentChunk):
     session_update: Annotated[Literal["agent_message_chunk"], Field(alias="sessionUpdate")]
 
 
-class AgentThoughtChunk(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
+class AgentThoughtChunk(ContentChunk):
     session_update: Annotated[Literal["agent_thought_chunk"], Field(alias="sessionUpdate")]
 
 
@@ -1358,7 +1361,7 @@ class ContentToolCallContent(BaseModel):
     type: Literal["content"]
 
 
-class ToolCall(BaseModel):
+class ToolCallUpdate(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1380,116 +1383,6 @@ class ToolCall(BaseModel):
     raw_input: Annotated[Optional[Any], Field(alias="rawInput", description="Update the raw input.")] = None
     # Update the raw output.
     raw_output: Annotated[Optional[Any], Field(alias="rawOutput", description="Update the raw output.")] = None
-    # Update the execution status.
-    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
-    # Update the human-readable title.
-    title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
-    # The ID of the tool call being updated.
-    tool_call_id: Annotated[
-        str,
-        Field(alias="toolCallId", description="The ID of the tool call being updated."),
-    ]
-
-
-class RequestPermissionRequest(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Available permission options for the user to choose from.
-    options: Annotated[
-        List[PermissionOption],
-        Field(description="Available permission options for the user to choose from."),
-    ]
-    # The session ID for this request.
-    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
-    # Details about the tool call requiring permission.
-    tool_call: Annotated[
-        ToolCall,
-        Field(
-            alias="toolCall",
-            description="Details about the tool call requiring permission.",
-        ),
-    ]
-
-
-class ToolCallStart(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Content produced by the tool call.
-    content: Annotated[
-        Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
-        Field(description="Content produced by the tool call."),
-    ] = None
-    # The category of tool being invoked.
-    # Helps clients choose appropriate icons and UI treatment.
-    kind: Annotated[
-        Optional[ToolKind],
-        Field(
-            description="The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment."
-        ),
-    ] = None
-    # File locations affected by this tool call.
-    # Enables "follow-along" features in clients.
-    locations: Annotated[
-        Optional[List[ToolCallLocation]],
-        Field(description='File locations affected by this tool call.\nEnables "follow-along" features in clients.'),
-    ] = None
-    # Raw input parameters sent to the tool.
-    raw_input: Annotated[
-        Optional[Any],
-        Field(alias="rawInput", description="Raw input parameters sent to the tool."),
-    ] = None
-    # Raw output returned by the tool.
-    raw_output: Annotated[
-        Optional[Any],
-        Field(alias="rawOutput", description="Raw output returned by the tool."),
-    ] = None
-    session_update: Annotated[Literal["tool_call"], Field(alias="sessionUpdate")]
-    # Current execution status of the tool call.
-    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
-    # Human-readable title describing what the tool is doing.
-    title: Annotated[
-        str,
-        Field(description="Human-readable title describing what the tool is doing."),
-    ]
-    # Unique identifier for this tool call within the session.
-    tool_call_id: Annotated[
-        str,
-        Field(
-            alias="toolCallId",
-            description="Unique identifier for this tool call within the session.",
-        ),
-    ]
-
-
-class ToolCallProgress(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Replace the content collection.
-    content: Annotated[
-        Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
-        Field(description="Replace the content collection."),
-    ] = None
-    # Update the tool kind.
-    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
-    # Replace the locations collection.
-    locations: Annotated[
-        Optional[List[ToolCallLocation]],
-        Field(description="Replace the locations collection."),
-    ] = None
-    # Update the raw input.
-    raw_input: Annotated[Optional[Any], Field(alias="rawInput", description="Update the raw input.")] = None
-    # Update the raw output.
-    raw_output: Annotated[Optional[Any], Field(alias="rawOutput", description="Update the raw output.")] = None
-    session_update: Annotated[Literal["tool_call_update"], Field(alias="sessionUpdate")]
     # Update the execution status.
     status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
     # Update the human-readable title.
@@ -1541,6 +1434,85 @@ class AgentResponseMessage(BaseModel):
     ]
 
 
+class RequestPermissionRequest(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Available permission options for the user to choose from.
+    options: Annotated[
+        List[PermissionOption],
+        Field(description="Available permission options for the user to choose from."),
+    ]
+    # The session ID for this request.
+    session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
+    # Details about the tool call requiring permission.
+    tool_call: Annotated[
+        ToolCallUpdate,
+        Field(
+            alias="toolCall",
+            description="Details about the tool call requiring permission.",
+        ),
+    ]
+
+
+class ToolCallProgress(ToolCallUpdate):
+    session_update: Annotated[Literal["tool_call_update"], Field(alias="sessionUpdate")]
+
+
+class ToolCall(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Content produced by the tool call.
+    content: Annotated[
+        Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
+        Field(description="Content produced by the tool call."),
+    ] = None
+    # The category of tool being invoked.
+    # Helps clients choose appropriate icons and UI treatment.
+    kind: Annotated[
+        Optional[ToolKind],
+        Field(
+            description="The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment."
+        ),
+    ] = None
+    # File locations affected by this tool call.
+    # Enables "follow-along" features in clients.
+    locations: Annotated[
+        Optional[List[ToolCallLocation]],
+        Field(description='File locations affected by this tool call.\nEnables "follow-along" features in clients.'),
+    ] = None
+    # Raw input parameters sent to the tool.
+    raw_input: Annotated[
+        Optional[Any],
+        Field(alias="rawInput", description="Raw input parameters sent to the tool."),
+    ] = None
+    # Raw output returned by the tool.
+    raw_output: Annotated[
+        Optional[Any],
+        Field(alias="rawOutput", description="Raw output returned by the tool."),
+    ] = None
+    # Current execution status of the tool call.
+    status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
+    # Human-readable title describing what the tool is doing.
+    title: Annotated[
+        str,
+        Field(description="Human-readable title describing what the tool is doing."),
+    ]
+    # Unique identifier for this tool call within the session.
+    tool_call_id: Annotated[
+        str,
+        Field(
+            alias="toolCallId",
+            description="Unique identifier for this tool call within the session.",
+        ),
+    ]
+
+
 class ClientRequestMessage(BaseModel):
     jsonrpc: Jsonrpc
     # JSON RPC Request Id
@@ -1573,34 +1545,8 @@ class ClientRequestMessage(BaseModel):
     ] = None
 
 
-class SessionNotification(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The ID of the session this update pertains to.
-    session_id: Annotated[
-        str,
-        Field(
-            alias="sessionId",
-            description="The ID of the session this update pertains to.",
-        ),
-    ]
-    # The actual update content.
-    update: Annotated[
-        Union[
-            UserMessageChunk,
-            AgentMessageChunk,
-            AgentThoughtChunk,
-            ToolCallStart,
-            ToolCallProgress,
-            AgentPlanUpdate,
-            AvailableCommandsUpdate,
-            CurrentModeUpdate,
-        ],
-        Field(description="The actual update content.", discriminator="session_update"),
-    ]
+class ToolCallStart(ToolCall):
+    session_update: Annotated[Literal["tool_call"], Field(alias="sessionUpdate")]
 
 
 class AgentRequestMessage(BaseModel):
@@ -1634,6 +1580,36 @@ class AgentRequestMessage(BaseModel):
             Any,
         ]
     ] = None
+
+
+class SessionNotification(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The ID of the session this update pertains to.
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="The ID of the session this update pertains to.",
+        ),
+    ]
+    # The actual update content.
+    update: Annotated[
+        Union[
+            UserMessageChunk,
+            AgentMessageChunk,
+            AgentThoughtChunk,
+            ToolCallStart,
+            ToolCallProgress,
+            AgentPlanUpdate,
+            AvailableCommandsUpdate,
+            CurrentModeUpdate,
+        ],
+        Field(description="The actual update content.", discriminator="session_update"),
+    ]
 
 
 class AgentNotificationMessage(BaseModel):

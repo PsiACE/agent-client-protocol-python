@@ -28,9 +28,9 @@ from ..schema import (
     SessionNotification,
     TerminalOutputRequest,
     TerminalOutputResponse,
-    ToolCall,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
     WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
@@ -92,7 +92,7 @@ class AgentSideConnection:
 
     @param_model(RequestPermissionRequest)
     async def request_permission(
-        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCallUpdate, **kwargs: Any
     ) -> RequestPermissionResponse:
         return await request_model(
             self._conn,

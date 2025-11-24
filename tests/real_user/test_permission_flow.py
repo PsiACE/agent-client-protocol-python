@@ -12,7 +12,7 @@ from acp.schema import (
     PermissionOption,
     ResourceContentBlock,
     TextContentBlock,
-    ToolCall,
+    ToolCallUpdate,
 )
 from tests.conftest import TestAgent, TestClient
 
@@ -45,7 +45,7 @@ class PermissionRequestAgent(TestAgent):
                 PermissionOption(option_id="allow", name="Allow", kind="allow_once"),
                 PermissionOption(option_id="deny", name="Deny", kind="reject_once"),
             ],
-            tool_call=ToolCall(tool_call_id="call-1", title="Write File"),
+            tool_call=ToolCallUpdate(tool_call_id="call-1", title="Write File"),
         )
         self.permission_responses.append(permission)
         return await super().prompt(prompt, session_id, **kwargs)

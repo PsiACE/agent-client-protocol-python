@@ -47,9 +47,9 @@ from acp.schema import (
     SseMcpServer,
     StdioMcpServer,
     TextContentBlock,
-    ToolCall,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
 )
 
@@ -140,7 +140,7 @@ class TestClient:
         )
 
     async def request_permission(
-        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCallUpdate, **kwargs: Any
     ) -> RequestPermissionResponse:
         if self.permission_outcomes:
             return self.permission_outcomes.pop()

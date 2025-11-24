@@ -47,6 +47,7 @@ def build_agent_router(agent: Agent) -> MessageRouter:
         agent,
         "set_session_model",
         adapt_result=normalize_result,
+        unstable=True,
     )
     router.route_request(
         AGENT_METHODS["authenticate"],

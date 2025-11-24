@@ -93,6 +93,8 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
     ("ToolCallStart", "status", "ToolCallStatus", True),
     ("ToolCall", "kind", "ToolKind", True),
     ("ToolCall", "status", "ToolCallStatus", True),
+    ("ToolCallUpdate", "kind", "ToolKind", True),
+    ("ToolCallUpdate", "status", "ToolCallStatus", True),
 )
 
 DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (

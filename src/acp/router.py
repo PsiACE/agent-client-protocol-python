@@ -28,8 +28,15 @@ class Route:
     optional: bool = False
     default_result: Any = None
     adapt_result: Callable[[Any | None], Any] | None = None
+    unstable: bool = False
 
     async def handle(self, params: Any) -> Any:
+        if self.unstable:
+            warnings.warn(
+                f"The method {self.method} is part of the unstable protocol and is subject to change or removal.",
+                FutureWarning,
+                stacklevel=3,
+            )
         if self.func is None:
             if self.optional:
                 return self.default_result
@@ -98,6 +105,7 @@ class MessageRouter:
         optional: bool = False,
         default_result: Any = None,
         adapt_result: Callable[[Any | None], Any] | None = None,
+        unstable: bool = False,
     ) -> Route:
         """Register a request route with obj and attribute name."""
         route = Route(
@@ -107,6 +115,7 @@ class MessageRouter:
             optional=optional,
             default_result=default_result,
             adapt_result=adapt_result,
+            unstable=unstable,
         )
         self.add_route(route)
         return route

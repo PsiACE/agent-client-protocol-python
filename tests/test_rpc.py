@@ -40,10 +40,10 @@ from acp.schema import (
     SseMcpServer,
     StdioMcpServer,
     TextContentBlock,
-    ToolCall,
     ToolCallLocation,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
 )
 from tests.conftest import TestClient
@@ -71,8 +71,10 @@ async def test_initialize_and_new_session(connect):
     mode_resp = await agent_conn.set_session_mode(session_id=new_sess.session_id, mode_id="ask")
     assert isinstance(mode_resp, SetSessionModeResponse)
 
-    model_resp = await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
-    assert isinstance(model_resp, SetSessionModelResponse)
+    with pytest.warns(FutureWarning) as record:
+        model_resp = await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
+        assert isinstance(model_resp, SetSessionModelResponse)
+        assert len(record) == 1
 
 
 @pytest.mark.asyncio
@@ -188,7 +190,9 @@ async def test_set_session_mode_and_extensions(connect, agent, client):
     resp = await agent_conn.set_session_mode(session_id="sess", mode_id="yolo")
     assert isinstance(resp, SetSessionModeResponse)
 
-    model_resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
+    with pytest.warns(FutureWarning) as record:
+        model_resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
+        assert len(record) == 1
     assert isinstance(model_resp, SetSessionModelResponse)
 
     # extMethod
@@ -285,7 +289,7 @@ class _ExampleAgent(Agent):
 
         permission_request = {
             "session_id": session_id,
-            "tool_call": ToolCall(
+            "tool_call": ToolCallUpdate(
                 tool_call_id="call_1",
                 title="Modifying configuration",
                 kind="edit",
@@ -329,7 +333,7 @@ class _ExampleClient(TestClient):
         self,
         options: list[PermissionOption] | RequestPermissionRequest,
         session_id: str | None = None,
-        tool_call: ToolCall | None = None,
+        tool_call: ToolCallUpdate | None = None,
         **kwargs: Any,
     ) -> RequestPermissionResponse:
         if isinstance(options, RequestPermissionRequest):
