@@ -17,7 +17,6 @@ from acp import (
     PromptResponse,
     RequestPermissionRequest,
     RequestPermissionResponse,
-    SetSessionModelResponse,
     SetSessionModeResponse,
     WriteTextFileResponse,
     spawn_agent_process,
@@ -25,6 +24,7 @@ from acp import (
     update_agent_message_text,
     update_tool_call,
 )
+from acp.exceptions import RequestError
 from acp.schema import (
     AgentMessageChunk,
     AllowedOutcome,
@@ -35,15 +35,17 @@ from acp.schema import (
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
+    ListSessionsResponse,
+    McpServerStdio,
     PermissionOption,
     ResourceContentBlock,
+    SetSessionModelResponse,
     SseMcpServer,
-    StdioMcpServer,
     TextContentBlock,
-    ToolCall,
     ToolCallLocation,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
 )
 from tests.conftest import TestClient
@@ -71,8 +73,9 @@ async def test_initialize_and_new_session(connect):
     mode_resp = await agent_conn.set_session_mode(session_id=new_sess.session_id, mode_id="ask")
     assert isinstance(mode_resp, SetSessionModeResponse)
 
-    model_resp = await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
-    assert isinstance(model_resp, SetSessionModelResponse)
+    with pytest.raises(RequestError), pytest.warns(UserWarning) as record:
+        await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
+        assert len(record) == 1
 
 
 @pytest.mark.asyncio
@@ -188,8 +191,9 @@ async def test_set_session_mode_and_extensions(connect, agent, client):
     resp = await agent_conn.set_session_mode(session_id="sess", mode_id="yolo")
     assert isinstance(resp, SetSessionModeResponse)
 
-    model_resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
-    assert isinstance(model_resp, SetSessionModelResponse)
+    with pytest.raises(RequestError), pytest.warns(UserWarning) as record:
+        await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
+        assert len(record) == 1
 
     # extMethod
     echo = await agent_conn.ext_method("example.com/echo", {"x": 1})
@@ -247,7 +251,7 @@ class _ExampleAgent(Agent):
         return InitializeResponse(protocol_version=protocol_version)
 
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse:
         return NewSessionResponse(session_id="sess_demo")
 
@@ -285,7 +289,7 @@ class _ExampleAgent(Agent):
 
         permission_request = {
             "session_id": session_id,
-            "tool_call": ToolCall(
+            "tool_call": ToolCallUpdate(
                 tool_call_id="call_1",
                 title="Modifying configuration",
                 kind="edit",
@@ -329,7 +333,7 @@ class _ExampleClient(TestClient):
         self,
         options: list[PermissionOption] | RequestPermissionRequest,
         session_id: str | None = None,
-        tool_call: ToolCall | None = None,
+        tool_call: ToolCallUpdate | None = None,
         **kwargs: Any,
     ) -> RequestPermissionResponse:
         if isinstance(options, RequestPermissionRequest):
@@ -428,3 +432,14 @@ async def test_spawn_agent_process_roundtrip(tmp_path):
         assert test_client.notifications
 
     assert process.returncode is not None
+
+
+@pytest.mark.asyncio
+async def test_call_unstable_protocol(connect):
+    _, agent_conn = connect(use_unstable_protocol=True)
+
+    resp = await agent_conn.list_sessions()
+    assert isinstance(resp, ListSessionsResponse)
+
+    resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
+    assert isinstance(resp, SetSessionModelResponse)

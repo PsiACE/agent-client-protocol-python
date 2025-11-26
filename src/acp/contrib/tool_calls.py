@@ -7,7 +7,14 @@ from typing import Any, cast
 from pydantic import BaseModel, ConfigDict
 
 from ..helpers import text_block, tool_content
-from ..schema import ToolCall, ToolCallLocation, ToolCallProgress, ToolCallStart, ToolCallStatus, ToolKind
+from ..schema import (
+    ToolCallLocation,
+    ToolCallProgress,
+    ToolCallStart,
+    ToolCallStatus,
+    ToolCallUpdate,
+    ToolKind,
+)
 
 
 class _MissingToolCallTitleError(ValueError):
@@ -91,8 +98,8 @@ class _TrackedToolCall:
             raw_output=self.raw_output,
         )
 
-    def to_tool_call_model(self) -> ToolCall:
-        return ToolCall(
+    def to_tool_call_model(self) -> ToolCallUpdate:
+        return ToolCallUpdate(
             tool_call_id=self.tool_call_id,
             title=self.title,
             kind=self.kind,
@@ -249,7 +256,7 @@ class ToolCallTracker:
         state = self._require_call(external_id)
         return state.to_view()
 
-    def tool_call_model(self, external_id: str) -> ToolCall:
+    def tool_call_model(self, external_id: str) -> ToolCallUpdate:
         """Return a deep copy of the tool call suitable for permission requests."""
         state = self._require_call(external_id)
         return state.to_tool_call_model()

@@ -28,11 +28,19 @@ class Route:
     optional: bool = False
     default_result: Any = None
     adapt_result: Callable[[Any | None], Any] | None = None
+    warn_unstable: bool = False
 
     async def handle(self, params: Any) -> Any:
         if self.func is None:
             if self.optional:
                 return self.default_result
+            raise RequestError.method_not_found(self.method)
+        if self.warn_unstable:
+            warnings.warn(
+                f"The method {self.method} is part of the unstable protocol, please enable `use_unstable_protocol` flag to use it.",
+                UserWarning,
+                stacklevel=3,
+            )
             raise RequestError.method_not_found(self.method)
         result = await self.func(params)
         if self.adapt_result is not None and self.kind == "request":
@@ -41,11 +49,12 @@ class Route:
 
 
 class MessageRouter:
-    def __init__(self) -> None:
+    def __init__(self, use_unstable_protocol: bool = False) -> None:
         self._requests: dict[str, Route] = {}
         self._notifications: dict[str, Route] = {}
         self._request_extensions: RequestHandler | None = None
         self._notification_extensions: RequestHandler | None = None
+        self._use_unstable_protocol = use_unstable_protocol
 
     def add_route(self, route: Route) -> None:
         if route.kind == "request":
@@ -98,6 +107,7 @@ class MessageRouter:
         optional: bool = False,
         default_result: Any = None,
         adapt_result: Callable[[Any | None], Any] | None = None,
+        unstable: bool = False,
     ) -> Route:
         """Register a request route with obj and attribute name."""
         route = Route(
@@ -107,6 +117,7 @@ class MessageRouter:
             optional=optional,
             default_result=default_result,
             adapt_result=adapt_result,
+            warn_unstable=unstable and not self._use_unstable_protocol,
         )
         self.add_route(route)
         return route
@@ -118,6 +129,7 @@ class MessageRouter:
         obj: Any,
         attr: str,
         optional: bool = False,
+        unstable: bool = False,
     ) -> Route:
         """Register a notification route with obj and attribute name."""
         route = Route(
@@ -125,6 +137,7 @@ class MessageRouter:
             func=self._make_func(model, obj, attr),
             kind="notification",
             optional=optional,
+            warn_unstable=unstable and not self._use_unstable_protocol,
         )
         self.add_route(route)
         return route

@@ -28,9 +28,9 @@ from ..schema import (
     SessionNotification,
     TerminalOutputRequest,
     TerminalOutputResponse,
-    ToolCall,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
     WaitForTerminalExitRequest,
     WaitForTerminalExitResponse,
@@ -56,12 +56,14 @@ class AgentSideConnection:
         input_stream: Any,
         output_stream: Any,
         listening: bool = True,
+        *,
+        use_unstable_protocol: bool = False,
         **connection_kwargs: Any,
     ) -> None:
         agent = to_agent(cast(Client, self)) if callable(to_agent) else to_agent
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_AGENT_CONNECTION_ERROR)
-        handler = build_agent_router(cast(Agent, agent))
+        handler = build_agent_router(cast(Agent, agent), use_unstable_protocol=use_unstable_protocol)
         self._conn = Connection(handler, input_stream, output_stream, listening=listening, **connection_kwargs)
         if on_connect := getattr(agent, "on_connect", None):
             on_connect(self)
@@ -92,7 +94,7 @@ class AgentSideConnection:
 
     @param_model(RequestPermissionRequest)
     async def request_permission(
-        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCallUpdate, **kwargs: Any
     ) -> RequestPermissionResponse:
         return await request_model(
             self._conn,

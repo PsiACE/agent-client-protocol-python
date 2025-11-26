@@ -109,8 +109,8 @@ def resolve_ref(version: str | None) -> str:
 
 def download_schema(repo: str, ref: str) -> None:
     SCHEMA_DIR.mkdir(parents=True, exist_ok=True)
-    schema_url = f"https://raw.githubusercontent.com/{repo}/{ref}/schema/schema.json"
-    meta_url = f"https://raw.githubusercontent.com/{repo}/{ref}/schema/meta.json"
+    schema_url = f"https://raw.githubusercontent.com/{repo}/{ref}/schema/schema.unstable.json"
+    meta_url = f"https://raw.githubusercontent.com/{repo}/{ref}/schema/meta.unstable.json"
     try:
         schema_data = fetch_json(schema_url)
         meta_data = fetch_json(meta_url)

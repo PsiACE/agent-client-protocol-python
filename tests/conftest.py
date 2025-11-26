@@ -42,14 +42,15 @@ from acp.schema import (
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
+    ListSessionsResponse,
+    McpServerStdio,
     PermissionOption,
     ResourceContentBlock,
     SseMcpServer,
-    StdioMcpServer,
     TextContentBlock,
-    ToolCall,
     ToolCallProgress,
     ToolCallStart,
+    ToolCallUpdate,
     UserMessageChunk,
 )
 
@@ -140,7 +141,7 @@ class TestClient:
         )
 
     async def request_permission(
-        self, options: list[PermissionOption], session_id: str, tool_call: ToolCall, **kwargs: Any
+        self, options: list[PermissionOption], session_id: str, tool_call: ToolCallUpdate, **kwargs: Any
     ) -> RequestPermissionResponse:
         if self.permission_outcomes:
             return self.permission_outcomes.pop()
@@ -236,14 +237,19 @@ class TestAgent:
         return InitializeResponse(protocol_version=protocol_version, agent_capabilities=None, auth_methods=[])
 
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse:
         return NewSessionResponse(session_id="test-session-123")
 
     async def load_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], session_id: str, **kwargs: Any
     ) -> LoadSessionResponse | None:
         return LoadSessionResponse()
+
+    async def list_sessions(
+        self, cursor: str | None = None, cwd: str | None = None, **kwargs: Any
+    ) -> ListSessionsResponse:
+        return ListSessionsResponse(sessions=[], next_cursor=None)
 
     async def authenticate(self, method_id: str, **kwargs: Any) -> AuthenticateResponse | None:
         return AuthenticateResponse()
@@ -295,14 +301,22 @@ def client_fixture() -> TestClient:
 @pytest.fixture(name="connect")
 def connect_func(server, agent, client) -> Callable[[bool, bool], tuple[AgentSideConnection, ClientSideConnection]]:
     def _connect(
-        connect_agent: bool = True, connect_client: bool = True
+        connect_agent: bool = True, connect_client: bool = True, use_unstable_protocol: bool = False
     ) -> tuple[AgentSideConnection, ClientSideConnection]:
         agent_conn = None
         client_conn = None
         if connect_agent:
-            agent_conn = AgentSideConnection(agent, server.server_writer, server.server_reader, listening=True)
+            agent_conn = AgentSideConnection(
+                agent,
+                server.server_writer,
+                server.server_reader,
+                listening=True,
+                use_unstable_protocol=use_unstable_protocol,
+            )
         if connect_client:
-            client_conn = ClientSideConnection(client, server.client_writer, server.client_reader)
+            client_conn = ClientSideConnection(
+                client, server.client_writer, server.client_reader, use_unstable_protocol=use_unstable_protocol
+            )
         return agent_conn, client_conn  # type: ignore[return-value]
 
     return _connect

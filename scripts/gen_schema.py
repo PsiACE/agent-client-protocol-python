@@ -28,7 +28,7 @@ DESCRIPTION_PATTERN = re.compile(
 
 STDIO_TYPE_LITERAL = 'Literal["2#-datamodel-code-generator-#-object-#-special-#"]'
 STDIO_TYPE_PATTERN = re.compile(
-    r"^    type:\s*Literal\[['\"]2#-datamodel-code-generator-#-object-#-special-#['\"]\]"
+    r"^    type:\s*Literal\[['\"]McpServerStdio['\"]\]"
     r"(?:\s*=\s*['\"][^'\"]+['\"])?\s*$",
     re.MULTILINE,
 )
@@ -40,7 +40,6 @@ RENAME_MAP: dict[str, str] = {
     "AgentOutgoingMessage2": "AgentResponseMessage",
     "AgentOutgoingMessage3": "AgentErrorMessage",
     "AgentOutgoingMessage4": "AgentNotificationMessage",
-    "AvailableCommandInput1": "CommandInputHint",
     "ClientOutgoingMessage1": "ClientRequestMessage",
     "ClientOutgoingMessage2": "ClientResponseMessage",
     "ClientOutgoingMessage3": "ClientErrorMessage",
@@ -52,7 +51,6 @@ RENAME_MAP: dict[str, str] = {
     "ContentBlock5": "EmbeddedResourceContentBlock",
     "McpServer1": "HttpMcpServer",
     "McpServer2": "SseMcpServer",
-    "McpServer3": "StdioMcpServer",
     "RequestPermissionOutcome1": "DeniedOutcome",
     "RequestPermissionOutcome2": "AllowedOutcome",
     "SessionUpdate1": "UserMessageChunk",
@@ -66,6 +64,10 @@ RENAME_MAP: dict[str, str] = {
     "ToolCallContent1": "ContentToolCallContent",
     "ToolCallContent2": "FileEditToolCallContent",
     "ToolCallContent3": "TerminalToolCallContent",
+}
+
+ALIASES_MAP = {
+    "StdioMcpServer": "McpServerStdio",
 }
 
 ENUM_LITERAL_MAP: dict[str, tuple[str, ...]] = {
@@ -87,16 +89,15 @@ FIELD_TYPE_OVERRIDES: tuple[tuple[str, str, str, bool], ...] = (
     ("PlanEntry", "priority", "PlanEntryPriority", False),
     ("PlanEntry", "status", "PlanEntryStatus", False),
     ("PromptResponse", "stop_reason", "StopReason", False),
-    ("ToolCallProgress", "kind", "ToolKind", True),
-    ("ToolCallProgress", "status", "ToolCallStatus", True),
-    ("ToolCallStart", "kind", "ToolKind", True),
-    ("ToolCallStart", "status", "ToolCallStatus", True),
     ("ToolCall", "kind", "ToolKind", True),
     ("ToolCall", "status", "ToolCallStatus", True),
+    ("ToolCallUpdate", "kind", "ToolKind", True),
+    ("ToolCallUpdate", "status", "ToolCallStatus", True),
 )
 
 DEFAULT_VALUE_OVERRIDES: tuple[tuple[str, str, str], ...] = (
     ("AgentCapabilities", "mcp_capabilities", "McpCapabilities()"),
+    ("AgentCapabilities", "session_capabilities", "SessionCapabilities()"),
     (
         "AgentCapabilities",
         "prompt_capabilities",
@@ -222,6 +223,7 @@ def _build_header_block() -> str:
 
 def _build_alias_block() -> str:
     alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
+    alias_lines += [f"{old} = {new}" for old, new in sorted(ALIASES_MAP.items())]
     return BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
 
 
@@ -421,6 +423,7 @@ def _normalize_stdio_model(content: str) -> str:
     replacement_line = '    type: Literal["stdio"] = "stdio"'
     new_content, count = STDIO_TYPE_PATTERN.subn(replacement_line, content)
     if count == 0:
+        print("Warning: stdio type placeholder not found; no replacements made.", file=sys.stderr)
         return content
     if count > 1:
         print(
