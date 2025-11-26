@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.6.3
+# Schema ref: refs/tags/v0.7.0
 
 from __future__ import annotations
 
@@ -30,6 +30,23 @@ class Jsonrpc(Enum):
     field_2_0 = "2.0"
 
 
+class AuthMethod(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Optional description providing more details about this authentication method.
+    description: Annotated[
+        Optional[str],
+        Field(description="Optional description providing more details about this authentication method."),
+    ] = None
+    # Unique identifier for this authentication method.
+    id: Annotated[str, Field(description="Unique identifier for this authentication method.")]
+    # Human-readable name of the authentication method.
+    name: Annotated[str, Field(description="Human-readable name of the authentication method.")]
+
+
 class AuthenticateRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -53,22 +70,6 @@ class AuthenticateResponse(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-
-
-class CommandInputHint(BaseModel):
-    # A hint to display when the input hasn't been provided yet
-    hint: Annotated[
-        str,
-        Field(description="A hint to display when the input hasn't been provided yet"),
-    ]
-
-
-class AvailableCommandInput(RootModel[CommandInputHint]):
-    # The input specification for a command.
-    root: Annotated[
-        CommandInputHint,
-        Field(description="The input specification for a command."),
-    ]
 
 
 class BlobResourceContents(BaseModel):
@@ -96,6 +97,23 @@ class CreateTerminalResponse(BaseModel):
             description="The unique identifier for the created terminal.",
         ),
     ]
+
+
+class Diff(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The new content after modification.
+    new_text: Annotated[str, Field(alias="newText", description="The new content after modification.")]
+    # The original content (None for new files).
+    old_text: Annotated[
+        Optional[str],
+        Field(alias="oldText", description="The original content (None for new files)."),
+    ] = None
+    # The file path being modified.
+    path: Annotated[str, Field(description="The file path being modified.")]
 
 
 class EnvVariable(BaseModel):
@@ -174,6 +192,11 @@ class HttpHeader(BaseModel):
 
 
 class Implementation(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
     # Intended for programmatic or logical use, but can be used as a display
     # name fallback if title isn’t present.
     name: Annotated[
@@ -193,11 +216,11 @@ class Implementation(BaseModel):
         ),
     ] = None
     # Version of the implementation. Can be displayed to the user or used
-    # for debugging or metrics purposes.
+    # for debugging or metrics purposes. (e.g. "1.0.0").
     version: Annotated[
         str,
         Field(
-            description="Version of the implementation. Can be displayed to the user or used\nfor debugging or metrics purposes."
+            description='Version of the implementation. Can be displayed to the user or used\nfor debugging or metrics purposes. (e.g. "1.0.0").'
         ),
     ]
 
@@ -207,6 +230,26 @@ class KillTerminalCommandResponse(BaseModel):
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+
+
+class ListSessionsRequest(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Opaque cursor token from a previous response's nextCursor field for cursor-based pagination
+    cursor: Annotated[
+        Optional[str],
+        Field(
+            description="Opaque cursor token from a previous response's nextCursor field for cursor-based pagination"
+        ),
+    ] = None
+    # Filter sessions by working directory. Must be an absolute path.
+    cwd: Annotated[
+        Optional[str],
+        Field(description="Filter sessions by working directory. Must be an absolute path."),
     ] = None
 
 
@@ -222,7 +265,12 @@ class McpCapabilities(BaseModel):
     sse: Annotated[Optional[bool], Field(description="Agent supports [`McpServer::Sse`].")] = False
 
 
-class HttpMcpServer(BaseModel):
+class McpServerHttp(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
     # HTTP headers to set when making requests to the MCP server.
     headers: Annotated[
         List[HttpHeader],
@@ -230,12 +278,16 @@ class HttpMcpServer(BaseModel):
     ]
     # Human-readable name identifying this MCP server.
     name: Annotated[str, Field(description="Human-readable name identifying this MCP server.")]
-    type: Literal["http"]
     # URL to the MCP server.
     url: Annotated[str, Field(description="URL to the MCP server.")]
 
 
-class SseMcpServer(BaseModel):
+class McpServerSse(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
     # HTTP headers to set when making requests to the MCP server.
     headers: Annotated[
         List[HttpHeader],
@@ -243,12 +295,16 @@ class SseMcpServer(BaseModel):
     ]
     # Human-readable name identifying this MCP server.
     name: Annotated[str, Field(description="Human-readable name identifying this MCP server.")]
-    type: Literal["sse"]
     # URL to the MCP server.
     url: Annotated[str, Field(description="URL to the MCP server.")]
 
 
-class StdioMcpServer(BaseModel):
+class McpServerStdio(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
     # Command-line arguments to pass to the MCP server.
     args: Annotated[
         List[str],
@@ -278,27 +334,6 @@ class ModelInfo(BaseModel):
     model_id: Annotated[str, Field(alias="modelId", description="Unique identifier for the model.")]
     # Human-readable name of the model.
     name: Annotated[str, Field(description="Human-readable name of the model.")]
-
-
-class NewSessionRequest(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The working directory for this session. Must be an absolute path.
-    cwd: Annotated[
-        str,
-        Field(description="The working directory for this session. Must be an absolute path."),
-    ]
-    # List of MCP (Model Context Protocol) servers the agent should connect to.
-    mcp_servers: Annotated[
-        List[Union[HttpMcpServer, SseMcpServer, StdioMcpServer]],
-        Field(
-            alias="mcpServers",
-            description="List of MCP (Model Context Protocol) servers the agent should connect to.",
-        ),
-    ]
 
 
 class PromptCapabilities(BaseModel):
@@ -345,34 +380,52 @@ class DeniedOutcome(BaseModel):
     outcome: Literal["cancelled"]
 
 
-class AllowedOutcome(BaseModel):
-    # The ID of the option the user selected.
-    option_id: Annotated[
-        str,
-        Field(alias="optionId", description="The ID of the option the user selected."),
-    ]
-    outcome: Literal["selected"]
+class Role(Enum):
+    assistant = "assistant"
+    user = "user"
 
 
-class RequestPermissionResponse(BaseModel):
+class SelectedPermissionOutcome(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    # The user's decision on the permission request.
-    outcome: Annotated[
-        Union[DeniedOutcome, AllowedOutcome],
-        Field(
-            description="The user's decision on the permission request.",
-            discriminator="outcome",
-        ),
+    # The ID of the option the user selected.
+    option_id: Annotated[
+        str,
+        Field(alias="optionId", description="The ID of the option the user selected."),
     ]
 
 
-class Role(Enum):
-    assistant = "assistant"
-    user = "user"
+class SessionInfo(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The working directory for this session. Must be an absolute path.
+    cwd: Annotated[
+        str,
+        Field(description="The working directory for this session. Must be an absolute path."),
+    ]
+    # Unique identifier for the session
+    session_id: Annotated[str, Field(alias="sessionId", description="Unique identifier for the session")]
+    # Human-readable title for the session
+    title: Annotated[Optional[str], Field(description="Human-readable title for the session")] = None
+    # ISO 8601 timestamp of last activity
+    updated_at: Annotated[
+        Optional[str],
+        Field(alias="updatedAt", description="ISO 8601 timestamp of last activity"),
+    ] = None
+
+
+class SessionListCapabilities(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
 
 
 class SessionModelState(BaseModel):
@@ -394,17 +447,6 @@ class SessionModelState(BaseModel):
         str,
         Field(alias="currentModelId", description="The current model the Agent is in."),
     ]
-
-
-class CurrentModeUpdate(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The ID of the current mode
-    current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
-    session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
 
 
 class SetSessionModeRequest(BaseModel):
@@ -447,6 +489,15 @@ class SetSessionModelResponse(BaseModel):
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
+
+
+class Terminal(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    terminal_id: Annotated[str, Field(alias="terminalId")]
 
 
 class TerminalExitStatus(BaseModel):
@@ -514,26 +565,11 @@ class TextResourceContents(BaseModel):
     uri: str
 
 
-class FileEditToolCallContent(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The new content after modification.
-    new_text: Annotated[str, Field(alias="newText", description="The new content after modification.")]
-    # The original content (None for new files).
-    old_text: Annotated[
-        Optional[str],
-        Field(alias="oldText", description="The original content (None for new files)."),
-    ] = None
-    # The file path being modified.
-    path: Annotated[str, Field(description="The file path being modified.")]
+class FileEditToolCallContent(Diff):
     type: Literal["diff"]
 
 
-class TerminalToolCallContent(BaseModel):
-    terminal_id: Annotated[str, Field(alias="terminalId")]
+class TerminalToolCallContent(Terminal):
     type: Literal["terminal"]
 
 
@@ -547,6 +583,19 @@ class ToolCallLocation(BaseModel):
     line: Annotated[Optional[int], Field(description="Optional line number within the file.", ge=0)] = None
     # The file path being accessed or modified.
     path: Annotated[str, Field(description="The file path being accessed or modified.")]
+
+
+class UnstructuredCommandInput(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A hint to display when the input hasn't been provided yet
+    hint: Annotated[
+        str,
+        Field(description="A hint to display when the input hasn't been provided yet"),
+    ]
 
 
 class WaitForTerminalExitRequest(BaseModel):
@@ -608,38 +657,6 @@ class WriteTextFileResponse(BaseModel):
     ] = None
 
 
-class AgentCapabilities(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Whether the agent supports `session/load`.
-    load_session: Annotated[
-        Optional[bool],
-        Field(
-            alias="loadSession",
-            description="Whether the agent supports `session/load`.",
-        ),
-    ] = False
-    # MCP capabilities supported by the agent.
-    mcp_capabilities: Annotated[
-        Optional[McpCapabilities],
-        Field(
-            alias="mcpCapabilities",
-            description="MCP capabilities supported by the agent.",
-        ),
-    ] = McpCapabilities()
-    # Prompt capabilities supported by the agent.
-    prompt_capabilities: Annotated[
-        Optional[PromptCapabilities],
-        Field(
-            alias="promptCapabilities",
-            description="Prompt capabilities supported by the agent.",
-        ),
-    ] = PromptCapabilities()
-
-
 class AgentErrorMessage(BaseModel):
     jsonrpc: Jsonrpc
     # JSON RPC Request Id
@@ -671,40 +688,22 @@ class Annotations(BaseModel):
     priority: Optional[float] = None
 
 
-class AuthMethod(BaseModel):
+class AudioContent(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    # Optional description providing more details about this authentication method.
-    description: Annotated[
-        Optional[str],
-        Field(description="Optional description providing more details about this authentication method."),
-    ] = None
-    # Unique identifier for this authentication method.
-    id: Annotated[str, Field(description="Unique identifier for this authentication method.")]
-    # Human-readable name of the authentication method.
-    name: Annotated[str, Field(description="Human-readable name of the authentication method.")]
+    annotations: Optional[Annotations] = None
+    data: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
 
 
-class AvailableCommand(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Human-readable description of what the command does.
-    description: Annotated[str, Field(description="Human-readable description of what the command does.")]
-    # Input for the command if required
-    input: Annotated[
-        Optional[AvailableCommandInput],
-        Field(description="Input for the command if required"),
-    ] = None
-    # Command name (e.g., `create_plan`, `research_codebase`).
-    name: Annotated[
-        str,
-        Field(description="Command name (e.g., `create_plan`, `research_codebase`)."),
+class AvailableCommandInput(RootModel[UnstructuredCommandInput]):
+    # The input specification for a command.
+    root: Annotated[
+        UnstructuredCommandInput,
+        Field(description="The input specification for a command."),
     ]
 
 
@@ -771,56 +770,8 @@ class ClientNotificationMessage(BaseModel):
     params: Optional[Union[CancelNotification, Any]] = None
 
 
-class TextContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    text: str
-    type: Literal["text"]
-
-
-class ImageContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mime_type: Annotated[str, Field(alias="mimeType")]
-    type: Literal["image"]
-    uri: Optional[str] = None
-
-
-class AudioContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    data: str
-    mime_type: Annotated[str, Field(alias="mimeType")]
+class AudioContentBlock(AudioContent):
     type: Literal["audio"]
-
-
-class ResourceContentBlock(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    annotations: Optional[Annotations] = None
-    description: Optional[str] = None
-    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
-    name: str
-    size: Optional[int] = None
-    title: Optional[str] = None
-    type: Literal["resource_link"]
-    uri: str
 
 
 class CreateTerminalRequest(BaseModel):
@@ -863,6 +814,28 @@ class CreateTerminalRequest(BaseModel):
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
 
 
+class CurrentModeUpdate(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The ID of the current mode
+    current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
+
+
+class ImageContent(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    data: str
+    mime_type: Annotated[str, Field(alias="mimeType")]
+    uri: Optional[str] = None
+
+
 class InitializeRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -899,53 +872,6 @@ class InitializeRequest(BaseModel):
     ]
 
 
-class InitializeResponse(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Capabilities supported by the agent.
-    agent_capabilities: Annotated[
-        Optional[AgentCapabilities],
-        Field(
-            alias="agentCapabilities",
-            description="Capabilities supported by the agent.",
-        ),
-    ] = AgentCapabilities()
-    # Information about the Agent name and version sent to the Client.
-    #
-    # Note: in future versions of the protocol, this will be required.
-    agent_info: Annotated[
-        Optional[Implementation],
-        Field(
-            alias="agentInfo",
-            description="Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
-        ),
-    ] = None
-    # Authentication methods supported by the agent.
-    auth_methods: Annotated[
-        Optional[List[AuthMethod]],
-        Field(
-            alias="authMethods",
-            description="Authentication methods supported by the agent.",
-        ),
-    ] = []
-    # The protocol version the client specified if supported by the agent,
-    # or the latest protocol version supported by the agent.
-    #
-    # The client should disconnect, if it doesn't support this version.
-    protocol_version: Annotated[
-        int,
-        Field(
-            alias="protocolVersion",
-            description="The protocol version the client specified if supported by the agent,\nor the latest protocol version supported by the agent.\n\nThe client should disconnect, if it doesn't support this version.",
-            ge=0,
-            le=65535,
-        ),
-    ]
-
-
 class KillTerminalCommandRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -958,24 +884,52 @@ class KillTerminalCommandRequest(BaseModel):
     terminal_id: Annotated[str, Field(alias="terminalId", description="The ID of the terminal to kill.")]
 
 
-class LoadSessionRequest(BaseModel):
+class ListSessionsResponse(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    # The working directory for this session.
-    cwd: Annotated[str, Field(description="The working directory for this session.")]
-    # List of MCP servers to connect to for this session.
+    # Opaque cursor token. If present, pass this in the next request's cursor parameter
+    # to fetch the next page. If absent, there are no more results.
+    next_cursor: Annotated[
+        Optional[str],
+        Field(
+            alias="nextCursor",
+            description="Opaque cursor token. If present, pass this in the next request's cursor parameter\nto fetch the next page. If absent, there are no more results.",
+        ),
+    ] = None
+    # Array of session information objects
+    sessions: Annotated[List[SessionInfo], Field(description="Array of session information objects")]
+
+
+class HttpMcpServer(McpServerHttp):
+    type: Literal["http"]
+
+
+class SseMcpServer(McpServerSse):
+    type: Literal["sse"]
+
+
+class NewSessionRequest(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The working directory for this session. Must be an absolute path.
+    cwd: Annotated[
+        str,
+        Field(description="The working directory for this session. Must be an absolute path."),
+    ]
+    # List of MCP (Model Context Protocol) servers the agent should connect to.
     mcp_servers: Annotated[
-        List[Union[HttpMcpServer, SseMcpServer, StdioMcpServer]],
+        List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]],
         Field(
             alias="mcpServers",
-            description="List of MCP servers to connect to for this session.",
+            description="List of MCP (Model Context Protocol) servers the agent should connect to.",
         ),
     ]
-    # The ID of the session to load.
-    session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to load.")]
 
 
 class PermissionOption(BaseModel):
@@ -1068,6 +1022,60 @@ class ReleaseTerminalRequest(BaseModel):
     terminal_id: Annotated[str, Field(alias="terminalId", description="The ID of the terminal to release.")]
 
 
+class AllowedOutcome(SelectedPermissionOutcome):
+    outcome: Literal["selected"]
+
+
+class RequestPermissionResponse(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The user's decision on the permission request.
+    outcome: Annotated[
+        Union[DeniedOutcome, AllowedOutcome],
+        Field(
+            description="The user's decision on the permission request.",
+            discriminator="outcome",
+        ),
+    ]
+
+
+class ResourceLink(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    annotations: Optional[Annotations] = None
+    description: Optional[str] = None
+    mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
+    name: str
+    size: Optional[int] = None
+    title: Optional[str] = None
+    uri: str
+
+
+class SessionCapabilities(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # **UNSTABLE**
+    #
+    # This capability is not part of the spec yet, and may be removed or changed at any point.
+    #
+    # Whether the agent supports `session/list`.
+    list: Annotated[
+        Optional[SessionListCapabilities],
+        Field(
+            description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/list`."
+        ),
+    ] = None
+
+
 class SessionMode(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1101,23 +1109,73 @@ class SessionModeState(BaseModel):
     ]
 
 
-class AgentPlanUpdate(BaseModel):
+class CurrentModeUpdate(CurrentModeUpdate):
+    session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
+
+
+class TextContent(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    # The list of tasks to be accomplished.
-    #
-    # When updating a plan, the agent must send a complete list of all entries
-    # with their current status. The client replaces the entire plan with each update.
-    entries: Annotated[
-        List[PlanEntry],
+    annotations: Optional[Annotations] = None
+    text: str
+
+
+class AgentCapabilities(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Whether the agent supports `session/load`.
+    load_session: Annotated[
+        Optional[bool],
         Field(
-            description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
+            alias="loadSession",
+            description="Whether the agent supports `session/load`.",
         ),
+    ] = False
+    # MCP capabilities supported by the agent.
+    mcp_capabilities: Annotated[
+        Optional[McpCapabilities],
+        Field(
+            alias="mcpCapabilities",
+            description="MCP capabilities supported by the agent.",
+        ),
+    ] = McpCapabilities()
+    # Prompt capabilities supported by the agent.
+    prompt_capabilities: Annotated[
+        Optional[PromptCapabilities],
+        Field(
+            alias="promptCapabilities",
+            description="Prompt capabilities supported by the agent.",
+        ),
+    ] = PromptCapabilities()
+    session_capabilities: Annotated[Optional[SessionCapabilities], Field(alias="sessionCapabilities")] = (
+        SessionCapabilities()
+    )
+
+
+class AvailableCommand(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Human-readable description of what the command does.
+    description: Annotated[str, Field(description="Human-readable description of what the command does.")]
+    # Input for the command if required
+    input: Annotated[
+        Optional[AvailableCommandInput],
+        Field(description="Input for the command if required"),
+    ] = None
+    # Command name (e.g., `create_plan`, `research_codebase`).
+    name: Annotated[
+        str,
+        Field(description="Command name (e.g., `create_plan`, `research_codebase`)."),
     ]
-    session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
 
 
 class AvailableCommandsUpdate(BaseModel):
@@ -1131,51 +1189,21 @@ class AvailableCommandsUpdate(BaseModel):
         List[AvailableCommand],
         Field(alias="availableCommands", description="Commands the agent can execute"),
     ]
-    session_update: Annotated[Literal["available_commands_update"], Field(alias="sessionUpdate")]
 
 
-class ClientResponseMessage(BaseModel):
-    jsonrpc: Jsonrpc
-    # JSON RPC Request Id
-    #
-    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
-    #
-    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
-    #
-    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
-    #
-    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
-    id: Annotated[
-        Optional[Union[int, str]],
-        Field(
-            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
-        ),
-    ] = None
-    # All possible responses that a client can send to an agent.
-    #
-    # This enum is used internally for routing RPC responses. You typically won't need
-    # to use this directly - the responses are handled automatically by the connection.
-    #
-    # These are responses to the corresponding `AgentRequest` variants.
-    result: Annotated[
-        Union[
-            WriteTextFileResponse,
-            ReadTextFileResponse,
-            RequestPermissionResponse,
-            CreateTerminalResponse,
-            TerminalOutputResponse,
-            ReleaseTerminalResponse,
-            WaitForTerminalExitResponse,
-            KillTerminalCommandResponse,
-            Any,
-        ],
-        Field(
-            description="All possible responses that a client can send to an agent.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `AgentRequest` variants."
-        ),
-    ]
+class TextContentBlock(TextContent):
+    type: Literal["text"]
 
 
-class EmbeddedResourceContentBlock(BaseModel):
+class ImageContentBlock(ImageContent):
+    type: Literal["image"]
+
+
+class ResourceContentBlock(ResourceLink):
+    type: Literal["resource_link"]
+
+
+class EmbeddedResource(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1187,7 +1215,73 @@ class EmbeddedResourceContentBlock(BaseModel):
         Union[TextResourceContents, BlobResourceContents],
         Field(description="Resource content that can be embedded in a message."),
     ]
-    type: Literal["resource"]
+
+
+class InitializeResponse(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # Capabilities supported by the agent.
+    agent_capabilities: Annotated[
+        Optional[AgentCapabilities],
+        Field(
+            alias="agentCapabilities",
+            description="Capabilities supported by the agent.",
+        ),
+    ] = AgentCapabilities()
+    # Information about the Agent name and version sent to the Client.
+    #
+    # Note: in future versions of the protocol, this will be required.
+    agent_info: Annotated[
+        Optional[Implementation],
+        Field(
+            alias="agentInfo",
+            description="Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
+        ),
+    ] = None
+    # Authentication methods supported by the agent.
+    auth_methods: Annotated[
+        Optional[List[AuthMethod]],
+        Field(
+            alias="authMethods",
+            description="Authentication methods supported by the agent.",
+        ),
+    ] = []
+    # The protocol version the client specified if supported by the agent,
+    # or the latest protocol version supported by the agent.
+    #
+    # The client should disconnect, if it doesn't support this version.
+    protocol_version: Annotated[
+        int,
+        Field(
+            alias="protocolVersion",
+            description="The protocol version the client specified if supported by the agent,\nor the latest protocol version supported by the agent.\n\nThe client should disconnect, if it doesn't support this version.",
+            ge=0,
+            le=65535,
+        ),
+    ]
+
+
+class LoadSessionRequest(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The working directory for this session.
+    cwd: Annotated[str, Field(description="The working directory for this session.")]
+    # List of MCP servers to connect to for this session.
+    mcp_servers: Annotated[
+        List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]],
+        Field(
+            alias="mcpServers",
+            description="List of MCP servers to connect to for this session.",
+        ),
+    ]
+    # The ID of the session to load.
+    session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to load.")]
 
 
 class LoadSessionResponse(BaseModel):
@@ -1256,6 +1350,92 @@ class NewSessionResponse(BaseModel):
     ]
 
 
+class Plan(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The list of tasks to be accomplished.
+    #
+    # When updating a plan, the agent must send a complete list of all entries
+    # with their current status. The client replaces the entire plan with each update.
+    entries: Annotated[
+        List[PlanEntry],
+        Field(
+            description="The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update."
+        ),
+    ]
+
+
+class AgentPlanUpdate(Plan):
+    session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
+
+
+class AvailableCommandsUpdate(AvailableCommandsUpdate):
+    session_update: Annotated[Literal["available_commands_update"], Field(alias="sessionUpdate")]
+
+
+class ClientResponseMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    # All possible responses that a client can send to an agent.
+    #
+    # This enum is used internally for routing RPC responses. You typically won't need
+    # to use this directly - the responses are handled automatically by the connection.
+    #
+    # These are responses to the corresponding `AgentRequest` variants.
+    result: Annotated[
+        Union[
+            WriteTextFileResponse,
+            ReadTextFileResponse,
+            RequestPermissionResponse,
+            CreateTerminalResponse,
+            TerminalOutputResponse,
+            ReleaseTerminalResponse,
+            WaitForTerminalExitResponse,
+            KillTerminalCommandResponse,
+            Any,
+        ],
+        Field(
+            description="All possible responses that a client can send to an agent.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `AgentRequest` variants."
+        ),
+    ]
+
+
+class EmbeddedResourceContentBlock(EmbeddedResource):
+    type: Literal["resource"]
+
+
+class ContentChunk(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # A single item of content
+    content: Annotated[
+        Union[
+            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
+        ],
+        Field(description="A single item of content", discriminator="type"),
+    ]
+
+
 class PromptRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1299,55 +1479,65 @@ class PromptRequest(BaseModel):
     ]
 
 
-class UserMessageChunk(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
+class UserMessageChunk(ContentChunk):
     session_update: Annotated[Literal["user_message_chunk"], Field(alias="sessionUpdate")]
 
 
-class AgentMessageChunk(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
+class AgentMessageChunk(ContentChunk):
     session_update: Annotated[Literal["agent_message_chunk"], Field(alias="sessionUpdate")]
 
 
-class AgentThoughtChunk(BaseModel):
+class AgentThoughtChunk(ContentChunk):
+    session_update: Annotated[Literal["agent_thought_chunk"], Field(alias="sessionUpdate")]
+
+
+class AgentResponseMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    # All possible responses that an agent can send to a client.
+    #
+    # This enum is used internally for routing RPC responses. You typically won't need
+    # to use this directly - the responses are handled automatically by the connection.
+    #
+    # These are responses to the corresponding `ClientRequest` variants.
+    result: Annotated[
+        Union[
+            InitializeResponse,
+            AuthenticateResponse,
+            NewSessionResponse,
+            LoadSessionResponse,
+            ListSessionsResponse,
+            SetSessionModeResponse,
+            PromptResponse,
+            SetSessionModelResponse,
+            Any,
+        ],
+        Field(
+            description="All possible responses that an agent can send to a client.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `ClientRequest` variants."
+        ),
+    ]
+
+
+class Content(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
         Field(alias="_meta", description="Extension point for implementations"),
     ] = None
-    # A single item of content
-    content: Annotated[
-        Union[
-            TextContentBlock, ImageContentBlock, AudioContentBlock, ResourceContentBlock, EmbeddedResourceContentBlock
-        ],
-        Field(description="A single item of content", discriminator="type"),
-    ]
-    session_update: Annotated[Literal["agent_thought_chunk"], Field(alias="sessionUpdate")]
-
-
-class ContentToolCallContent(BaseModel):
     # The actual content block.
     content: Annotated[
         Union[
@@ -1355,10 +1545,13 @@ class ContentToolCallContent(BaseModel):
         ],
         Field(description="The actual content block.", discriminator="type"),
     ]
+
+
+class ContentToolCallContent(Content):
     type: Literal["content"]
 
 
-class ToolCall(BaseModel):
+class ToolCallUpdate(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1391,6 +1584,39 @@ class ToolCall(BaseModel):
     ]
 
 
+class ClientRequestMessage(BaseModel):
+    jsonrpc: Jsonrpc
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+    method: str
+    params: Optional[
+        Union[
+            InitializeRequest,
+            AuthenticateRequest,
+            NewSessionRequest,
+            LoadSessionRequest,
+            ListSessionsRequest,
+            SetSessionModeRequest,
+            PromptRequest,
+            SetSessionModelRequest,
+            Any,
+        ]
+    ] = None
+
+
 class RequestPermissionRequest(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
@@ -1406,7 +1632,7 @@ class RequestPermissionRequest(BaseModel):
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
     # Details about the tool call requiring permission.
     tool_call: Annotated[
-        ToolCall,
+        ToolCallUpdate,
         Field(
             alias="toolCall",
             description="Details about the tool call requiring permission.",
@@ -1414,7 +1640,11 @@ class RequestPermissionRequest(BaseModel):
     ]
 
 
-class ToolCallStart(BaseModel):
+class ToolCallProgress(ToolCallUpdate):
+    session_update: Annotated[Literal["tool_call_update"], Field(alias="sessionUpdate")]
+
+
+class ToolCall(BaseModel):
     # Extension point for implementations
     field_meta: Annotated[
         Optional[Any],
@@ -1449,7 +1679,6 @@ class ToolCallStart(BaseModel):
         Optional[Any],
         Field(alias="rawOutput", description="Raw output returned by the tool."),
     ] = None
-    session_update: Annotated[Literal["tool_call"], Field(alias="sessionUpdate")]
     # Current execution status of the tool call.
     status: Annotated[Optional[ToolCallStatus], Field(description="Current execution status of the tool call.")] = None
     # Human-readable title describing what the tool is doing.
@@ -1467,140 +1696,8 @@ class ToolCallStart(BaseModel):
     ]
 
 
-class ToolCallProgress(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # Replace the content collection.
-    content: Annotated[
-        Optional[List[Union[ContentToolCallContent, FileEditToolCallContent, TerminalToolCallContent]]],
-        Field(description="Replace the content collection."),
-    ] = None
-    # Update the tool kind.
-    kind: Annotated[Optional[ToolKind], Field(description="Update the tool kind.")] = None
-    # Replace the locations collection.
-    locations: Annotated[
-        Optional[List[ToolCallLocation]],
-        Field(description="Replace the locations collection."),
-    ] = None
-    # Update the raw input.
-    raw_input: Annotated[Optional[Any], Field(alias="rawInput", description="Update the raw input.")] = None
-    # Update the raw output.
-    raw_output: Annotated[Optional[Any], Field(alias="rawOutput", description="Update the raw output.")] = None
-    session_update: Annotated[Literal["tool_call_update"], Field(alias="sessionUpdate")]
-    # Update the execution status.
-    status: Annotated[Optional[ToolCallStatus], Field(description="Update the execution status.")] = None
-    # Update the human-readable title.
-    title: Annotated[Optional[str], Field(description="Update the human-readable title.")] = None
-    # The ID of the tool call being updated.
-    tool_call_id: Annotated[
-        str,
-        Field(alias="toolCallId", description="The ID of the tool call being updated."),
-    ]
-
-
-class AgentResponseMessage(BaseModel):
-    jsonrpc: Jsonrpc
-    # JSON RPC Request Id
-    #
-    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
-    #
-    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
-    #
-    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
-    #
-    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
-    id: Annotated[
-        Optional[Union[int, str]],
-        Field(
-            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
-        ),
-    ] = None
-    # All possible responses that an agent can send to a client.
-    #
-    # This enum is used internally for routing RPC responses. You typically won't need
-    # to use this directly - the responses are handled automatically by the connection.
-    #
-    # These are responses to the corresponding `ClientRequest` variants.
-    result: Annotated[
-        Union[
-            InitializeResponse,
-            AuthenticateResponse,
-            NewSessionResponse,
-            LoadSessionResponse,
-            SetSessionModeResponse,
-            PromptResponse,
-            SetSessionModelResponse,
-            Any,
-        ],
-        Field(
-            description="All possible responses that an agent can send to a client.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `ClientRequest` variants."
-        ),
-    ]
-
-
-class ClientRequestMessage(BaseModel):
-    jsonrpc: Jsonrpc
-    # JSON RPC Request Id
-    #
-    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
-    #
-    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
-    #
-    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
-    #
-    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
-    id: Annotated[
-        Optional[Union[int, str]],
-        Field(
-            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
-        ),
-    ] = None
-    method: str
-    params: Optional[
-        Union[
-            InitializeRequest,
-            AuthenticateRequest,
-            NewSessionRequest,
-            LoadSessionRequest,
-            SetSessionModeRequest,
-            PromptRequest,
-            SetSessionModelRequest,
-            Any,
-        ]
-    ] = None
-
-
-class SessionNotification(BaseModel):
-    # Extension point for implementations
-    field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
-    ] = None
-    # The ID of the session this update pertains to.
-    session_id: Annotated[
-        str,
-        Field(
-            alias="sessionId",
-            description="The ID of the session this update pertains to.",
-        ),
-    ]
-    # The actual update content.
-    update: Annotated[
-        Union[
-            UserMessageChunk,
-            AgentMessageChunk,
-            AgentThoughtChunk,
-            ToolCallStart,
-            ToolCallProgress,
-            AgentPlanUpdate,
-            AvailableCommandsUpdate,
-            CurrentModeUpdate,
-        ],
-        Field(description="The actual update content.", discriminator="session_update"),
-    ]
+class ToolCallStart(ToolCall):
+    session_update: Annotated[Literal["tool_call"], Field(alias="sessionUpdate")]
 
 
 class AgentRequestMessage(BaseModel):
@@ -1634,6 +1731,36 @@ class AgentRequestMessage(BaseModel):
             Any,
         ]
     ] = None
+
+
+class SessionNotification(BaseModel):
+    # Extension point for implementations
+    field_meta: Annotated[
+        Optional[Any],
+        Field(alias="_meta", description="Extension point for implementations"),
+    ] = None
+    # The ID of the session this update pertains to.
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="The ID of the session this update pertains to.",
+        ),
+    ]
+    # The actual update content.
+    update: Annotated[
+        Union[
+            UserMessageChunk,
+            AgentMessageChunk,
+            AgentThoughtChunk,
+            ToolCallStart,
+            ToolCallProgress,
+            AgentPlanUpdate,
+            AvailableCommandsUpdate,
+            CurrentModeUpdate,
+        ],
+        Field(description="The actual update content.", discriminator="session_update"),
+    ]
 
 
 class AgentNotificationMessage(BaseModel):
@@ -1677,7 +1804,6 @@ AgentOutgoingMessage1 = AgentRequestMessage
 AgentOutgoingMessage2 = AgentResponseMessage
 AgentOutgoingMessage3 = AgentErrorMessage
 AgentOutgoingMessage4 = AgentNotificationMessage
-AvailableCommandInput1 = CommandInputHint
 ClientOutgoingMessage1 = ClientRequestMessage
 ClientOutgoingMessage2 = ClientResponseMessage
 ClientOutgoingMessage3 = ClientErrorMessage
@@ -1689,7 +1815,6 @@ ContentBlock4 = ResourceContentBlock
 ContentBlock5 = EmbeddedResourceContentBlock
 McpServer1 = HttpMcpServer
 McpServer2 = SseMcpServer
-McpServer3 = StdioMcpServer
 RequestPermissionOutcome1 = DeniedOutcome
 RequestPermissionOutcome2 = AllowedOutcome
 SessionUpdate1 = UserMessageChunk
@@ -1703,3 +1828,4 @@ SessionUpdate8 = CurrentModeUpdate
 ToolCallContent1 = ContentToolCallContent
 ToolCallContent2 = FileEditToolCallContent
 ToolCallContent3 = TerminalToolCallContent
+StdioMcpServer = McpServerStdio

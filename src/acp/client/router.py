@@ -22,8 +22,8 @@ from ..utils import normalize_result
 __all__ = ["build_client_router"]
 
 
-def build_client_router(client: Client) -> MessageRouter:
-    router = MessageRouter()
+def build_client_router(client: Client, use_unstable_protocol: bool = False) -> MessageRouter:
+    router = MessageRouter(use_unstable_protocol=use_unstable_protocol)
 
     router.route_request(CLIENT_METHODS["fs_write_text_file"], WriteTextFileRequest, client, "write_text_file")
     router.route_request(CLIENT_METHODS["fs_read_text_file"], ReadTextFileRequest, client, "read_text_file")

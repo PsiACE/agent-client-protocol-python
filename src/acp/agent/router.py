@@ -10,6 +10,7 @@ from ..schema import (
     AuthenticateRequest,
     CancelNotification,
     InitializeRequest,
+    ListSessionsRequest,
     LoadSessionRequest,
     NewSessionRequest,
     PromptRequest,
@@ -21,8 +22,8 @@ from ..utils import normalize_result
 __all__ = ["build_agent_router"]
 
 
-def build_agent_router(agent: Agent) -> MessageRouter:
-    router = MessageRouter()
+def build_agent_router(agent: Agent, use_unstable_protocol: bool = False) -> MessageRouter:
+    router = MessageRouter(use_unstable_protocol=use_unstable_protocol)
 
     router.route_request(AGENT_METHODS["initialize"], InitializeRequest, agent, "initialize")
     router.route_request(AGENT_METHODS["session_new"], NewSessionRequest, agent, "new_session")
@@ -33,6 +34,7 @@ def build_agent_router(agent: Agent) -> MessageRouter:
         "load_session",
         adapt_result=normalize_result,
     )
+    router.route_request(AGENT_METHODS["session_list"], ListSessionsRequest, agent, "list_sessions", unstable=True)
     router.route_request(
         AGENT_METHODS["session_set_mode"],
         SetSessionModeRequest,
@@ -47,6 +49,7 @@ def build_agent_router(agent: Agent) -> MessageRouter:
         agent,
         "set_session_model",
         adapt_result=normalize_result,
+        unstable=True,
     )
     router.route_request(
         AGENT_METHODS["authenticate"],
