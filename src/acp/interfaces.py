@@ -24,8 +24,11 @@ from .schema import (
     InitializeResponse,
     KillTerminalCommandRequest,
     KillTerminalCommandResponse,
+    ListSessionsRequest,
+    ListSessionsResponse,
     LoadSessionRequest,
     LoadSessionResponse,
+    McpServerStdio,
     NewSessionRequest,
     NewSessionResponse,
     PermissionOption,
@@ -44,7 +47,6 @@ from .schema import (
     SetSessionModeRequest,
     SetSessionModeResponse,
     SseMcpServer,
-    StdioMcpServer,
     TerminalOutputRequest,
     TerminalOutputResponse,
     TextContentBlock,
@@ -142,13 +144,18 @@ class Agent(Protocol):
 
     @param_model(NewSessionRequest)
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse: ...
 
     @param_model(LoadSessionRequest)
     async def load_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], session_id: str, **kwargs: Any
     ) -> LoadSessionResponse | None: ...
+
+    @param_model(ListSessionsRequest)
+    async def list_sessions(
+        self, cursor: str | None = None, cwd: str | None = None, **kwargs: Any
+    ) -> ListSessionsResponse: ...
 
     @param_model(SetSessionModeRequest)
     async def set_session_mode(self, mode_id: str, session_id: str, **kwargs: Any) -> SetSessionModeResponse | None: ...

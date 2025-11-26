@@ -28,7 +28,7 @@ from acp.schema import (
     Implementation,
     ResourceContentBlock,
     SseMcpServer,
-    StdioMcpServer,
+    McpServerStdio,
     TextContentBlock,
 )
 
@@ -66,7 +66,7 @@ class ExampleAgent(Agent):
         return AuthenticateResponse()
 
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse:
         logging.info("Received new session request")
         session_id = str(self._next_session_id)
@@ -75,7 +75,7 @@ class ExampleAgent(Agent):
         return NewSessionResponse(session_id=session_id, modes=None)
 
     async def load_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], session_id: str, **kwargs: Any
     ) -> LoadSessionResponse | None:
         logging.info("Received load session request %s", session_id)
         self._sessions.add(session_id)

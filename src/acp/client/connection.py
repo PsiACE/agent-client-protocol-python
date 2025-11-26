@@ -19,8 +19,11 @@ from ..schema import (
     Implementation,
     InitializeRequest,
     InitializeResponse,
+    ListSessionsRequest,
+    ListSessionsResponse,
     LoadSessionRequest,
     LoadSessionResponse,
+    McpServerStdio,
     NewSessionRequest,
     NewSessionResponse,
     PromptRequest,
@@ -31,7 +34,6 @@ from ..schema import (
     SetSessionModeRequest,
     SetSessionModeResponse,
     SseMcpServer,
-    StdioMcpServer,
     TextContentBlock,
 )
 from ..utils import compatible_class, notify_model, param_model, request_model, request_model_from_dict
@@ -51,12 +53,14 @@ class ClientSideConnection:
         to_client: Callable[[Agent], Client] | Client,
         input_stream: Any,
         output_stream: Any,
+        *,
+        use_unstable_protocol: bool = False,
         **connection_kwargs: Any,
     ) -> None:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
         client = to_client(cast(Agent, self)) if callable(to_client) else to_client
-        handler = build_client_router(cast(Client, client))
+        handler = build_client_router(cast(Client, client), use_unstable_protocol=use_unstable_protocol)
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
         if on_connect := getattr(client, "on_connect", None):
             on_connect(self)
@@ -83,7 +87,7 @@ class ClientSideConnection:
 
     @param_model(NewSessionRequest)
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse:
         return await request_model(
             self._conn,
@@ -94,13 +98,24 @@ class ClientSideConnection:
 
     @param_model(LoadSessionRequest)
     async def load_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], session_id: str, **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], session_id: str, **kwargs: Any
     ) -> LoadSessionResponse:
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["session_load"],
             LoadSessionRequest(cwd=cwd, mcp_servers=mcp_servers, session_id=session_id, field_meta=kwargs or None),
             LoadSessionResponse,
+        )
+
+    @param_model(ListSessionsRequest)
+    async def list_sessions(
+        self, cursor: str | None = None, cwd: str | None = None, **kwargs: Any
+    ) -> ListSessionsResponse:
+        return await request_model_from_dict(
+            self._conn,
+            AGENT_METHODS["session_list"],
+            ListSessionsRequest(cursor=cursor, cwd=cwd, field_meta=kwargs or None),
+            ListSessionsResponse,
         )
 
     @param_model(SetSessionModeRequest)

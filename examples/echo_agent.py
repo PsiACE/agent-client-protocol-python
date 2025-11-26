@@ -22,7 +22,7 @@ from acp.schema import (
     Implementation,
     ResourceContentBlock,
     SseMcpServer,
-    StdioMcpServer,
+    McpServerStdio,
     TextContentBlock,
 )
 
@@ -43,7 +43,7 @@ class EchoAgent(Agent):
         return InitializeResponse(protocol_version=protocol_version)
 
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | StdioMcpServer], **kwargs: Any
+        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
     ) -> NewSessionResponse:
         return NewSessionResponse(session_id=uuid4().hex)
 
