@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from acp import (
-    Client,
-    connect_to_agent,
-    RequestError,
-    text_block,
     PROTOCOL_VERSION,
+    Client,
+    RequestError,
+    connect_to_agent,
+    text_block,
 )
 from acp.core import ClientSideConnection
 from acp.schema import (
@@ -154,8 +154,8 @@ async def interactive_loop(conn: ClientSideConnection, session_id: str) -> None:
                 session_id=session_id,
                 prompt=[text_block(line)],
             )
-        except Exception as exc:  # noqa: BLE001
-            logging.error("Prompt failed: %s", exc)
+        except Exception as exc:
+            logging.error("Prompt failed: %s", exc)  # noqa: TRY400
 
 
 async def main(argv: list[str]) -> int:
