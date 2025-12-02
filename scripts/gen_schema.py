@@ -162,7 +162,7 @@ def generate_schema() -> None:
 
 def postprocess_generated_schema(output_path: Path) -> list[str]:
     if not output_path.exists():
-        raise RuntimeError(f"Generated schema not found at {output_path}")  # noqa: TRY003
+        raise RuntimeError(f"Generated schema not found at {output_path}")
 
     raw_content = output_path.read_text(encoding="utf-8")
     header_block = _build_header_block()

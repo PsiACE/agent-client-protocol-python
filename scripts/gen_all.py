@@ -129,7 +129,7 @@ def fetch_json(url: str) -> dict:
         with urllib.request.urlopen(url) as response:  # noqa: S310 - trusted source configured by repo
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.URLError as exc:
-        raise RuntimeError(f"Failed to fetch {url}: {exc}") from exc  # noqa: TRY003
+        raise RuntimeError(f"Failed to fetch {url}: {exc}") from exc
 
 
 def _cached_ref() -> str | None:

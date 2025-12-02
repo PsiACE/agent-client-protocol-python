@@ -17,7 +17,7 @@ def generate_meta() -> None:
     meta_json = SCHEMA_DIR / "meta.json"
     out_py = ROOT / "src" / "acp" / "meta.py"
     if not meta_json.exists():
-        raise SystemExit("schema/meta.json not found. Run gen_schema.py first.")  # noqa: TRY003
+        raise SystemExit("schema/meta.json not found. Run gen_schema.py first.")
 
     data = json.loads(meta_json.read_text("utf-8"))
     agent_methods = data.get("agentMethods", {})
