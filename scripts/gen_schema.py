@@ -32,18 +32,15 @@ STDIO_TYPE_PATTERN = re.compile(
     r"(?:\s*=\s*['\"][^'\"]+['\"])?\s*$",
     re.MULTILINE,
 )
+MODELS_TO_REMOVE = ["Model1", "Model2", "Model3", "Model4", "Model5", "Model6", "Model"]
 
 # Map of numbered classes produced by datamodel-code-generator to descriptive names.
 # Keep this in sync with the Rust/TypeScript SDK nomenclature.
 RENAME_MAP: dict[str, str] = {
-    "AgentOutgoingMessage1": "AgentRequestMessage",
-    "AgentOutgoingMessage2": "AgentResponseMessage",
-    "AgentOutgoingMessage3": "AgentErrorMessage",
-    "AgentOutgoingMessage4": "AgentNotificationMessage",
-    "ClientOutgoingMessage1": "ClientRequestMessage",
-    "ClientOutgoingMessage2": "ClientResponseMessage",
-    "ClientOutgoingMessage3": "ClientErrorMessage",
-    "ClientOutgoingMessage4": "ClientNotificationMessage",
+    "AgentResponse1": "AgentResponseMessage",
+    "AgentResponse2": "AgentErrorMessage",
+    "ClientResponse1": "ClientResponseMessage",
+    "ClientResponse2": "ClientErrorMessage",
     "ContentBlock1": "TextContentBlock",
     "ContentBlock2": "ImageContentBlock",
     "ContentBlock3": "AudioContentBlock",
@@ -172,6 +169,7 @@ def postprocess_generated_schema(output_path: Path) -> list[str]:
 
     content = _strip_existing_header(raw_content)
     content = _remove_backcompat_block(content)
+    content = _remove_unused_models(content)
     content, leftover_classes = _rename_numbered_models(content)
 
     processing_steps: tuple[_ProcessingStep, ...] = (
@@ -516,6 +514,18 @@ def _inject_enum_aliases(content: str) -> str:
         return content
     insertion_point = class_index + 1  # include leading newline
     return content[:insertion_point] + block + content[insertion_point:]
+
+
+def _remove_unused_models(content: str) -> str:
+    for model_name in MODELS_TO_REMOVE:
+        pattern = re.compile(
+            rf"^(class {model_name}\([\s\S]*?\):)([\s\S]*?)(?=^\S|\Z)",
+            re.MULTILINE,
+        )
+        content, count = pattern.subn("", content)
+        if count > 0:
+            print(f"Removed unused model: {model_name}", file=sys.stderr)
+    return content
 
 
 if __name__ == "__main__":
