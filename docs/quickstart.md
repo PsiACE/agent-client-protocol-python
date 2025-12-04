@@ -73,6 +73,7 @@ Prefer to drive agents directly from Python? The `spawn_agent_process` helper wi
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 from acp import spawn_agent_process, text_block
 from acp.interfaces import Client
@@ -81,7 +82,7 @@ from acp.interfaces import Client
 class SimpleClient(Client):
     async def request_permission(
         self, options, session_id, tool_call, **kwargs: Any
-    )
+    ):
         return {"outcome": {"outcome": "cancelled"}}
 
     async def session_update(self, session_id, update, **kwargs):
