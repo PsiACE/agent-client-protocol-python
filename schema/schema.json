@@ -4,7 +4,12 @@
       "description": "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "loadSession": {
           "default": false,
@@ -255,7 +260,12 @@
       "description": "Optional annotations for the client. The client can use annotations to inform how objects are used or displayed",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "audience": {
           "items": {
@@ -286,7 +296,12 @@
       "description": "Audio provided to or from an LLM.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "annotations": {
           "anyOf": [
@@ -315,7 +330,12 @@
       "description": "Describes an available authentication method.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "description": {
           "description": "Optional description providing more details about this authentication method.",
@@ -343,7 +363,12 @@
       "description": "Request parameters for the authenticate method.\n\nSpecifies which authentication method to use.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "methodId": {
           "description": "The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response.",
@@ -361,7 +386,12 @@
       "description": "Response to the `authenticate` method.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -372,7 +402,12 @@
       "description": "Information about a command.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "description": {
           "description": "Human-readable description of what the command does.",
@@ -417,7 +452,12 @@
       "description": "Available commands are ready or have changed",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "availableCommands": {
           "description": "Commands the agent can execute",
@@ -436,7 +476,12 @@
       "description": "Binary resource contents.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "blob": {
           "type": "string"
@@ -461,7 +506,12 @@
       "description": "Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -483,7 +533,12 @@
       "description": "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "fs": {
           "allOf": [
@@ -713,7 +768,12 @@
       "description": "Standard content block (text, images, resources).",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "allOf": [
@@ -831,7 +891,12 @@
       "description": "A streamed item of content",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "allOf": [
@@ -851,7 +916,12 @@
       "description": "Request to create a new terminal and execute a command.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "args": {
           "description": "Array of command arguments.",
@@ -908,7 +978,12 @@
       "description": "Response containing the ID of the created terminal.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "terminalId": {
           "description": "The unique identifier for the created terminal.",
@@ -926,7 +1001,12 @@
       "description": "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "currentModeId": {
           "allOf": [
@@ -946,7 +1026,12 @@
       "description": "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "newText": {
           "description": "The new content after modification.",
@@ -974,7 +1059,12 @@
       "description": "The contents of a resource, embedded into a prompt or tool call result.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "annotations": {
           "anyOf": [
@@ -1010,7 +1100,12 @@
       "description": "An environment variable to set when launching an MCP server.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "name": {
           "description": "The name of the environment variable.",
@@ -1062,7 +1157,12 @@
       "description": "Filesystem capabilities supported by the client.\nFile system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "readTextFile": {
           "default": false,
@@ -1081,7 +1181,12 @@
       "description": "An HTTP header to set when making requests to the MCP server.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "name": {
           "description": "The name of the HTTP header.",
@@ -1102,7 +1207,12 @@
       "description": "An image provided to or from an LLM.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "annotations": {
           "anyOf": [
@@ -1137,7 +1247,12 @@
       "description": "Metadata about the implementation of the client or agent.\nDescribes the name and version of an MCP implementation, with an optional\ntitle for UI representation.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "name": {
           "description": "Intended for programmatic or logical use, but can be used as a display\nname fallback if title isn\u2019t present.",
@@ -1165,7 +1280,12 @@
       "description": "Request parameters for the initialize method.\n\nSent by the client to establish connection and negotiate capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "clientCapabilities": {
           "allOf": [
@@ -1213,7 +1333,12 @@
       "description": "Response to the `initialize` method.\n\nContains the negotiated protocol version and agent capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "agentCapabilities": {
           "allOf": [
@@ -1275,7 +1400,12 @@
       "description": "Request to kill a terminal command without releasing the terminal.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -1302,7 +1432,12 @@
       "description": "Response to terminal/kill command method",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -1313,7 +1448,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for listing existing sessions.\n\nOnly available if the Agent supports the `listSessions` capability.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "cursor": {
           "description": "Opaque cursor token from a previous response's nextCursor field for cursor-based pagination",
@@ -1338,7 +1478,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from listing sessions.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "nextCursor": {
           "description": "Opaque cursor token. If present, pass this in the next request's cursor parameter\nto fetch the next page. If absent, there are no more results.",
@@ -1366,7 +1511,12 @@
       "description": "Request parameters for loading an existing session.\n\nOnly available if the Agent supports the `loadSession` capability.\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "cwd": {
           "description": "The working directory for this session.",
@@ -1401,7 +1551,12 @@
       "description": "Response from loading an existing session.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "models": {
           "anyOf": [
@@ -1434,7 +1589,12 @@
       "description": "MCP capabilities supported by the agent",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "http": {
           "default": false,
@@ -1496,16 +1656,18 @@
           "description": "Stdio transport configuration\n\nAll Agents MUST support this transport."
         }
       ],
-      "description": "Configuration for connecting to an MCP (Model Context Protocol) server.\n\nMCP servers provide tools and context that the agent can use when\nprocessing prompts.\n\nSee protocol docs: [MCP Servers](https://agentclientprotocol.com/protocol/session-setup#mcp-servers)",
-      "discriminator": {
-        "propertyName": "type"
-      }
+      "description": "Configuration for connecting to an MCP (Model Context Protocol) server.\n\nMCP servers provide tools and context that the agent can use when\nprocessing prompts.\n\nSee protocol docs: [MCP Servers](https://agentclientprotocol.com/protocol/session-setup#mcp-servers)"
     },
     "McpServerHttp": {
       "description": "HTTP transport configuration for MCP.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "headers": {
           "description": "HTTP headers to set when making requests to the MCP server.",
@@ -1534,7 +1696,12 @@
       "description": "SSE transport configuration for MCP.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "headers": {
           "description": "HTTP headers to set when making requests to the MCP server.",
@@ -1563,7 +1730,12 @@
       "description": "Stdio transport configuration for MCP.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "args": {
           "description": "Command-line arguments to pass to the MCP server.",
@@ -1604,7 +1776,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInformation about a selectable model.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "description": {
           "description": "Optional description of the model.",
@@ -1636,7 +1813,12 @@
       "description": "Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "cwd": {
           "description": "The working directory for this session. Must be an absolute path.",
@@ -1662,7 +1844,12 @@
       "description": "Response from creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "models": {
           "anyOf": [
@@ -1706,7 +1893,12 @@
       "description": "An option presented to the user when requesting permission.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "kind": {
           "allOf": [
@@ -1769,7 +1961,12 @@
       "description": "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "entries": {
           "description": "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
@@ -1788,7 +1985,12 @@
       "description": "A single entry in the execution plan.\n\nRepresents a task or goal that the assistant intends to accomplish\nas part of fulfilling the user's request.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "description": "Human-readable description of what this task aims to accomplish.",
@@ -1862,7 +2064,12 @@
       "description": "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "audio": {
           "default": false,
@@ -1886,7 +2093,12 @@
       "description": "Request parameters for sending a user prompt to the agent.\n\nContains the user's message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "prompt": {
           "description": "The blocks of content that compose the user's message.\n\nAs a baseline, the Agent MUST support [`ContentBlock::Text`] and [`ContentBlock::ResourceLink`],\nwhile other variants are optionally enabled via [`PromptCapabilities`].\n\nThe Client MUST adapt its interface according to [`PromptCapabilities`].\n\nThe client MAY include referenced pieces of context as either\n[`ContentBlock::Resource`] or [`ContentBlock::ResourceLink`].\n\nWhen available, [`ContentBlock::Resource`] is preferred\nas it avoids extra round-trips and allows the message to include\npieces of context from sources the agent may not have access to.",
@@ -1916,7 +2128,12 @@
       "description": "Response from processing a user prompt.\n\nSee protocol docs: [Check for Completion](https://agentclientprotocol.com/protocol/prompt-turn#4-check-for-completion)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "stopReason": {
           "allOf": [
@@ -1945,7 +2162,12 @@
       "description": "Request to read content from a text file.\n\nOnly available if the client supports the `fs.readTextFile` capability.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "limit": {
           "description": "Maximum number of lines to read.",
@@ -1990,7 +2212,12 @@
       "description": "Response containing the contents of a text file.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "type": "string"
@@ -2007,7 +2234,12 @@
       "description": "Request to release a terminal and free its resources.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -2034,7 +2266,12 @@
       "description": "Response to terminal/release method",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -2099,7 +2336,12 @@
       "description": "Request for user permission to execute a tool call.\n\nSent when the agent needs authorization before performing a sensitive operation.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "options": {
           "description": "Available permission options for the user to choose from.",
@@ -2138,7 +2380,12 @@
       "description": "Response to a permission request.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "outcome": {
           "allOf": [
@@ -2160,7 +2407,12 @@
       "description": "A resource that the server is capable of reading, included in a prompt or tool call result.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "annotations": {
           "anyOf": [
@@ -2222,7 +2474,12 @@
       "description": "The user selected one of the provided options.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "optionId": {
           "allOf": [
@@ -2242,7 +2499,12 @@
       "description": "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "list": {
           "anyOf": [
@@ -2266,7 +2528,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInformation about a session returned by session/list",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "cwd": {
           "description": "The working directory for this session. Must be an absolute path.",
@@ -2305,7 +2572,12 @@
       "description": "Capabilities for the `session/list` method.\n\nBy supplying `{}` it means that the agent supports listing of sessions.\n\nFurther capabilities can be added in the future for other means of filtering or searching the list.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object"
@@ -2314,7 +2586,12 @@
       "description": "A mode the agent can operate in.\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "description": {
           "type": [
@@ -2343,7 +2620,12 @@
       "description": "The set of modes and the one currently active.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "availableModes": {
           "description": "The set of modes that the Agent can operate in",
@@ -2371,7 +2653,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe set of models and the one currently active.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "availableModels": {
           "description": "The set of models that the Agent can use",
@@ -2399,7 +2686,12 @@
       "description": "Notification containing a session update from the agent.\n\nUsed to stream real-time progress and results during prompt processing.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -2582,7 +2874,12 @@
       "description": "Request parameters for setting a session mode.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "modeId": {
           "allOf": [
@@ -2612,7 +2909,13 @@
     "SetSessionModeResponse": {
       "description": "Response to `session/set_mode` method.",
       "properties": {
-        "_meta": {}
+        "_meta": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        }
       },
       "type": "object",
       "x-method": "session/set_mode",
@@ -2622,7 +2925,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for setting a session model.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "modelId": {
           "allOf": [
@@ -2653,7 +2961,12 @@
       "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to `session/set_model` method.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -2694,7 +3007,12 @@
       "description": "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "terminalId": {
           "type": "string"
@@ -2709,7 +3027,12 @@
       "description": "Exit status of a terminal command.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "exitCode": {
           "description": "The process exit code (may be null if terminated by signal).",
@@ -2734,7 +3057,12 @@
       "description": "Request to get the current output and status of a terminal.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -2761,7 +3089,12 @@
       "description": "Response containing the terminal output and exit status.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "exitStatus": {
           "anyOf": [
@@ -2795,7 +3128,12 @@
       "description": "Text provided to or from an LLM.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "annotations": {
           "anyOf": [
@@ -2820,7 +3158,12 @@
       "description": "Text-based resource contents.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "mimeType": {
           "type": [
@@ -2845,7 +3188,12 @@
       "description": "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "description": "Content produced by the tool call.",
@@ -2972,7 +3320,12 @@
       "description": "A file location being accessed or modified by a tool.\n\nEnables clients to implement \"follow-along\" features that track\nwhich files the agent is working with in real-time.\n\nSee protocol docs: [Following the Agent](https://agentclientprotocol.com/protocol/tool-calls#following-the-agent)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "line": {
           "description": "Optional line number within the file.",
@@ -3022,7 +3375,12 @@
       "description": "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "description": "Replace the content collection.",
@@ -3152,7 +3510,12 @@
       "description": "All text that was typed after the command name is provided as input.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "hint": {
           "description": "A hint to display when the input hasn't been provided yet",
@@ -3168,7 +3531,12 @@
       "description": "Request to wait for a terminal command to exit.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "sessionId": {
           "allOf": [
@@ -3195,7 +3563,12 @@
       "description": "Response containing the exit status of a terminal command.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "exitCode": {
           "description": "The process exit code (may be null if terminated by signal).",
@@ -3222,7 +3595,12 @@
       "description": "Request to write content to a text file.\n\nOnly available if the client supports the `fs.writeTextFile` capability.",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         },
         "content": {
           "description": "The text content to write to the file.",
@@ -3254,7 +3632,12 @@
       "description": "Response to `fs/write_text_file`",
       "properties": {
         "_meta": {
-          "description": "Extension point for implementations"
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
