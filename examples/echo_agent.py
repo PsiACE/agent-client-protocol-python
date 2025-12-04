@@ -19,9 +19,9 @@ from acp.schema import (
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
+    McpServerStdio,
     ResourceContentBlock,
     SseMcpServer,
-    McpServerStdio,
     TextContentBlock,
 )
 

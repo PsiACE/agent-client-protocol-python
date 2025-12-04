@@ -1,10 +1,10 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.8.0
+# Schema ref: refs/tags/v0.9.1
 
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any, List, Literal, Optional, Union
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel as _BaseModel, Field, RootModel, ConfigDict
 
@@ -31,10 +31,17 @@ class Jsonrpc(Enum):
 
 
 class AuthMethod(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Optional description providing more details about this authentication method.
     description: Annotated[
@@ -48,10 +55,17 @@ class AuthMethod(BaseModel):
 
 
 class AuthenticateRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the authentication method to use.
     # Must be one of the methods advertised in the initialize response.
@@ -65,18 +79,32 @@ class AuthenticateRequest(BaseModel):
 
 
 class AuthenticateResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
 class BlobResourceContents(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     blob: str
     mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
@@ -84,10 +112,17 @@ class BlobResourceContents(BaseModel):
 
 
 class CreateTerminalResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The unique identifier for the created terminal.
     terminal_id: Annotated[
@@ -100,10 +135,17 @@ class CreateTerminalResponse(BaseModel):
 
 
 class Diff(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The new content after modification.
     new_text: Annotated[str, Field(alias="newText", description="The new content after modification.")]
@@ -117,10 +159,17 @@ class Diff(BaseModel):
 
 
 class EnvVariable(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The name of the environment variable.
     name: Annotated[str, Field(description="The name of the environment variable.")]
@@ -156,10 +205,17 @@ class Error(BaseModel):
 
 
 class FileSystemCapability(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Whether the Client supports `fs/read_text_file` requests.
     read_text_file: Annotated[
@@ -180,10 +236,17 @@ class FileSystemCapability(BaseModel):
 
 
 class HttpHeader(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The name of the HTTP header.
     name: Annotated[str, Field(description="The name of the HTTP header.")]
@@ -192,10 +255,17 @@ class HttpHeader(BaseModel):
 
 
 class Implementation(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Intended for programmatic or logical use, but can be used as a display
     # name fallback if title isn’t present.
@@ -226,18 +296,32 @@ class Implementation(BaseModel):
 
 
 class KillTerminalCommandResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
 class ListSessionsRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Opaque cursor token from a previous response's nextCursor field for cursor-based pagination
     cursor: Annotated[
@@ -254,10 +338,17 @@ class ListSessionsRequest(BaseModel):
 
 
 class McpCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Agent supports [`McpServer::Http`].
     http: Annotated[Optional[bool], Field(description="Agent supports [`McpServer::Http`].")] = False
@@ -266,10 +357,17 @@ class McpCapabilities(BaseModel):
 
 
 class McpServerHttp(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # HTTP headers to set when making requests to the MCP server.
     headers: Annotated[
@@ -283,10 +381,17 @@ class McpServerHttp(BaseModel):
 
 
 class McpServerSse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # HTTP headers to set when making requests to the MCP server.
     headers: Annotated[
@@ -300,10 +405,17 @@ class McpServerSse(BaseModel):
 
 
 class McpServerStdio(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Command-line arguments to pass to the MCP server.
     args: Annotated[
@@ -319,14 +431,20 @@ class McpServerStdio(BaseModel):
     ]
     # Human-readable name identifying this MCP server.
     name: Annotated[str, Field(description="Human-readable name identifying this MCP server.")]
-    type: Literal["stdio"] = "stdio"
 
 
 class ModelInfo(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Optional description of the model.
     description: Annotated[Optional[str], Field(description="Optional description of the model.")] = None
@@ -337,10 +455,17 @@ class ModelInfo(BaseModel):
 
 
 class PromptCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Agent supports [`ContentBlock::Audio`].
     audio: Annotated[Optional[bool], Field(description="Agent supports [`ContentBlock::Audio`].")] = False
@@ -360,19 +485,33 @@ class PromptCapabilities(BaseModel):
 
 
 class ReadTextFileResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     content: str
 
 
 class ReleaseTerminalResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
@@ -386,10 +525,17 @@ class Role(Enum):
 
 
 class SelectedPermissionOutcome(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the option the user selected.
     option_id: Annotated[
@@ -399,10 +545,17 @@ class SelectedPermissionOutcome(BaseModel):
 
 
 class SessionInfo(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The working directory for this session. Must be an absolute path.
     cwd: Annotated[
@@ -421,18 +574,32 @@ class SessionInfo(BaseModel):
 
 
 class SessionListCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
 class SessionModelState(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The set of models that the Agent can use
     available_models: Annotated[
@@ -450,10 +617,17 @@ class SessionModelState(BaseModel):
 
 
 class SetSessionModeRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the mode to set.
     mode_id: Annotated[str, Field(alias="modeId", description="The ID of the mode to set.")]
@@ -465,14 +639,21 @@ class SetSessionModeRequest(BaseModel):
 
 
 class SetSessionModeResponse(BaseModel):
-    field_meta: Annotated[Optional[Any], Field(alias="_meta")] = None
+    field_meta: Annotated[Optional[Dict[str, Any]], Field(alias="_meta")] = None
 
 
 class SetSessionModelRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the model to set.
     model_id: Annotated[str, Field(alias="modelId", description="The ID of the model to set.")]
@@ -484,27 +665,48 @@ class SetSessionModelRequest(BaseModel):
 
 
 class SetSessionModelResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
 class Terminal(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     terminal_id: Annotated[str, Field(alias="terminalId")]
 
 
 class TerminalExitStatus(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The process exit code (may be null if terminated by signal).
     exit_code: Annotated[
@@ -523,10 +725,17 @@ class TerminalExitStatus(BaseModel):
 
 
 class TerminalOutputRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The session ID for this request.
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
@@ -538,10 +747,17 @@ class TerminalOutputRequest(BaseModel):
 
 
 class TerminalOutputResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Exit status if the command has completed.
     exit_status: Annotated[
@@ -555,10 +771,17 @@ class TerminalOutputResponse(BaseModel):
 
 
 class TextResourceContents(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     mime_type: Annotated[Optional[str], Field(alias="mimeType")] = None
     text: str
@@ -574,10 +797,17 @@ class TerminalToolCallContent(Terminal):
 
 
 class ToolCallLocation(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Optional line number within the file.
     line: Annotated[Optional[int], Field(description="Optional line number within the file.", ge=0)] = None
@@ -586,10 +816,17 @@ class ToolCallLocation(BaseModel):
 
 
 class UnstructuredCommandInput(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # A hint to display when the input hasn't been provided yet
     hint: Annotated[
@@ -599,10 +836,17 @@ class UnstructuredCommandInput(BaseModel):
 
 
 class WaitForTerminalExitRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The session ID for this request.
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
@@ -614,10 +858,17 @@ class WaitForTerminalExitRequest(BaseModel):
 
 
 class WaitForTerminalExitResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The process exit code (may be null if terminated by signal).
     exit_code: Annotated[
@@ -636,10 +887,17 @@ class WaitForTerminalExitResponse(BaseModel):
 
 
 class WriteTextFileRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The text content to write to the file.
     content: Annotated[str, Field(description="The text content to write to the file.")]
@@ -650,10 +908,17 @@ class WriteTextFileRequest(BaseModel):
 
 
 class WriteTextFileResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
 
 
@@ -677,10 +942,17 @@ class AgentErrorMessage(BaseModel):
 
 
 class Annotations(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     audience: Optional[List[Role]] = None
     last_modified: Annotated[Optional[str], Field(alias="lastModified")] = None
@@ -688,10 +960,17 @@ class Annotations(BaseModel):
 
 
 class AudioContent(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     annotations: Optional[Annotations] = None
     data: str
@@ -707,10 +986,17 @@ class AvailableCommandInput(RootModel[UnstructuredCommandInput]):
 
 
 class CancelNotification(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the session to cancel operations for.
     session_id: Annotated[
@@ -723,10 +1009,17 @@ class CancelNotification(BaseModel):
 
 
 class ClientCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # File system capabilities supported by the client.
     # Determines which file operations the agent can request.
@@ -772,10 +1065,17 @@ class AudioContentBlock(AudioContent):
 
 
 class CreateTerminalRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Array of command arguments.
     args: Annotated[Optional[List[str]], Field(description="Array of command arguments.")] = None
@@ -812,20 +1112,34 @@ class CreateTerminalRequest(BaseModel):
 
 
 class CurrentModeUpdate(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the current mode
     current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
 
 
 class ImageContent(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     annotations: Optional[Annotations] = None
     data: str
@@ -834,10 +1148,17 @@ class ImageContent(BaseModel):
 
 
 class InitializeRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Capabilities supported by the client.
     client_capabilities: Annotated[
@@ -870,10 +1191,17 @@ class InitializeRequest(BaseModel):
 
 
 class KillTerminalCommandRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The session ID for this request.
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
@@ -882,10 +1210,17 @@ class KillTerminalCommandRequest(BaseModel):
 
 
 class ListSessionsResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Opaque cursor token. If present, pass this in the next request's cursor parameter
     # to fetch the next page. If absent, there are no more results.
@@ -909,10 +1244,17 @@ class SseMcpServer(McpServerSse):
 
 
 class NewSessionRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The working directory for this session. Must be an absolute path.
     cwd: Annotated[
@@ -930,10 +1272,17 @@ class NewSessionRequest(BaseModel):
 
 
 class PermissionOption(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Hint about the nature of this permission option.
     kind: Annotated[PermissionOptionKind, Field(description="Hint about the nature of this permission option.")]
@@ -950,10 +1299,17 @@ class PermissionOption(BaseModel):
 
 
 class PlanEntry(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Human-readable description of what this task aims to accomplish.
     content: Annotated[
@@ -973,10 +1329,17 @@ class PlanEntry(BaseModel):
 
 
 class PromptResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Indicates why the agent stopped processing the turn.
     stop_reason: Annotated[
@@ -989,10 +1352,17 @@ class PromptResponse(BaseModel):
 
 
 class ReadTextFileRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Maximum number of lines to read.
     limit: Annotated[Optional[int], Field(description="Maximum number of lines to read.", ge=0)] = None
@@ -1008,10 +1378,17 @@ class ReadTextFileRequest(BaseModel):
 
 
 class ReleaseTerminalRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The session ID for this request.
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
@@ -1024,10 +1401,17 @@ class AllowedOutcome(SelectedPermissionOutcome):
 
 
 class RequestPermissionResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The user's decision on the permission request.
     outcome: Annotated[
@@ -1040,10 +1424,17 @@ class RequestPermissionResponse(BaseModel):
 
 
 class ResourceLink(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     annotations: Optional[Annotations] = None
     description: Optional[str] = None
@@ -1055,10 +1446,17 @@ class ResourceLink(BaseModel):
 
 
 class SessionCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # **UNSTABLE**
     #
@@ -1074,10 +1472,17 @@ class SessionCapabilities(BaseModel):
 
 
 class SessionMode(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     description: Optional[str] = None
     # Unique identifier for a Session Mode.
@@ -1086,10 +1491,17 @@ class SessionMode(BaseModel):
 
 
 class SessionModeState(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The set of modes that the Agent can operate in
     available_modes: Annotated[
@@ -1111,20 +1523,34 @@ class CurrentModeUpdate(CurrentModeUpdate):
 
 
 class TextContent(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     annotations: Optional[Annotations] = None
     text: str
 
 
 class AgentCapabilities(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Whether the agent supports `session/load`.
     load_session: Annotated[
@@ -1156,10 +1582,17 @@ class AgentCapabilities(BaseModel):
 
 
 class AvailableCommand(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Human-readable description of what the command does.
     description: Annotated[str, Field(description="Human-readable description of what the command does.")]
@@ -1176,10 +1609,17 @@ class AvailableCommand(BaseModel):
 
 
 class AvailableCommandsUpdate(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Commands the agent can execute
     available_commands: Annotated[
@@ -1245,10 +1685,17 @@ class ResourceContentBlock(ResourceLink):
 
 
 class EmbeddedResource(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     annotations: Optional[Annotations] = None
     # Resource content that can be embedded in a message.
@@ -1259,10 +1706,17 @@ class EmbeddedResource(BaseModel):
 
 
 class InitializeResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Capabilities supported by the agent.
     agent_capabilities: Annotated[
@@ -1306,10 +1760,17 @@ class InitializeResponse(BaseModel):
 
 
 class LoadSessionRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The working directory for this session.
     cwd: Annotated[str, Field(description="The working directory for this session.")]
@@ -1326,10 +1787,17 @@ class LoadSessionRequest(BaseModel):
 
 
 class LoadSessionResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # **UNSTABLE**
     #
@@ -1354,10 +1822,17 @@ class LoadSessionResponse(BaseModel):
 
 
 class NewSessionResponse(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # **UNSTABLE**
     #
@@ -1392,10 +1867,17 @@ class NewSessionResponse(BaseModel):
 
 
 class Plan(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The list of tasks to be accomplished.
     #
@@ -1466,10 +1948,17 @@ class EmbeddedResourceContentBlock(EmbeddedResource):
 
 
 class ContentChunk(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # A single item of content
     content: Annotated[
@@ -1481,10 +1970,17 @@ class ContentChunk(BaseModel):
 
 
 class PromptRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The blocks of content that compose the user's message.
     #
@@ -1568,10 +2064,17 @@ class ClientRequest(BaseModel):
 
 
 class Content(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The actual content block.
     content: Annotated[
@@ -1587,10 +2090,17 @@ class ContentToolCallContent(Content):
 
 
 class ToolCallUpdate(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Replace the content collection.
     content: Annotated[
@@ -1620,10 +2130,17 @@ class ToolCallUpdate(BaseModel):
 
 
 class RequestPermissionRequest(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Available permission options for the user to choose from.
     options: Annotated[
@@ -1647,10 +2164,17 @@ class ToolCallProgress(ToolCallUpdate):
 
 
 class ToolCall(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # Content produced by the tool call.
     content: Annotated[
@@ -1735,10 +2259,17 @@ class ToolCallStart(ToolCall):
 
 
 class SessionNotification(BaseModel):
-    # Extension point for implementations
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
     field_meta: Annotated[
-        Optional[Any],
-        Field(alias="_meta", description="Extension point for implementations"),
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
     ] = None
     # The ID of the session this update pertains to.
     session_id: Annotated[
