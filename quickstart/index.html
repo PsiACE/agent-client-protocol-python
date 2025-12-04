@@ -512,6 +512,28 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-guide-0.7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    0.7 Migration Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -735,30 +757,30 @@ uv add agent-client-protocol
 <pre><code class="language-python">import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 from acp import spawn_agent_process, text_block
 from acp.interfaces import Client
-from acp.schema import InitializeRequest, NewSessionRequest, PromptRequest, SessionNotification
 
 
 class SimpleClient(Client):
-    async def requestPermission(self, params):  # pragma: no cover - minimal stub
+    async def request_permission(
+        self, options, session_id, tool_call, **kwargs: Any
+    ):
         return {&quot;outcome&quot;: {&quot;outcome&quot;: &quot;cancelled&quot;}}
 
-    async def sessionUpdate(self, params: SessionNotification) -&gt; None:
-        print(&quot;update:&quot;, params.sessionId, params.update)
+    async def session_update(self, session_id, update, **kwargs):
+        print(&quot;update:&quot;, session_id, update)
 
 
 async def main() -&gt; None:
     script = Path(&quot;examples/echo_agent.py&quot;)
-    async with spawn_agent_process(lambda _agent: SimpleClient(), sys.executable, str(script)) as (conn, _proc):
-        await conn.initialize(InitializeRequest(protocolVersion=1))
-        session = await conn.newSession(NewSessionRequest(cwd=str(script.parent), mcpServers=[]))
+    async with spawn_agent_process(SimpleClient(), sys.executable, str(script)) as (conn, _proc):
+        await conn.initialize(protocol_version=1)
+        session = await conn.new_session(cwd=str(script.parent), mcp_servers=[])
         await conn.prompt(
-            PromptRequest(
-                sessionId=session.sessionId,
-                prompt=[text_block(&quot;Hello from spawn!&quot;)],
-            )
+            session_id=session.session_id,
+            prompt=[text_block(&quot;Hello from spawn!&quot;)],
         )
 
 asyncio.run(main())
@@ -767,15 +789,15 @@ asyncio.run(main())
 <h2 id="step-4-extend-the-agent">Step 4 — Extend the agent<a class="headerlink" href="#step-4-extend-the-agent" title="Permanent link">&para;</a></h2>
 <p><em>Swap the echo demo for your own <code>Agent</code> subclass.</em></p>
 <p>Create your own agent by subclassing <code>acp.Agent</code>. The pattern mirrors the echo example:</p>
-<pre><code class="language-python">from acp import Agent, PromptRequest, PromptResponse
+<pre><code class="language-python">from acp import Agent, PromptResponse
 
 
 class MyAgent(Agent):
-    async def prompt(self, params: PromptRequest) -&gt; PromptResponse:
-        # inspect params.prompt, stream updates, then finish the turn
-        return PromptResponse(stopReason=&quot;end_turn&quot;)
+    async def prompt(self, prompt, session_id, **kwargs) -&gt; PromptResponse:
+        # inspect prompt, stream updates, then finish the turn
+        return PromptResponse(stop_reason=&quot;end_turn&quot;)
 </code></pre>
-<p>Hook it up with <code>AgentSideConnection</code> inside an async entrypoint and wire it to your client. Refer to:</p>
+<p>Run it with <code>run_agent()</code> inside an async entrypoint and wire it to your client. Refer to:</p>
 <ul>
 <li><a href="https://github.com/agentclientprotocol/python-sdk/blob/main/examples/echo_agent.py"><code>examples/echo_agent.py</code></a> for the smallest streaming agent</li>
 <li><a href="https://github.com/agentclientprotocol/python-sdk/blob/main/examples/agent.py"><code>examples/agent.py</code></a> for an implementation that negotiates capabilities and streams richer updates</li>

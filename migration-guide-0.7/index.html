@@ -12,26 +12,26 @@
         <meta name="author" content="Chojan Shang">
       
       
-        <link rel="canonical" href="https://agentclientprotocol.github.io/python-sdk/">
+        <link rel="canonical" href="https://agentclientprotocol.github.io/python-sdk/migration-guide-0.7/">
+      
+      
+        <link rel="prev" href="../releasing/">
       
       
       
-        <link rel="next" href="quickstart/">
-      
-      
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
-        <title>Agent Client Protocol - Python SDK</title>
+        <title>0.7 Migration Guide - Agent Client Protocol - Python SDK</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -50,9 +50,9 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agent-client-protocol-sdk-python" class="md-skip">
+        <a href="#migrating-to-acp-python-sdk-07" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Agent Client Protocol - Python SDK" class="md-header__button md-logo" aria-label="Agent Client Protocol - Python SDK" data-md-component="logo">
+    <a href=".." title="Agent Client Protocol - Python SDK" class="md-header__button md-logo" aria-label="Agent Client Protocol - Python SDK" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              0.7 Migration Guide
             
           </span>
         </div>
@@ -230,7 +230,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Agent Client Protocol - Python SDK" class="md-nav__button md-logo" aria-label="Agent Client Protocol - Python SDK" data-md-component="logo">
+    <a href=".." title="Agent Client Protocol - Python SDK" class="md-nav__button md-logo" aria-label="Agent Client Protocol - Python SDK" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -257,6 +257,116 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../use-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use Cases
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contrib/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Experimental Contrib
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Releasing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -274,7 +384,7 @@
   
   
   <span class="md-ellipsis">
-    Home
+    0.7 Migration Guide
     
   </span>
   
@@ -282,12 +392,12 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    Home
+    0.7 Migration Guide
     
   </span>
   
@@ -310,65 +420,95 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install-verify" class="md-nav__link">
+  <a href="#1-acpschema-models-now-expose-snake_case-fields" class="md-nav__link">
     <span class="md-ellipsis">
-      Install &amp; verify
+      1. acp.schema models now expose snake_case fields
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#acp-at-a-glance" class="md-nav__link">
+  <a href="#2-acprun_agent-and-acpconnect_to_agent-replace-manual-connection-wiring" class="md-nav__link">
     <span class="md-ellipsis">
-      ACP at a glance
+      2. acp.run_agent and acp.connect_to_agent replace manual connection wiring
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. acp.run_agent and acp.connect_to_agent replace manual connection wiring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#updating-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating agents
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#sdk-building-blocks" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#updating-clients-and-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      SDK building blocks
+      Updating clients and tests
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-links" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick links
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#choose-a-path" class="md-nav__link">
+  <a href="#3-agent-and-client-interface-methods-take-explicit-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Choose a path
+      3. Agent and Client interface methods take explicit parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Agent and Client interface methods take explicit parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      What changed
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#reference-material" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-update-your-implementations" class="md-nav__link">
     <span class="md-ellipsis">
-      Reference material
+      How to update your implementations
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#feedback-support" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
     <span class="md-ellipsis">
-      Feedback &amp; support
+      Additional notes
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backward-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backward compatibility
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -376,116 +516,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="quickstart/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Quick Start
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="use-cases/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Use Cases
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="contrib/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Experimental Contrib
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="releasing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Releasing
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="migration-guide-0.7/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    0.7 Migration Guide
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -517,65 +547,95 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install-verify" class="md-nav__link">
+  <a href="#1-acpschema-models-now-expose-snake_case-fields" class="md-nav__link">
     <span class="md-ellipsis">
-      Install &amp; verify
+      1. acp.schema models now expose snake_case fields
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#acp-at-a-glance" class="md-nav__link">
+  <a href="#2-acprun_agent-and-acpconnect_to_agent-replace-manual-connection-wiring" class="md-nav__link">
     <span class="md-ellipsis">
-      ACP at a glance
+      2. acp.run_agent and acp.connect_to_agent replace manual connection wiring
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. acp.run_agent and acp.connect_to_agent replace manual connection wiring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#updating-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating agents
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#sdk-building-blocks" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#updating-clients-and-tests" class="md-nav__link">
     <span class="md-ellipsis">
-      SDK building blocks
+      Updating clients and tests
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-links" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick links
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#choose-a-path" class="md-nav__link">
+  <a href="#3-agent-and-client-interface-methods-take-explicit-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Choose a path
+      3. Agent and Client interface methods take explicit parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Agent and Client interface methods take explicit parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      What changed
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#reference-material" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-update-your-implementations" class="md-nav__link">
     <span class="md-ellipsis">
-      Reference material
+      How to update your implementations
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#feedback-support" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
     <span class="md-ellipsis">
-      Feedback &amp; support
+      Additional notes
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backward-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backward compatibility
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -598,82 +658,98 @@
   
 
 
-<p><a href="https://agentclientprotocol.com/">
-  <img alt="Agent Client Protocol" src="https://zed.dev/img/acp/banner-dark.webp">
-</a></p>
-<h1 id="agent-client-protocol-sdk-python">Agent Client Protocol SDK (Python)<a class="headerlink" href="#agent-client-protocol-sdk-python" title="Permanent link">&para;</a></h1>
-<p>Ship ACP-compatible agents and clients in Python without rebuilding JSON-RPC transports or schema models. This SDK mirrors each ACP release so your integrations stay interoperable with editors, CLIs, and hosted clients.</p>
-<h2 id="install-verify">Install &amp; verify<a class="headerlink" href="#install-verify" title="Permanent link">&para;</a></h2>
-<pre><code class="language-bash">pip install agent-client-protocol
-# or
-uv add agent-client-protocol
+<h1 id="migrating-to-acp-python-sdk-07">Migrating to ACP Python SDK 0.7<a class="headerlink" href="#migrating-to-acp-python-sdk-07" title="Permanent link">&para;</a></h1>
+<p>ACP 0.7 reshapes the public surface so that Python-facing names, runtime helpers, and schema models line up with the evolving Agent Client Protocol schema. This guide covers the major changes in 0.7.0 and calls out the mechanical steps you need to apply in downstream agents, clients, and transports.</p>
+<h2 id="1-acpschema-models-now-expose-snake_case-fields">1. <code>acp.schema</code> models now expose <code>snake_case</code> fields<a class="headerlink" href="#1-acpschema-models-now-expose-snake_case-fields" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Every generated model in <code>acp.schema</code> (see <code>src/acp/schema.py</code>) now uses Pythonic attribute names such as <code>session_id</code>, <code>stop_reason</code>, and <code>field_meta</code>. The JSON aliases (e.g., <code>alias="sessionId"</code>) stay intact so over-the-wire payloads remain camelCase.</li>
+<li>Instantiating a model or accessing response values must now use the <code>snake_case</code> form:</li>
+</ul>
+<pre><code class="language-python"># Before (0.6 and earlier)
+PromptResponse(stopReason=&quot;end_turn&quot;)
+params.sessionId
+
+# After (0.7 and later)
+PromptResponse(stop_reason=&quot;end_turn&quot;)
+params.session_id
 </code></pre>
-<p>Next steps live in the <a href="quickstart/">Quickstart</a>: launch the echo agent, wire it to Zed (or another ACP client), and exercise the programmatic spawn helpers.</p>
-<h2 id="acp-at-a-glance">ACP at a glance<a class="headerlink" href="#acp-at-a-glance" title="Permanent link">&para;</a></h2>
 <ul>
-<li>ACP is the stdio protocol that lets “clients” (editors, shells, CLIs) orchestrate AI “agents.”</li>
-<li>Sessions exchange structured payloads (<code>session/update</code>, permission prompts, tool calls) defined in the upstream schema.</li>
-<li>Matching the schema version keeps your Python integrations compatible with tools such as Zed, Gemini CLI, or kimi-cli.</li>
+<li>If you relied on <code>model_dump()</code> to emit camelCase keys automatically, switch to <code>model_dump(by_alias=True)</code> (or use helpers such as <code>text_block</code>, <code>start_tool_call</code>, etc.) so responses continue to match the protocol.</li>
+<li><code>field_meta</code> stays available for extension data. Any extra keys that were nested under <code>_meta</code> should now be provided via keyword arguments when constructing the schema models (see section 3).</li>
 </ul>
-<h2 id="sdk-building-blocks">SDK building blocks<a class="headerlink" href="#sdk-building-blocks" title="Permanent link">&para;</a></h2>
+<h2 id="2-acprun_agent-and-acpconnect_to_agent-replace-manual-connection-wiring">2. <code>acp.run_agent</code> and <code>acp.connect_to_agent</code> replace manual connection wiring<a class="headerlink" href="#2-acprun_agent-and-acpconnect_to_agent-replace-manual-connection-wiring" title="Permanent link">&para;</a></h2>
+<p><code>AgentSideConnection</code> and <code>ClientSideConnection</code> still exist internally, but the top-level entry points now prefer the helper functions implemented in <code>src/acp/core.py</code>.</p>
+<h3 id="updating-agents">Updating agents<a class="headerlink" href="#updating-agents" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>acp.schema</code>: generated Pydantic models that validate every payload against the canonical specification.</li>
-<li><code>acp.agent</code> / <code>acp.client</code>: async base classes, JSON-RPC supervision, and lifecycle orchestration.</li>
-<li><code>acp.helpers</code>: builders for content blocks, tool calls, permissions, and notifications.</li>
-<li><code>acp.contrib</code>: experimental utilities (session accumulators, permission brokers, tool call trackers) harvested from production deployments.</li>
-<li><code>examples/</code>: runnable agents, clients, duet demos, and the Gemini CLI bridge.</li>
+<li>Old pattern:</li>
 </ul>
-<h2 id="quick-links">Quick links<a class="headerlink" href="#quick-links" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Need</th>
-<th>Link</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Quickstart walkthrough</td>
-<td><a href="quickstart/">quickstart.md</a></td>
-</tr>
-<tr>
-<td>Real-world adopters</td>
-<td><a href="use-cases/">use-cases.md</a></td>
-</tr>
-<tr>
-<td>Contrib helpers</td>
-<td><a href="contrib/">contrib.md</a></td>
-</tr>
-<tr>
-<td>Releasing workflow</td>
-<td><a href="releasing/">releasing.md</a></td>
-</tr>
-<tr>
-<td>Example scripts</td>
-<td><a href="https://github.com/agentclientprotocol/python-sdk/tree/main/examples">github.com/agentclientprotocol/python-sdk/tree/main/examples</a></td>
-</tr>
-</tbody>
-</table>
-<h2 id="choose-a-path">Choose a path<a class="headerlink" href="#choose-a-path" title="Permanent link">&para;</a></h2>
+<pre><code class="language-python">conn = AgentSideConnection(lambda conn: Agent(), writer, reader)
+await asyncio.Event().wait()  # keep running
+</code></pre>
 <ul>
-<li><strong>Just exploring?</strong> Skim <a href="use-cases/">use-cases.md</a> to see how kimi-cli, agent-client-kernel, and others use the SDK.</li>
-<li><strong>Building agents?</strong> Copy <code>examples/echo_agent.py</code> or <code>examples/agent.py</code>, then layer in <code>acp.helpers</code> for tool calls and permissions.</li>
-<li><strong>Embedding clients?</strong> Start with <code>examples/client.py</code> or the <code>spawn_agent_process</code> / <code>spawn_client_process</code> helpers in the <a href="quickstart/#programmatic-launch">Quickstart</a>.</li>
+<li>New pattern:</li>
 </ul>
-<h2 id="reference-material">Reference material<a class="headerlink" href="#reference-material" title="Permanent link">&para;</a></h2>
+<pre><code class="language-python">await run_agent(MyAgent(), input_stream=writer, output_stream=reader)
+</code></pre>
 <ul>
-<li><a href="quickstart/">Quickstart</a> — installation, editor wiring, and programmatic launch walkthroughs.</li>
-<li><a href="use-cases/">Use Cases</a> — real adopters with succinct descriptions of what they build.</li>
-<li><a href="contrib/">Experimental Contrib</a> — deep dives on the <code>acp.contrib</code> utilities.</li>
-<li><a href="releasing/">Releasing</a> — schema upgrade process, versioning policy, and publishing checklist.</li>
+<li>When your agent just runs over stdio, call <code>await run_agent(MyAgent())</code> and the helper will acquire asyncio streams via <code>stdio_streams()</code> for you.</li>
 </ul>
-<p>Need API-level details? Browse the source in <code>src/acp/</code> or generate docs with <code>mkdocstrings</code>.</p>
-<h2 id="feedback-support">Feedback &amp; support<a class="headerlink" href="#feedback-support" title="Permanent link">&para;</a></h2>
+<h3 id="updating-clients-and-tests">Updating clients and tests<a class="headerlink" href="#updating-clients-and-tests" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Open issues or discussions on GitHub for bugs, feature requests, or integration help.</li>
-<li>Join <a href="https://github.com/agentclientprotocol/python-sdk/discussions">GitHub Discussions</a> to swap ideas.</li>
-<li>Chat with the community on <a href="https://agentclientprotocol.zulipchat.com/">agentclientprotocol.zulipchat.com</a>.</li>
-<li>Follow ACP roadmap updates at <a href="https://agentclientprotocol.com/">agentclientprotocol.com</a>.</li>
+<li>Old pattern:</li>
+</ul>
+<pre><code class="language-python">conn = ClientSideConnection(lambda conn: MyClient(), proc.stdin, proc.stdout)
+</code></pre>
+<ul>
+<li>New pattern:</li>
+</ul>
+<pre><code class="language-python">conn = connect_to_agent(MyClient(), proc.stdin, proc.stdout)
+</code></pre>
+<ul>
+<li><code>spawn_agent_process</code> / <code>spawn_client_process</code> now accept concrete <code>Agent</code>/<code>Client</code> instances instead of factories that received the connection. Instantiate your implementation first and pass it in.</li>
+<li>Importing the legacy connection classes via <code>acp.AgentSideConnection</code> / <code>acp.ClientSideConnection</code> issues a <code>DeprecationWarning</code> (see <code>src/acp/__init__.py:82-96</code>). Update your imports to <code>run_agent</code> and <code>connect_to_agent</code> to silence the warning.</li>
+</ul>
+<h2 id="3-agent-and-client-interface-methods-take-explicit-parameters">3. <code>Agent</code> and <code>Client</code> interface methods take explicit parameters<a class="headerlink" href="#3-agent-and-client-interface-methods-take-explicit-parameters" title="Permanent link">&para;</a></h2>
+<p>Both interfaces in <code>src/acp/interfaces.py</code> now look like idiomatic Python protocols: methods use <code>snake_case</code> names and receive the individual schema fields rather than a single request model.</p>
+<h3 id="what-changed">What changed<a class="headerlink" href="#what-changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Method names follow <code>snake_case</code> (<code>request_permission</code>, <code>session_update</code>, <code>new_session</code>, <code>set_session_model</code>, etc.).</li>
+<li>Parameters represent the schema fields, so there is no need to unpack <code>params</code> manually.</li>
+<li>Each method is decorated with <code>@param_model(...)</code>. Combined with the <code>compatible_class</code> helper (see <code>src/acp/utils.py</code>), this keeps the camelCase wrappers alive for callers that still pass a full Pydantic request object—but those wrappers now emit <code>DeprecationWarning</code>s to encourage migration.</li>
+</ul>
+<h3 id="how-to-update-your-implementations">How to update your implementations<a class="headerlink" href="#how-to-update-your-implementations" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Rename your method overrides to their <code>snake_case</code> equivalents.</li>
+<li>Replace <code>params: Model</code> arguments with the concrete fields plus <code>**kwargs</code> to collect future <code>_meta</code> keys.</li>
+<li>Access schema data directly via those parameters.</li>
+</ol>
+<p>Example migration for an agent:</p>
+<pre><code class="language-python"># Before
+class EchoAgent:
+    async def prompt(self, params: PromptRequest) -&gt; PromptResponse:
+        text = params.prompt[0].text
+        return PromptResponse(stopReason=&quot;end_turn&quot;)
+
+# After
+class EchoAgent:
+    async def prompt(self, prompt, session_id, **kwargs) -&gt; PromptResponse:
+        text = prompt[0].text
+        return PromptResponse(stop_reason=&quot;end_turn&quot;)
+</code></pre>
+<p>Similarly, a client method such as <code>requestPermission</code> becomes:</p>
+<pre><code class="language-python">class RecordingClient(Client):
+    async def request_permission(self, options, session_id, tool_call, **kwargs):
+        ...
+</code></pre>
+<h3 id="additional-notes">Additional notes<a class="headerlink" href="#additional-notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The connection layers automatically assemble the right request/response models using the <code>param_model</code> metadata, so callers do not need to build Pydantic objects manually anymore.</li>
+<li>For extension points (<code>field_meta</code>), pass keyword arguments from the connection into your handler signature: they arrive inside <code>**kwargs</code>.</li>
+</ul>
+<h3 id="backward-compatibility">Backward compatibility<a class="headerlink" href="#backward-compatibility" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The change should be 100% backward compatible as long as you update your method names and signatures. The <code>compatible_class</code> wrapper ensures that existing callers passing full request models continue to work. The old style API will remain functional before the next major release(1.0).</li>
+<li>Because camelCase wrappers remain for now, you can migrate file-by-file while still running against ACP 0.7. Just watch for the new deprecation warnings in your logs/tests.</li>
 </ul>
 
 
@@ -754,10 +830,10 @@ uv add agent-client-protocol
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
   </body>
