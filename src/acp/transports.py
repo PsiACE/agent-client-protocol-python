@@ -63,27 +63,16 @@ async def spawn_stdio_transport(
     if env:
         merged_env.update(env)
 
-    if limit is None:
-        process = await asyncio.create_subprocess_exec(
-            command,
-            *args,
-            stdin=aio_subprocess.PIPE,
-            stdout=aio_subprocess.PIPE,
-            stderr=stderr,
-            env=merged_env,
-            cwd=str(cwd) if cwd is not None else None,
-        )
-    else:
-        process = await asyncio.create_subprocess_exec(
-            command,
-            *args,
-            stdin=aio_subprocess.PIPE,
-            stdout=aio_subprocess.PIPE,
-            stderr=stderr,
-            env=merged_env,
-            cwd=str(cwd) if cwd is not None else None,
-            limit=limit,
-        )
+    process = await asyncio.create_subprocess_exec(
+        command,
+        *args,
+        stdin=aio_subprocess.PIPE,
+        stdout=aio_subprocess.PIPE,
+        stderr=stderr,
+        env=merged_env,
+        cwd=str(cwd) if cwd is not None else None,
+        limit=limit,
+    )
 
     if process.stdout is None or process.stdin is None:
         process.kill()
