@@ -1,5 +1,5 @@
 # Generated from schema/schema.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.9.1
+# Schema ref: refs/tags/v0.10.3
 
 from __future__ import annotations
 
@@ -175,33 +175,6 @@ class EnvVariable(BaseModel):
     name: Annotated[str, Field(description="The name of the environment variable.")]
     # The value to set for the environment variable.
     value: Annotated[str, Field(description="The value to set for the environment variable.")]
-
-
-class Error(BaseModel):
-    # A number indicating the error type that occurred.
-    # This must be an integer as defined in the JSON-RPC specification.
-    code: Annotated[
-        int,
-        Field(
-            description="A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification."
-        ),
-    ]
-    # Optional primitive or structured value that contains additional information about the error.
-    # This may include debugging information or context-specific details.
-    data: Annotated[
-        Optional[Any],
-        Field(
-            description="Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details."
-        ),
-    ] = None
-    # A string providing a short description of the error.
-    # The message should be limited to a concise single sentence.
-    message: Annotated[
-        str,
-        Field(
-            description="A string providing a short description of the error.\nThe message should be limited to a concise single sentence."
-        ),
-    ]
 
 
 class FileSystemCapability(BaseModel):
@@ -544,6 +517,21 @@ class SelectedPermissionOutcome(BaseModel):
     ]
 
 
+class SessionForkCapabilities(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+
+
 class SessionInfo(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
@@ -570,6 +558,34 @@ class SessionInfo(BaseModel):
     updated_at: Annotated[
         Optional[str],
         Field(alias="updatedAt", description="ISO 8601 timestamp of last activity"),
+    ] = None
+
+
+class _SessionInfoUpdate(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # Human-readable title for the session. Set to null to clear.
+    title: Annotated[
+        Optional[str],
+        Field(description="Human-readable title for the session. Set to null to clear."),
+    ] = None
+    # ISO 8601 timestamp of last activity. Set to null to clear.
+    updated_at: Annotated[
+        Optional[str],
+        Field(
+            alias="updatedAt",
+            description="ISO 8601 timestamp of last activity. Set to null to clear.",
+        ),
     ] = None
 
 
@@ -614,6 +630,25 @@ class SessionModelState(BaseModel):
         str,
         Field(alias="currentModelId", description="The current model the Agent is in."),
     ]
+
+
+class SessionResumeCapabilities(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+
+
+class SessionInfoUpdate(_SessionInfoUpdate):
+    session_update: Annotated[Literal["session_info_update"], Field(alias="sessionUpdate")]
 
 
 class SetSessionModeRequest(BaseModel):
@@ -922,25 +957,6 @@ class WriteTextFileResponse(BaseModel):
     ] = None
 
 
-class AgentErrorMessage(BaseModel):
-    error: Error
-    # JSON RPC Request Id
-    #
-    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
-    #
-    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
-    #
-    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
-    #
-    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
-    id: Annotated[
-        Optional[Union[int, str]],
-        Field(
-            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
-        ),
-    ] = None
-
-
 class Annotations(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
@@ -1008,6 +1024,26 @@ class CancelNotification(BaseModel):
     ]
 
 
+class CancelRequestNotification(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # The ID of the request to cancel.
+    request_id: Annotated[
+        Optional[Union[int, str]],
+        Field(alias="requestId", description="The ID of the request to cancel."),
+    ] = None
+
+
 class ClientCapabilities(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
@@ -1039,25 +1075,6 @@ class ClientCapabilities(BaseModel):
 class ClientNotification(BaseModel):
     method: str
     params: Optional[Union[CancelNotification, Any]] = None
-
-
-class ClientErrorMessage(BaseModel):
-    error: Error
-    # JSON RPC Request Id
-    #
-    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
-    #
-    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
-    #
-    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
-    #
-    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
-    id: Annotated[
-        Optional[Union[int, str]],
-        Field(
-            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
-        ),
-    ] = None
 
 
 class AudioContentBlock(AudioContent):
@@ -1111,7 +1128,7 @@ class CreateTerminalRequest(BaseModel):
     session_id: Annotated[str, Field(alias="sessionId", description="The session ID for this request.")]
 
 
-class CurrentModeUpdate(BaseModel):
+class _CurrentModeUpdate(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
     # these keys.
@@ -1126,6 +1143,33 @@ class CurrentModeUpdate(BaseModel):
     ] = None
     # The ID of the current mode
     current_mode_id: Annotated[str, Field(alias="currentModeId", description="The ID of the current mode")]
+
+
+class Error(BaseModel):
+    # A number indicating the error type that occurred.
+    # This must be an integer as defined in the JSON-RPC specification.
+    code: Annotated[
+        int,
+        Field(
+            description="A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification."
+        ),
+    ]
+    # Optional primitive or structured value that contains additional information about the error.
+    # This may include debugging information or context-specific details.
+    data: Annotated[
+        Optional[Any],
+        Field(
+            description="Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details."
+        ),
+    ] = None
+    # A string providing a short description of the error.
+    # The message should be limited to a concise single sentence.
+    message: Annotated[
+        str,
+        Field(
+            description="A string providing a short description of the error.\nThe message should be limited to a concise single sentence."
+        ),
+    ]
 
 
 class ImageContent(BaseModel):
@@ -1445,6 +1489,33 @@ class ResourceLink(BaseModel):
     uri: str
 
 
+class ResumeSessionRequest(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # The working directory for this session.
+    cwd: Annotated[str, Field(description="The working directory for this session.")]
+    # List of MCP servers to connect to for this session.
+    mcp_servers: Annotated[
+        Optional[List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]]],
+        Field(
+            alias="mcpServers",
+            description="List of MCP servers to connect to for this session.",
+        ),
+    ] = None
+    # The ID of the session to resume.
+    session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to resume.")]
+
+
 class SessionCapabilities(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
@@ -1462,11 +1533,33 @@ class SessionCapabilities(BaseModel):
     #
     # This capability is not part of the spec yet, and may be removed or changed at any point.
     #
+    # Whether the agent supports `session/fork`.
+    fork: Annotated[
+        Optional[SessionForkCapabilities],
+        Field(
+            description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/fork`."
+        ),
+    ] = None
+    # **UNSTABLE**
+    #
+    # This capability is not part of the spec yet, and may be removed or changed at any point.
+    #
     # Whether the agent supports `session/list`.
     list: Annotated[
         Optional[SessionListCapabilities],
         Field(
             description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/list`."
+        ),
+    ] = None
+    # **UNSTABLE**
+    #
+    # This capability is not part of the spec yet, and may be removed or changed at any point.
+    #
+    # Whether the agent supports `session/resume`.
+    resume: Annotated[
+        Optional[SessionResumeCapabilities],
+        Field(
+            description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/resume`."
         ),
     ] = None
 
@@ -1518,7 +1611,7 @@ class SessionModeState(BaseModel):
     ]
 
 
-class CurrentModeUpdate(CurrentModeUpdate):
+class CurrentModeUpdate(_CurrentModeUpdate):
     session_update: Annotated[Literal["current_mode_update"], Field(alias="sessionUpdate")]
 
 
@@ -1581,6 +1674,25 @@ class AgentCapabilities(BaseModel):
     )
 
 
+class AgentErrorMessage(BaseModel):
+    error: Error
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+
+
 class AvailableCommand(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
@@ -1608,7 +1720,7 @@ class AvailableCommand(BaseModel):
     ]
 
 
-class AvailableCommandsUpdate(BaseModel):
+class _AvailableCommandsUpdate(BaseModel):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
     # these keys.
@@ -1668,6 +1780,25 @@ class ClientResponseMessage(BaseModel):
     ]
 
 
+class ClientErrorMessage(BaseModel):
+    error: Error
+    # JSON RPC Request Id
+    #
+    # An identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]
+    #
+    # The Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.
+    #
+    # [1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.
+    #
+    # [2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.
+    id: Annotated[
+        Optional[Union[int, str]],
+        Field(
+            description="JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions."
+        ),
+    ] = None
+
+
 class ClientResponse(RootModel[Union[ClientResponseMessage, ClientErrorMessage]]):
     root: Union[ClientResponseMessage, ClientErrorMessage]
 
@@ -1702,6 +1833,76 @@ class EmbeddedResource(BaseModel):
     resource: Annotated[
         Union[TextResourceContents, BlobResourceContents],
         Field(description="Resource content that can be embedded in a message."),
+    ]
+
+
+class ForkSessionRequest(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # The working directory for this session.
+    cwd: Annotated[str, Field(description="The working directory for this session.")]
+    # List of MCP servers to connect to for this session.
+    mcp_servers: Annotated[
+        Optional[List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]]],
+        Field(
+            alias="mcpServers",
+            description="List of MCP servers to connect to for this session.",
+        ),
+    ] = None
+    # The ID of the session to fork.
+    session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to fork.")]
+
+
+class ForkSessionResponse(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # **UNSTABLE**
+    #
+    # This capability is not part of the spec yet, and may be removed or changed at any point.
+    #
+    # Initial model state if supported by the Agent
+    models: Annotated[
+        Optional[SessionModelState],
+        Field(
+            description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent"
+        ),
+    ] = None
+    # Initial mode state if supported by the Agent
+    #
+    # See protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)
+    modes: Annotated[
+        Optional[SessionModeState],
+        Field(
+            description="Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)"
+        ),
+    ] = None
+    # Unique identifier for the newly created forked session.
+    session_id: Annotated[
+        str,
+        Field(
+            alias="sessionId",
+            description="Unique identifier for the newly created forked session.",
+        ),
     ]
 
 
@@ -1891,11 +2092,46 @@ class Plan(BaseModel):
     ]
 
 
+class ResumeSessionResponse(BaseModel):
+    # The _meta property is reserved by ACP to allow clients and agents to attach additional
+    # metadata to their interactions. Implementations MUST NOT make assumptions about values at
+    # these keys.
+    #
+    # See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+    field_meta: Annotated[
+        Optional[Dict[str, Any]],
+        Field(
+            alias="_meta",
+            description="The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        ),
+    ] = None
+    # **UNSTABLE**
+    #
+    # This capability is not part of the spec yet, and may be removed or changed at any point.
+    #
+    # Initial model state if supported by the Agent
+    models: Annotated[
+        Optional[SessionModelState],
+        Field(
+            description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent"
+        ),
+    ] = None
+    # Initial mode state if supported by the Agent
+    #
+    # See protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)
+    modes: Annotated[
+        Optional[SessionModeState],
+        Field(
+            description="Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)"
+        ),
+    ] = None
+
+
 class AgentPlanUpdate(Plan):
     session_update: Annotated[Literal["plan"], Field(alias="sessionUpdate")]
 
 
-class AvailableCommandsUpdate(AvailableCommandsUpdate):
+class AvailableCommandsUpdate(_AvailableCommandsUpdate):
     session_update: Annotated[Literal["available_commands_update"], Field(alias="sessionUpdate")]
 
 
@@ -1928,6 +2164,8 @@ class AgentResponseMessage(BaseModel):
             NewSessionResponse,
             LoadSessionResponse,
             ListSessionsResponse,
+            ForkSessionResponse,
+            ResumeSessionResponse,
             SetSessionModeResponse,
             PromptResponse,
             SetSessionModelResponse,
@@ -2055,6 +2293,8 @@ class ClientRequest(BaseModel):
             NewSessionRequest,
             LoadSessionRequest,
             ListSessionsRequest,
+            ForkSessionRequest,
+            ResumeSessionRequest,
             SetSessionModeRequest,
             PromptRequest,
             SetSessionModelRequest,
@@ -2290,6 +2530,7 @@ class SessionNotification(BaseModel):
             AgentPlanUpdate,
             AvailableCommandsUpdate,
             CurrentModeUpdate,
+            SessionInfoUpdate,
         ],
         Field(description="The actual update content.", discriminator="session_update"),
     ]
@@ -2322,6 +2563,7 @@ SessionUpdate5 = ToolCallProgress
 SessionUpdate6 = AgentPlanUpdate
 SessionUpdate7 = AvailableCommandsUpdate
 SessionUpdate8 = CurrentModeUpdate
+SessionUpdate9 = SessionInfoUpdate
 ToolCallContent1 = ContentToolCallContent
 ToolCallContent2 = FileEditToolCallContent
 ToolCallContent3 = TerminalToolCallContent

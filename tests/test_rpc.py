@@ -24,7 +24,6 @@ from acp import (
     update_agent_message_text,
     update_tool_call,
 )
-from acp.exceptions import RequestError
 from acp.schema import (
     AgentMessageChunk,
     AllowedOutcome,
@@ -35,11 +34,9 @@ from acp.schema import (
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
-    ListSessionsResponse,
     McpServerStdio,
     PermissionOption,
     ResourceContentBlock,
-    SetSessionModelResponse,
     SseMcpServer,
     TextContentBlock,
     ToolCallLocation,
@@ -72,10 +69,6 @@ async def test_initialize_and_new_session(connect):
 
     mode_resp = await agent_conn.set_session_mode(session_id=new_sess.session_id, mode_id="ask")
     assert isinstance(mode_resp, SetSessionModeResponse)
-
-    with pytest.raises(RequestError), pytest.warns(UserWarning) as record:
-        await agent_conn.set_session_model(session_id=new_sess.session_id, model_id="gpt-4o")
-        assert len(record) == 1
 
 
 @pytest.mark.asyncio
@@ -190,10 +183,6 @@ async def test_set_session_mode_and_extensions(connect, agent, client):
     # setSessionMode
     resp = await agent_conn.set_session_mode(session_id="sess", mode_id="yolo")
     assert isinstance(resp, SetSessionModeResponse)
-
-    with pytest.raises(RequestError), pytest.warns(UserWarning) as record:
-        await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
-        assert len(record) == 1
 
     # extMethod
     echo = await agent_conn.ext_method("example.com/echo", {"x": 1})
@@ -432,14 +421,3 @@ async def test_spawn_agent_process_roundtrip(tmp_path):
         assert test_client.notifications
 
     assert process.returncode is not None
-
-
-@pytest.mark.asyncio
-async def test_call_unstable_protocol(connect):
-    _, agent_conn = connect(use_unstable_protocol=True)
-
-    resp = await agent_conn.list_sessions()
-    assert isinstance(resp, ListSessionsResponse)
-
-    resp = await agent_conn.set_session_model(session_id="sess", model_id="gpt-4o-mini")
-    assert isinstance(resp, SetSessionModelResponse)

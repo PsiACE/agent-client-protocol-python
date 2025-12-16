@@ -17,6 +17,8 @@ from .schema import (
     CurrentModeUpdate,
     EmbeddedResourceContentBlock,
     EnvVariable,
+    ForkSessionRequest,
+    ForkSessionResponse,
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
@@ -41,6 +43,9 @@ from .schema import (
     RequestPermissionRequest,
     RequestPermissionResponse,
     ResourceContentBlock,
+    ResumeSessionRequest,
+    ResumeSessionResponse,
+    SessionInfoUpdate,
     SessionNotification,
     SetSessionModelRequest,
     SetSessionModelResponse,
@@ -81,7 +86,8 @@ class Client(Protocol):
         | ToolCallProgress
         | AgentPlanUpdate
         | AvailableCommandsUpdate
-        | CurrentModeUpdate,
+        | CurrentModeUpdate
+        | SessionInfoUpdate,
         **kwargs: Any,
     ) -> None: ...
 
@@ -181,6 +187,24 @@ class Agent(Protocol):
         session_id: str,
         **kwargs: Any,
     ) -> PromptResponse: ...
+
+    @param_model(ForkSessionRequest)
+    async def fork_session(
+        self,
+        cwd: str,
+        session_id: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
+        **kwargs: Any,
+    ) -> ForkSessionResponse: ...
+
+    @param_model(ResumeSessionRequest)
+    async def resume_session(
+        self,
+        cwd: str,
+        session_id: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
+        **kwargs: Any,
+    ) -> ResumeSessionResponse: ...
 
     @param_model(CancelNotification)
     async def cancel(self, session_id: str, **kwargs: Any) -> None: ...

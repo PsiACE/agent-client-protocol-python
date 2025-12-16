@@ -1,13 +1,15 @@
 # Generated from schema/meta.json. Do not edit by hand.
-# Schema ref: refs/tags/v0.9.1
+# Schema ref: refs/tags/v0.10.3
 AGENT_METHODS = {
     "authenticate": "authenticate",
     "initialize": "initialize",
     "session_cancel": "session/cancel",
+    "session_fork": "session/fork",
     "session_list": "session/list",
     "session_load": "session/load",
     "session_new": "session/new",
     "session_prompt": "session/prompt",
+    "session_resume": "session/resume",
     "session_set_mode": "session/set_mode",
     "session_set_model": "session/set_model",
 }

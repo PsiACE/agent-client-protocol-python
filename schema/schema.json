@@ -217,6 +217,12 @@
                   "$ref": "#/$defs/ListSessionsResponse"
                 },
                 {
+                  "$ref": "#/$defs/ForkSessionResponse"
+                },
+                {
+                  "$ref": "#/$defs/ResumeSessionResponse"
+                },
+                {
                   "$ref": "#/$defs/SetSessionModeResponse"
                 },
                 {
@@ -529,6 +535,33 @@
       "x-method": "session/cancel",
       "x-side": "agent"
     },
+    "CancelRequestNotification": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification to cancel an ongoing request.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/cancellation)",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "requestId": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/RequestId"
+            }
+          ],
+          "description": "The ID of the request to cancel."
+        }
+      },
+      "required": [
+        "requestId"
+      ],
+      "type": "object",
+      "x-method": "$/cancel_request",
+      "x-side": "protocol"
+    },
     "ClientCapabilities": {
       "description": "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
       "properties": {
@@ -651,6 +684,22 @@
                     }
                   ],
                   "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nLists existing sessions known to the agent.\n\nThis method is only available if the agent advertises the `listSessions` capability.\n\nThe agent should return metadata about sessions with optional filtering and pagination support."
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/ForkSessionRequest"
+                    }
+                  ],
+                  "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForks an existing session to create a new independent session.\n\nThis method is only available if the agent advertises the `session.fork` capability.\n\nThe agent should create a new session with the same conversation context as the\noriginal, allowing operations like generating summaries without affecting the\noriginal session's history."
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/ResumeSessionRequest"
+                    }
+                  ],
+                  "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResumes an existing session without returning previous messages.\n\nThis method is only available if the agent advertises the `session.resume` capability.\n\nThe agent should resume the session context, allowing the conversation to continue\nwithout replaying the message history (unlike `session/load`)."
                 },
                 {
                   "allOf": [
@@ -1126,9 +1175,12 @@
       "description": "JSON-RPC error object.\n\nRepresents an error that occurred during method execution, following the\nJSON-RPC 2.0 error object specification with optional additional data.\n\nSee protocol docs: [JSON-RPC Error Object](https://www.jsonrpc.org/specification#error_object)",
       "properties": {
         "code": {
-          "description": "A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification.",
-          "format": "int32",
-          "type": "integer"
+          "allOf": [
+            {
+              "$ref": "#/$defs/ErrorCode"
+            }
+          ],
+          "description": "A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification."
         },
         "data": {
           "description": "Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details."
@@ -1143,6 +1195,64 @@
         "message"
       ],
       "type": "object"
+    },
+    "ErrorCode": {
+      "anyOf": [
+        {
+          "const": -32700,
+          "description": "**Parse error**: Invalid JSON was received by the server.\nAn error occurred on the server while parsing the JSON text.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32600,
+          "description": "**Invalid request**: The JSON sent is not a valid Request object.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32601,
+          "description": "**Method not found**: The method does not exist or is not available.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32602,
+          "description": "**Invalid params**: Invalid method parameter(s).",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32603,
+          "description": "**Internal error**: Internal JSON-RPC error.\nReserved for implementation-defined server errors.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32800,
+          "description": "**Request cancelled**: **UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nExecution of the method was aborted either due to a cancellation request from the caller or\nbecause of resource constraints or shutdown.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32000,
+          "description": "**Authentication required**: Authentication is required before this operation can be performed.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "const": -32002,
+          "description": "**Resource not found**: A given resource, such as a file, was not found.",
+          "format": "int32",
+          "type": "integer"
+        },
+        {
+          "description": "Other undefined error code.",
+          "format": "int32",
+          "type": "integer"
+        }
+      ],
+      "description": "Predefined error codes for common JSON-RPC and ACP-specific errors.\n\nThese codes follow the JSON-RPC 2.0 specification for standard errors\nand use the reserved range (-32000 to -32099) for protocol-specific errors."
     },
     "ExtNotification": {
       "description": "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)"
@@ -1176,6 +1286,94 @@
         }
       },
       "type": "object"
+    },
+    "ForkSessionRequest": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session's history.\n\nOnly available if the Agent supports the `session.fork` capability.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "cwd": {
+          "description": "The working directory for this session.",
+          "type": "string"
+        },
+        "mcpServers": {
+          "description": "List of MCP servers to connect to for this session.",
+          "items": {
+            "$ref": "#/$defs/McpServer"
+          },
+          "type": "array"
+        },
+        "sessionId": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/SessionId"
+            }
+          ],
+          "description": "The ID of the session to fork."
+        }
+      },
+      "required": [
+        "sessionId",
+        "cwd"
+      ],
+      "type": "object",
+      "x-method": "session/fork",
+      "x-side": "agent"
+    },
+    "ForkSessionResponse": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from forking an existing session.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "models": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionModelState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent"
+        },
+        "modes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionModeState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)"
+        },
+        "sessionId": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/SessionId"
+            }
+          ],
+          "description": "Unique identifier for the newly created forked session."
+        }
+      },
+      "required": [
+        "sessionId"
+      ],
+      "type": "object",
+      "x-method": "session/fork",
+      "x-side": "agent"
     },
     "HttpHeader": {
       "description": "An HTTP header to set when making requests to the MCP server.",
@@ -2462,6 +2660,83 @@
       ],
       "type": "object"
     },
+    "ResumeSessionRequest": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for resuming an existing session.\n\nResumes an existing session without returning previous messages (unlike `session/load`).\nThis is useful for agents that can resume sessions but don't implement full session loading.\n\nOnly available if the Agent supports the `session.resume` capability.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "cwd": {
+          "description": "The working directory for this session.",
+          "type": "string"
+        },
+        "mcpServers": {
+          "description": "List of MCP servers to connect to for this session.",
+          "items": {
+            "$ref": "#/$defs/McpServer"
+          },
+          "type": "array"
+        },
+        "sessionId": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/SessionId"
+            }
+          ],
+          "description": "The ID of the session to resume."
+        }
+      },
+      "required": [
+        "sessionId",
+        "cwd"
+      ],
+      "type": "object",
+      "x-method": "session/resume",
+      "x-side": "agent"
+    },
+    "ResumeSessionResponse": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from resuming an existing session.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "models": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionModelState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent"
+        },
+        "modes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionModeState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)"
+        }
+      },
+      "type": "object",
+      "x-method": "session/resume",
+      "x-side": "agent"
+    },
     "Role": {
       "description": "The sender or recipient of messages and data in a conversation.",
       "enum": [
@@ -2506,6 +2781,17 @@
             "null"
           ]
         },
+        "fork": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionForkCapabilities"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/fork`."
+        },
         "list": {
           "anyOf": [
             {
@@ -2516,6 +2802,31 @@
             }
           ],
           "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/list`."
+        },
+        "resume": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionResumeCapabilities"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/resume`."
+        }
+      },
+      "type": "object"
+    },
+    "SessionForkCapabilities": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/fork` method.\n\nBy supplying `{}` it means that the agent supports forking of sessions.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object"
@@ -2566,6 +2877,34 @@
         "sessionId",
         "cwd"
       ],
+      "type": "object"
+    },
+    "SessionInfoUpdate": {
+      "description": "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "title": {
+          "description": "Human-readable title for the session. Set to null to clear.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updatedAt": {
+          "description": "ISO 8601 timestamp of last activity. Set to null to clear.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
       "type": "object"
     },
     "SessionListCapabilities": {
@@ -2718,6 +3057,20 @@
       "x-method": "session/update",
       "x-side": "client"
     },
+    "SessionResumeCapabilities": {
+      "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/resume` method.\n\nBy supplying `{}` it means that the agent supports resuming of sessions.",
+      "properties": {
+        "_meta": {
+          "additionalProperties": true,
+          "description": "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "SessionUpdate": {
       "description": "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
       "discriminator": {
@@ -2860,6 +3213,24 @@
           "properties": {
             "sessionUpdate": {
               "const": "current_mode_update",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sessionUpdate"
+          ],
+          "type": "object"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/SessionInfoUpdate"
+            }
+          ],
+          "description": "Session metadata has been updated (title, timestamps, custom metadata)",
+          "properties": {
+            "sessionUpdate": {
+              "const": "session_info_update",
               "type": "string"
             }
           },
@@ -3698,6 +4069,20 @@
         "jsonrpc"
       ],
       "type": "object"
+    },
+    {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/CancelRequestNotification"
+            }
+          ],
+          "description": "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or\nchanged at any point.\n\nCancels an ongoing request.\n\nThis is a notification sent by the the side that sent a request to cancel that request.\n\nUpon receiving this notification, the receiver:\n\n1. MUST cancel the corresponding request activity and all nested activities\n2. MAY send any pending notifications.\n3. MUST send one of these responses for the original request:\n  - Valid response with appropriate data (partial results or cancellation marker)\n  - Error response with code `-32800` (Cancelled)\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/cancellation)"
+        }
+      ],
+      "description": "General protocol-level notifications that all sides are expected to\nimplement.\n\nNotifications whose methods start with '$/' are messages which\nare protocol implementation dependent and might not be implementable in all\nclients or agents. For example if the implementation uses a single threaded\nsynchronous programming language then there is little it can do to react to\na `$/cancel_request` notification. If an agent or client receives\nnotifications starting with '$/' it is free to ignore the notification.\n\nNotifications do not expect a response."
     }
-  ]
+  ],
+  "title": "Agent Client Protocol"
 }
