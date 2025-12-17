@@ -27,12 +27,15 @@ DESCRIPTION_PATTERN = re.compile(
 )
 
 STDIO_TYPE_LITERAL = 'Literal["2#-datamodel-code-generator-#-object-#-special-#"]'
-STDIO_TYPE_PATTERN = re.compile(
-    r"^    type:\s*Literal\[['\"]McpServerStdio['\"]\]"
-    r"(?:\s*=\s*['\"][^'\"]+['\"])?\s*$",
-    re.MULTILINE,
-)
-MODELS_TO_REMOVE = ["Model1", "Model2", "Model3", "Model4", "Model5", "Model6", "Model"]
+MODELS_TO_REMOVE = [
+    "AgentClientProtocol",
+    "AgentClientProtocol1",
+    "AgentClientProtocol2",
+    "AgentClientProtocol3",
+    "AgentClientProtocol4",
+    "AgentClientProtocol5",
+    "AgentClientProtocol6",
+]
 
 # Map of numbered classes produced by datamodel-code-generator to descriptive names.
 # Keep this in sync with the Rust/TypeScript SDK nomenclature.
@@ -58,6 +61,7 @@ RENAME_MAP: dict[str, str] = {
     "SessionUpdate6": "AgentPlanUpdate",
     "SessionUpdate7": "AvailableCommandsUpdate",
     "SessionUpdate8": "CurrentModeUpdate",
+    "SessionUpdate9": "SessionInfoUpdate",
     "ToolCallContent1": "ContentToolCallContent",
     "ToolCallContent2": "FileEditToolCallContent",
     "ToolCallContent3": "TerminalToolCallContent",
@@ -175,7 +179,6 @@ def postprocess_generated_schema(output_path: Path) -> list[str]:
     processing_steps: tuple[_ProcessingStep, ...] = (
         _ProcessingStep("apply field overrides", _apply_field_overrides),
         _ProcessingStep("apply default overrides", _apply_default_overrides),
-        _ProcessingStep("normalize stdio literal", _normalize_stdio_model),
         _ProcessingStep("attach description comments", _add_description_comments),
         _ProcessingStep("ensure custom BaseModel", _ensure_custom_base_model),
     )
@@ -242,6 +245,8 @@ def _remove_backcompat_block(content: str) -> str:
 def _rename_numbered_models(content: str) -> tuple[str, list[str]]:
     renamed = content
     for old, new in sorted(RENAME_MAP.items(), key=lambda item: len(item[0]), reverse=True):
+        if re.search(rf"\b{re.escape(new)}\b", renamed) is not None:
+            renamed = re.sub(rf"\b{re.escape(new)}\b", f"_{new}", renamed)
         pattern = re.compile(rf"\b{re.escape(old)}\b")
         renamed = pattern.sub(new, renamed)
 
@@ -415,20 +420,6 @@ def _apply_default_overrides(content: str) -> str:
                 file=sys.stderr,
             )
     return content
-
-
-def _normalize_stdio_model(content: str) -> str:
-    replacement_line = '    type: Literal["stdio"] = "stdio"'
-    new_content, count = STDIO_TYPE_PATTERN.subn(replacement_line, content)
-    if count == 0:
-        print("Warning: stdio type placeholder not found; no replacements made.", file=sys.stderr)
-        return content
-    if count > 1:
-        print(
-            "Warning: multiple stdio type placeholders detected; manual review required.",
-            file=sys.stderr,
-        )
-    return new_content
 
 
 def _add_description_comments(content: str) -> str:

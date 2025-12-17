@@ -20,7 +20,6 @@ from acp import (
     RequestError,
     RequestPermissionResponse,
     SessionNotification,
-    SetSessionModelResponse,
     SetSessionModeResponse,
     TerminalOutputResponse,
     WaitForTerminalExitResponse,
@@ -42,7 +41,6 @@ from acp.schema import (
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
-    ListSessionsResponse,
     McpServerStdio,
     PermissionOption,
     ResourceContentBlock,
@@ -246,11 +244,6 @@ class TestAgent:
     ) -> LoadSessionResponse | None:
         return LoadSessionResponse()
 
-    async def list_sessions(
-        self, cursor: str | None = None, cwd: str | None = None, **kwargs: Any
-    ) -> ListSessionsResponse:
-        return ListSessionsResponse(sessions=[], next_cursor=None)
-
     async def authenticate(self, method_id: str, **kwargs: Any) -> AuthenticateResponse | None:
         return AuthenticateResponse()
 
@@ -274,9 +267,6 @@ class TestAgent:
 
     async def set_session_mode(self, mode_id: str, session_id: str, **kwargs: Any) -> SetSessionModeResponse | None:
         return SetSessionModeResponse()
-
-    async def set_session_model(self, model_id: str, session_id: str, **kwargs: Any) -> SetSessionModelResponse | None:
-        return SetSessionModelResponse()
 
     async def ext_method(self, method: str, params: dict) -> dict:
         self.ext_calls.append((method, params))

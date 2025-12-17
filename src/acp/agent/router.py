@@ -9,11 +9,13 @@ from ..router import MessageRouter
 from ..schema import (
     AuthenticateRequest,
     CancelNotification,
+    ForkSessionRequest,
     InitializeRequest,
     ListSessionsRequest,
     LoadSessionRequest,
     NewSessionRequest,
     PromptRequest,
+    ResumeSessionRequest,
     SetSessionModelRequest,
     SetSessionModeRequest,
 )
@@ -58,6 +60,8 @@ def build_agent_router(agent: Agent, use_unstable_protocol: bool = False) -> Mes
         "authenticate",
         adapt_result=normalize_result,
     )
+    router.route_request(AGENT_METHODS["session_fork"], ForkSessionRequest, agent, "fork_session", unstable=True)
+    router.route_request(AGENT_METHODS["session_resume"], ResumeSessionRequest, agent, "resume_session", unstable=True)
 
     router.route_notification(AGENT_METHODS["session_cancel"], CancelNotification, agent, "cancel")
 

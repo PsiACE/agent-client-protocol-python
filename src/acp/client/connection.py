@@ -14,6 +14,8 @@ from ..schema import (
     CancelNotification,
     ClientCapabilities,
     EmbeddedResourceContentBlock,
+    ForkSessionRequest,
+    ForkSessionResponse,
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
@@ -29,6 +31,8 @@ from ..schema import (
     PromptRequest,
     PromptResponse,
     ResourceContentBlock,
+    ResumeSessionRequest,
+    ResumeSessionResponse,
     SetSessionModelRequest,
     SetSessionModelResponse,
     SetSessionModeRequest,
@@ -163,6 +167,36 @@ class ClientSideConnection:
             AGENT_METHODS["session_prompt"],
             PromptRequest(prompt=prompt, session_id=session_id, field_meta=kwargs or None),
             PromptResponse,
+        )
+
+    @param_model(ForkSessionRequest)
+    async def fork_session(
+        self,
+        cwd: str,
+        session_id: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
+        **kwargs: Any,
+    ) -> ForkSessionResponse:
+        return await request_model(
+            self._conn,
+            AGENT_METHODS["session_fork"],
+            ForkSessionRequest(session_id=session_id, cwd=cwd, mcp_servers=mcp_servers, field_meta=kwargs or None),
+            ForkSessionResponse,
+        )
+
+    @param_model(ResumeSessionRequest)
+    async def resume_session(
+        self,
+        cwd: str,
+        session_id: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
+        **kwargs: Any,
+    ) -> ResumeSessionResponse:
+        return await request_model(
+            self._conn,
+            AGENT_METHODS["session_resume"],
+            ResumeSessionRequest(session_id=session_id, cwd=cwd, mcp_servers=mcp_servers, field_meta=kwargs or None),
+            ResumeSessionResponse,
         )
 
     @param_model(CancelNotification)
