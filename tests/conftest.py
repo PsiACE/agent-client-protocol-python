@@ -44,6 +44,7 @@ from acp.schema import (
     McpServerStdio,
     PermissionOption,
     ResourceContentBlock,
+    SessionInfoUpdate,
     SseMcpServer,
     TextContentBlock,
     ToolCallProgress,
@@ -129,6 +130,10 @@ class TestClient:
         self.notifications: list[SessionNotification] = []
         self.ext_calls: list[tuple[str, dict]] = []
         self.ext_notes: list[tuple[str, dict]] = []
+        self._agent_conn = None
+
+    def on_connect(self, conn) -> None:
+        self._agent_conn = conn
 
     def queue_permission_cancelled(self) -> None:
         self.permission_outcomes.append(RequestPermissionResponse(outcome=DeniedOutcome(outcome="cancelled")))
@@ -167,7 +172,8 @@ class TestClient:
         | ToolCallProgress
         | AgentPlanUpdate
         | AvailableCommandsUpdate
-        | CurrentModeUpdate,
+        | CurrentModeUpdate
+        | SessionInfoUpdate,
         **kwargs: Any,
     ) -> None:
         self.notifications.append(SessionNotification(session_id=session_id, update=update, field_meta=kwargs or None))
