@@ -20,6 +20,10 @@ class TerminalHandle:
         self._session_id = session_id
         self._conn = conn
 
+    @property
+    def terminal_id(self) -> str:
+        return self.id
+
     async def current_output(self) -> TerminalOutputResponse:
         response = await self._conn.send_request(
             CLIENT_METHODS["terminal_output"],

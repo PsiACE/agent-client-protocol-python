@@ -64,6 +64,7 @@ from .schema import (
     WriteTextFileRequest,
     WriteTextFileResponse,
 )
+from .terminal import TerminalHandle
 from .utils import param_model
 
 __all__ = ["Agent", "Client"]
@@ -111,7 +112,7 @@ class Client(Protocol):
         env: list[EnvVariable] | None = None,
         output_byte_limit: int | None = None,
         **kwargs: Any,
-    ) -> CreateTerminalResponse: ...
+    ) -> CreateTerminalResponse | TerminalHandle: ...
 
     @param_model(TerminalOutputRequest)
     async def terminal_output(self, session_id: str, terminal_id: str, **kwargs: Any) -> TerminalOutputResponse: ...

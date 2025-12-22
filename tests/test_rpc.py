@@ -10,6 +10,7 @@ from acp import (
     Agent,
     AuthenticateResponse,
     Client,
+    CreateTerminalResponse,
     InitializeResponse,
     LoadSessionResponse,
     NewSessionResponse,
@@ -24,6 +25,7 @@ from acp import (
     update_agent_message_text,
     update_tool_call,
 )
+from acp.core import AgentSideConnection, ClientSideConnection
 from acp.schema import (
     AgentMessageChunk,
     AllowedOutcome,
@@ -31,6 +33,7 @@ from acp.schema import (
     ClientCapabilities,
     DeniedOutcome,
     EmbeddedResourceContentBlock,
+    EnvVariable,
     HttpMcpServer,
     ImageContentBlock,
     Implementation,
@@ -128,6 +131,56 @@ async def test_session_notifications_flow(connect, client):
         await asyncio.sleep(0.01)
     assert len(client.notifications) >= 2
     assert client.notifications[0].session_id == "sess"
+
+
+@pytest.mark.asyncio
+async def test_on_connect_create_terminal_handle(server):
+    class _TerminalAgent(Agent):
+        __test__ = False
+
+        def __init__(self) -> None:
+            self._conn: Client | None = None
+            self.handle_id: str | None = None
+
+        def on_connect(self, conn: Client) -> None:
+            self._conn = conn
+
+        async def prompt(
+            self,
+            prompt: list[TextContentBlock],
+            session_id: str,
+            **kwargs: Any,
+        ) -> PromptResponse:
+            assert self._conn is not None
+            handle = await self._conn.create_terminal(command="echo", session_id=session_id)
+            self.handle_id = handle.terminal_id
+            return PromptResponse(stop_reason="end_turn")
+
+    class _TerminalClient(TestClient):
+        __test__ = False
+
+        async def create_terminal(
+            self,
+            command: str,
+            session_id: str,
+            args: list[str] | None = None,
+            cwd: str | None = None,
+            env: list[EnvVariable] | None = None,
+            output_byte_limit: int | None = None,
+            **kwargs: Any,
+        ) -> CreateTerminalResponse:
+            return CreateTerminalResponse(terminal_id="term-123")
+
+    agent = _TerminalAgent()
+    client = _TerminalClient()
+    agent_conn = AgentSideConnection(agent, server.server_writer, server.server_reader, listening=True)
+    client_conn = ClientSideConnection(client, server.client_writer, server.client_reader)
+
+    await client_conn.prompt(session_id="sess", prompt=[TextContentBlock(type="text", text="start")])
+    assert agent.handle_id == "term-123"
+
+    await client_conn.close()
+    await agent_conn.close()
 
 
 @pytest.mark.asyncio
