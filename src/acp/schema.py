@@ -2207,7 +2207,7 @@ class Content(BaseModel):
     ]
 
 
-class SessionConfigOption1(SessionConfigSelect):
+class SessionConfigOptionSelect(SessionConfigSelect):
     # The _meta property is reserved by ACP to allow clients and agents to attach additional
     # metadata to their interactions. Implementations MUST NOT make assumptions about values at
     # these keys.
@@ -2232,14 +2232,14 @@ class SessionConfigOption1(SessionConfigSelect):
     type: Literal["select"]
 
 
-class SessionConfigOption(RootModel[SessionConfigOption1]):
+class SessionConfigOption(RootModel[SessionConfigOptionSelect]):
     # **UNSTABLE**
     #
     # This capability is not part of the spec yet, and may be removed or changed at any point.
     #
     # A session configuration option selector and its current state.
     root: Annotated[
-        SessionConfigOption1,
+        SessionConfigOptionSelect,
         Field(
             description="**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA session configuration option selector and its current state.",
             discriminator="type",
@@ -2781,6 +2781,7 @@ McpServer1 = HttpMcpServer
 McpServer2 = SseMcpServer
 RequestPermissionOutcome1 = DeniedOutcome
 RequestPermissionOutcome2 = AllowedOutcome
+SessionConfigOption1 = SessionConfigOptionSelect
 SessionUpdate1 = UserMessageChunk
 SessionUpdate10 = SessionInfoUpdate
 SessionUpdate2 = AgentMessageChunk

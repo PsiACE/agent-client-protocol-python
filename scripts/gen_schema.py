@@ -53,6 +53,7 @@ RENAME_MAP: dict[str, str] = {
     "McpServer2": "SseMcpServer",
     "RequestPermissionOutcome1": "DeniedOutcome",
     "RequestPermissionOutcome2": "AllowedOutcome",
+    "SessionConfigOption1": "SessionConfigOptionSelect",
     "SessionUpdate1": "UserMessageChunk",
     "SessionUpdate2": "AgentMessageChunk",
     "SessionUpdate3": "AgentThoughtChunk",

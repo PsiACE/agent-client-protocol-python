@@ -34,6 +34,7 @@ from acp.schema import (
     AudioContentBlock,
     AvailableCommandsUpdate,
     ClientCapabilities,
+    ConfigOptionUpdate,
     CurrentModeUpdate,
     DeniedOutcome,
     EmbeddedResourceContentBlock,
@@ -173,6 +174,7 @@ class TestClient:
         | AgentPlanUpdate
         | AvailableCommandsUpdate
         | CurrentModeUpdate
+        | ConfigOptionUpdate
         | SessionInfoUpdate,
         **kwargs: Any,
     ) -> None:
