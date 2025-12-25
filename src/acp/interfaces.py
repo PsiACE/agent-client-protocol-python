@@ -12,6 +12,7 @@ from .schema import (
     AvailableCommandsUpdate,
     CancelNotification,
     ClientCapabilities,
+    ConfigOptionUpdate,
     CreateTerminalRequest,
     CreateTerminalResponse,
     CurrentModeUpdate,
@@ -88,6 +89,7 @@ class Client(Protocol):
         | AgentPlanUpdate
         | AvailableCommandsUpdate
         | CurrentModeUpdate
+        | ConfigOptionUpdate
         | SessionInfoUpdate,
         **kwargs: Any,
     ) -> None: ...
