@@ -2,26 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/contrib/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/migration-guide-0.7/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/quickstart/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/releasing/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
     <url>
          <loc>https://agentclientprotocol.github.io/python-sdk/use-cases/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-28</lastmod>
     </url>
 </urlset>
