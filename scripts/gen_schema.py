@@ -17,8 +17,6 @@ SCHEMA_JSON = SCHEMA_DIR / "schema.json"
 VERSION_FILE = SCHEMA_DIR / "VERSION"
 SCHEMA_OUT = ROOT / "src" / "acp" / "schema.py"
 
-BACKCOMPAT_MARKER = "# Backwards compatibility aliases"
-
 # Pattern caches used when post-processing generated schema.
 FIELD_DECLARATION_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\s*:")
 DESCRIPTION_PATTERN = re.compile(
@@ -67,10 +65,6 @@ RENAME_MAP: dict[str, str] = {
     "ToolCallContent1": "ContentToolCallContent",
     "ToolCallContent2": "FileEditToolCallContent",
     "ToolCallContent3": "TerminalToolCallContent",
-}
-
-ALIASES_MAP = {
-    "StdioMcpServer": "McpServerStdio",
 }
 
 ENUM_LITERAL_MAP: dict[str, tuple[str, ...]] = {
@@ -174,7 +168,6 @@ def postprocess_generated_schema(output_path: Path) -> list[str]:
     header_block = _build_header_block()
 
     content = _strip_existing_header(raw_content)
-    content = _remove_backcompat_block(content)
     content = _remove_unused_models(content)
     content, leftover_classes = _rename_numbered_models(content)
 
@@ -191,8 +184,7 @@ def postprocess_generated_schema(output_path: Path) -> list[str]:
     missing_targets = _find_missing_targets(content)
 
     content = _inject_enum_aliases(content)
-    alias_block = _build_alias_block()
-    final_content = header_block + content.rstrip() + "\n\n" + alias_block
+    final_content = header_block + content.rstrip() + "\n"
     if not final_content.endswith("\n"):
         final_content += "\n"
     output_path.write_text(final_content, encoding="utf-8")
@@ -224,24 +216,11 @@ def _build_header_block() -> str:
     return "\n".join(header_lines) + "\n\n"
 
 
-def _build_alias_block() -> str:
-    alias_lines = [f"{old} = {new}" for old, new in sorted(RENAME_MAP.items())]
-    alias_lines += [f"{old} = {new}" for old, new in sorted(ALIASES_MAP.items())]
-    return BACKCOMPAT_MARKER + "\n" + "\n".join(alias_lines) + "\n"
-
-
 def _strip_existing_header(content: str) -> str:
     existing_header = re.match(r"(#.*\n)+", content)
     if existing_header:
         return content[existing_header.end() :].lstrip("\n")
     return content.lstrip("\n")
-
-
-def _remove_backcompat_block(content: str) -> str:
-    marker_index = content.find(BACKCOMPAT_MARKER)
-    if marker_index != -1:
-        return content[:marker_index].rstrip()
-    return content
 
 
 def _rename_numbered_models(content: str) -> tuple[str, list[str]]:

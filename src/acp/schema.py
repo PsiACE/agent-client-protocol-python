@@ -2765,34 +2765,3 @@ class SessionNotification(BaseModel):
 class AgentNotification(BaseModel):
     method: str
     params: Optional[Union[SessionNotification, Any]] = None
-
-
-# Backwards compatibility aliases
-AgentResponse1 = AgentResponseMessage
-AgentResponse2 = AgentErrorMessage
-ClientResponse1 = ClientResponseMessage
-ClientResponse2 = ClientErrorMessage
-ContentBlock1 = TextContentBlock
-ContentBlock2 = ImageContentBlock
-ContentBlock3 = AudioContentBlock
-ContentBlock4 = ResourceContentBlock
-ContentBlock5 = EmbeddedResourceContentBlock
-McpServer1 = HttpMcpServer
-McpServer2 = SseMcpServer
-RequestPermissionOutcome1 = DeniedOutcome
-RequestPermissionOutcome2 = AllowedOutcome
-SessionConfigOption1 = SessionConfigOptionSelect
-SessionUpdate1 = UserMessageChunk
-SessionUpdate10 = SessionInfoUpdate
-SessionUpdate2 = AgentMessageChunk
-SessionUpdate3 = AgentThoughtChunk
-SessionUpdate4 = ToolCallStart
-SessionUpdate5 = ToolCallProgress
-SessionUpdate6 = AgentPlanUpdate
-SessionUpdate7 = AvailableCommandsUpdate
-SessionUpdate8 = CurrentModeUpdate
-SessionUpdate9 = ConfigOptionUpdate
-ToolCallContent1 = ContentToolCallContent
-ToolCallContent2 = FileEditToolCallContent
-ToolCallContent3 = TerminalToolCallContent
-StdioMcpServer = McpServerStdio
