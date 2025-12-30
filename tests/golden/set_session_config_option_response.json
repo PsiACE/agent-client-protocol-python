@@ -1,0 +1,20 @@
+{
+  "configOptions": [
+    {
+      "type": "select",
+      "id": "mode",
+      "name": "Mode",
+      "currentValue": "balanced",
+      "options": [
+        {
+          "name": "Fast",
+          "value": "fast"
+        },
+        {
+          "name": "Balanced",
+          "value": "balanced"
+        }
+      ]
+    }
+  ]
+}

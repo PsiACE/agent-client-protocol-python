@@ -1,0 +1,55 @@
+{
+  "sessionUpdate": "config_option_update",
+  "configOptions": [
+    {
+      "type": "select",
+      "id": "model",
+      "name": "Model",
+      "description": "Choose a model",
+      "currentValue": "gpt-4o-mini",
+      "options": [
+        {
+          "name": "GPT-4o Mini",
+          "value": "gpt-4o-mini"
+        },
+        {
+          "name": "GPT-4o",
+          "value": "gpt-4o",
+          "description": "Highest quality"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "mode",
+      "name": "Mode",
+      "currentValue": "fast",
+      "options": [
+        {
+          "group": "speed",
+          "name": "Speed",
+          "options": [
+            {
+              "name": "Fast",
+              "value": "fast"
+            },
+            {
+              "name": "Balanced",
+              "value": "balanced"
+            }
+          ]
+        },
+        {
+          "group": "quality",
+          "name": "Quality",
+          "options": [
+            {
+              "name": "High",
+              "value": "high"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

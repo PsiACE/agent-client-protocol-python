@@ -12,6 +12,7 @@ from ..schema import (
     AgentPlanUpdate,
     AgentThoughtChunk,
     AvailableCommandsUpdate,
+    ConfigOptionUpdate,
     CreateTerminalRequest,
     CreateTerminalResponse,
     CurrentModeUpdate,
@@ -85,6 +86,7 @@ class AgentSideConnection:
         | AgentPlanUpdate
         | AvailableCommandsUpdate
         | CurrentModeUpdate
+        | ConfigOptionUpdate
         | SessionInfoUpdate,
         **kwargs: Any,
     ) -> None:
