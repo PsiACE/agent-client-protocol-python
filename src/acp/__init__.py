@@ -4,7 +4,6 @@ from .core import (
     Agent,
     Client,
     RequestError,
-    TerminalHandle,
     connect_to_agent,
     run_agent,
 )
@@ -133,7 +132,6 @@ __all__ = [  # noqa: RUF022
     "RequestError",
     "Agent",
     "Client",
-    "TerminalHandle",
     # stdio helper
     "stdio_streams",
     "spawn_stdio_connection",

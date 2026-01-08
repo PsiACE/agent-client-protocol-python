@@ -14,7 +14,6 @@ from .client.connection import ClientSideConnection
 from .connection import Connection, JsonValue, MethodHandler
 from .exceptions import RequestError
 from .interfaces import Agent, Client
-from .terminal import TerminalHandle
 
 __all__ = [
     "Agent",
@@ -25,7 +24,6 @@ __all__ = [
     "JsonValue",
     "MethodHandler",
     "RequestError",
-    "TerminalHandle",
     "connect_to_agent",
     "run_agent",
 ]

@@ -50,7 +50,9 @@ _CLIENT_CONNECTION_ERROR = "ClientSideConnection requires asyncio StreamWriter/S
 @final
 @compatible_class
 class ClientSideConnection:
-    """Client-side connection wrapper that dispatches JSON-RPC messages to an Agent implementation."""
+    """Client-side connection wrapper that dispatches JSON-RPC messages to an Agent implementation.
+    The client can use this connection to communicate with the Agent so it behaves like an Agent.
+    """
 
     def __init__(
         self,
@@ -63,7 +65,7 @@ class ClientSideConnection:
     ) -> None:
         if not isinstance(input_stream, asyncio.StreamWriter) or not isinstance(output_stream, asyncio.StreamReader):
             raise TypeError(_CLIENT_CONNECTION_ERROR)
-        client = to_client(cast(Agent, self)) if callable(to_client) else to_client
+        client = to_client(self) if callable(to_client) else to_client
         handler = build_client_router(cast(Client, client), use_unstable_protocol=use_unstable_protocol)
         self._conn = Connection(handler, input_stream, output_stream, **connection_kwargs)
         if on_connect := getattr(client, "on_connect", None):
@@ -221,3 +223,7 @@ class ClientSideConnection:
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.close()
+
+    def on_connect(self, conn: Client) -> None:
+        # A dummy method to match the Agent protocol
+        pass
