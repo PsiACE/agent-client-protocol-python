@@ -50,12 +50,28 @@ Add an Agent Server entry in `settings.json` (Zed → Settings → Agents panel)
 {
   "agent_servers": {
     "Echo Agent (Python)": {
+      "type": "custom",
       "command": "/abs/path/to/python",
       "args": [
         "/abs/path/to/agentclientprotocol/python-sdk/examples/echo_agent.py"
       ]
     }
   }
+}
+```
+
+Or, if using `uv`:
+
+```json
+{
+  "agent_servers": {
+      "type": "custom",
+      "command": "uv",
+      "args": [
+        "run",
+        "/abs/path/to/agentclientprotocol/python-sdk/examples/echo_agent.py"
+      ],
+    }
 }
 ```
 
