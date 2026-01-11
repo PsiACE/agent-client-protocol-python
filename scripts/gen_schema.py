@@ -2,16 +2,23 @@
 from __future__ import annotations
 
 import ast
+import contextlib
 import json
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
+from scripts.schema_patches import apply_schema_patches  # noqa: E402
+
 SCHEMA_DIR = ROOT / "schema"
 SCHEMA_JSON = SCHEMA_DIR / "schema.json"
 VERSION_FILE = SCHEMA_DIR / "VERSION"
@@ -135,12 +142,23 @@ def generate_schema() -> None:
         )
         sys.exit(1)
 
+    schema_payload = json.loads(SCHEMA_JSON.read_text(encoding="utf-8"))
+    schema_payload, patch_warnings = apply_schema_patches(schema_payload)
+    for warning in patch_warnings:
+        print(f"Warning: {warning.message}", file=sys.stderr)
+
+    patched_schema_path: Path | None = None
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as handle:
+        json.dump(schema_payload, handle, indent=2)
+        handle.write("\n")
+        patched_schema_path = Path(handle.name)
+
     cmd = [
         sys.executable,
         "-m",
         "datamodel_code_generator",
         "--input",
-        str(SCHEMA_JSON),
+        str(patched_schema_path),
         "--input-file-type",
         "jsonschema",
         "--output",
@@ -154,10 +172,15 @@ def generate_schema() -> None:
         "--snake-case-field",
     ]
 
-    subprocess.check_call(cmd)  # noqa: S603
-    warnings = postprocess_generated_schema(SCHEMA_OUT)
-    for warning in warnings:
-        print(f"Warning: {warning}", file=sys.stderr)
+    try:
+        subprocess.check_call(cmd)  # noqa: S603
+        warnings = postprocess_generated_schema(SCHEMA_OUT)
+        for warning in warnings:
+            print(f"Warning: {warning}", file=sys.stderr)
+    finally:
+        if patched_schema_path is not None:
+            with contextlib.suppress(OSError):
+                patched_schema_path.unlink()
 
 
 def postprocess_generated_schema(output_path: Path) -> list[str]:
