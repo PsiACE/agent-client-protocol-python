@@ -62,6 +62,13 @@ async def test_session_requests_allow_missing_mcp_servers(server) -> None:
     )
     assert isinstance(load_session, LoadSessionResponse)
 
+    with pytest.warns(DeprecationWarning):
+        load_session = await asyncio.wait_for(
+            agent_conn.load_session("/workspace", new_session.session_id),
+            timeout=1.0,
+        )
+    assert isinstance(load_session, LoadSessionResponse)
+
     assert captured_agent, "Agent was not constructed"
     [agent] = captured_agent
     assert agent.seen_new_session == ("/workspace", None)

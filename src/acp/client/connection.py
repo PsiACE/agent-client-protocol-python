@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
 from collections.abc import Callable
 from typing import Any, cast, final
 
@@ -116,6 +117,12 @@ class ClientSideConnection:
     ) -> LoadSessionResponse:
         if session_id is _MISSING:
             if isinstance(mcp_servers, str):
+                warnings.warn(
+                    "Passing session_id as the second positional argument to load_session() is deprecated; "
+                    "use load_session(cwd=..., session_id=..., mcp_servers=...) instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
                 session_id = mcp_servers
                 mcp_servers = None
             else:
