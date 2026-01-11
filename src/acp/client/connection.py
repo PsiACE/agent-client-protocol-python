@@ -45,6 +45,7 @@ from .router import build_client_router
 
 __all__ = ["ClientSideConnection"]
 _CLIENT_CONNECTION_ERROR = "ClientSideConnection requires asyncio StreamWriter/StreamReader"
+_MISSING = object()
 
 
 @final
@@ -93,7 +94,10 @@ class ClientSideConnection:
 
     @param_model(NewSessionRequest)
     async def new_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], **kwargs: Any
+        self,
+        cwd: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | None = None,
+        **kwargs: Any,
     ) -> NewSessionResponse:
         return await request_model(
             self._conn,
@@ -104,12 +108,27 @@ class ClientSideConnection:
 
     @param_model(LoadSessionRequest)
     async def load_session(
-        self, cwd: str, mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio], session_id: str, **kwargs: Any
+        self,
+        cwd: str,
+        mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] | str | None = None,
+        session_id: str | object = _MISSING,
+        **kwargs: Any,
     ) -> LoadSessionResponse:
+        if session_id is _MISSING:
+            if isinstance(mcp_servers, str):
+                session_id = mcp_servers
+                mcp_servers = None
+            else:
+                raise TypeError("load_session() missing required argument: 'session_id'")
         return await request_model_from_dict(
             self._conn,
             AGENT_METHODS["session_load"],
-            LoadSessionRequest(cwd=cwd, mcp_servers=mcp_servers, session_id=session_id, field_meta=kwargs or None),
+            LoadSessionRequest(
+                cwd=cwd,
+                mcp_servers=cast(list[HttpMcpServer | SseMcpServer | McpServerStdio] | None, mcp_servers),
+                session_id=cast(str, session_id),
+                field_meta=kwargs or None,
+            ),
             LoadSessionResponse,
         )
 

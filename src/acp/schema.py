@@ -1337,12 +1337,12 @@ class NewSessionRequest(BaseModel):
     ]
     # List of MCP (Model Context Protocol) servers the agent should connect to.
     mcp_servers: Annotated[
-        List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]],
+        Optional[List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]]],
         Field(
             alias="mcpServers",
             description="List of MCP (Model Context Protocol) servers the agent should connect to.",
         ),
-    ]
+    ] = None
 
 
 class PermissionOption(BaseModel):
@@ -1985,12 +1985,12 @@ class LoadSessionRequest(BaseModel):
     cwd: Annotated[str, Field(description="The working directory for this session.")]
     # List of MCP servers to connect to for this session.
     mcp_servers: Annotated[
-        List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]],
+        Optional[List[Union[HttpMcpServer, SseMcpServer, McpServerStdio]]],
         Field(
             alias="mcpServers",
             description="List of MCP servers to connect to for this session.",
         ),
-    ]
+    ] = None
     # The ID of the session to load.
     session_id: Annotated[str, Field(alias="sessionId", description="The ID of the session to load.")]
 
