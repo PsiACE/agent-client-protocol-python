@@ -16,12 +16,12 @@ from .exceptions import RequestError
 from .interfaces import Agent, Client
 
 __all__ = [
+    "DEFAULT_STDIO_BUFFER_LIMIT_BYTES",
     "Agent",
     "AgentSideConnection",
     "Client",
     "ClientSideConnection",
     "Connection",
-    "DEFAULT_STDIO_BUFFER_LIMIT_BYTES",
     "JsonValue",
     "MethodHandler",
     "RequestError",
