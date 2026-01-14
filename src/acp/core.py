@@ -16,6 +16,7 @@ from .exceptions import RequestError
 from .interfaces import Agent, Client
 
 __all__ = [
+    "DEFAULT_STDIO_BUFFER_LIMIT_BYTES",
     "Agent",
     "AgentSideConnection",
     "Client",
@@ -28,6 +29,11 @@ __all__ = [
     "run_agent",
 ]
 
+# Default to 50MB for agent/client data transfer.
+# The original stdio_streams default is 64KB, which is not large
+# enough for multimodal use-cases.
+DEFAULT_STDIO_BUFFER_LIMIT_BYTES = 50 * 1024 * 1024
+
 
 async def run_agent(
     agent: Agent,
@@ -35,6 +41,7 @@ async def run_agent(
     output_stream: Any = None,
     *,
     use_unstable_protocol: bool = False,
+    stdio_buffer_limit_bytes: int = DEFAULT_STDIO_BUFFER_LIMIT_BYTES,
     **connection_kwargs: Any,
 ) -> None:
     """Run an ACP agent over the given input/output streams.
@@ -53,7 +60,7 @@ async def run_agent(
     from .stdio import stdio_streams
 
     if input_stream is None and output_stream is None:
-        output_stream, input_stream = await stdio_streams()
+        output_stream, input_stream = await stdio_streams(limit=stdio_buffer_limit_bytes)
     conn = AgentSideConnection(
         agent,
         input_stream,
