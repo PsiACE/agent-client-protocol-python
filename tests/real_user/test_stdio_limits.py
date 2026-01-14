@@ -65,7 +65,7 @@ asyncio.run(run_agent(TestAgent(), stdio_buffer_limit_bytes=1024))
 
         # Send a 70KB message - should fail with 1KB buffer
         large_msg = '{"jsonrpc":"2.0","method":"test","params":{"data":"' + "X" * LARGE_LINE_SIZE + '"}}\n'
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             [sys.executable, small_agent], input=large_msg, capture_output=True, text=True, timeout=2
         )
 
@@ -90,7 +90,7 @@ asyncio.run(run_agent(TestAgent(), stdio_buffer_limit_bytes={LARGE_LINE_SIZE * 3
 """)
 
         # Same message, but with a buffer 3x the size - should handle it
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             [sys.executable, large_agent], input=large_msg, capture_output=True, text=True, timeout=2
         )
 
